@@ -33,7 +33,7 @@ Configure the SSO settings as seen in ``testsettings.py``::
   SSO_SERVER_PRIVATE_URL = 'http://10.0.0.1:80/'
 
 Add the proper URLS to your urls.py. Because the app needs to override the login/logout URLS,
-import them in the root of your urlpatterns:
+import them in the root of your urlpatterns::
 
   urlpatterns = patterns(
       '',
