@@ -40,7 +40,10 @@ etc/*.logrotate
 .project
 .pydevproject
 .pydevproject.bak
-.settings/org.eclipse.core.resources.prefs
+.settings
 
-lizard_auth_client/local*.py
+# Old (local) stuff
 old
+
+# Local settings
+lizard_auth_client/local*.py
