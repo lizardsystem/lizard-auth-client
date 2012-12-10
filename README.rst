@@ -25,7 +25,7 @@ Configure the SSO settings as seen in ``testsettings.py``::
   SSO_STANDALONE = True
   # A key identifying this client. Can be published.
   SSO_KEY = 'random_generated_key_to_identify_the_client'
-  # A \*secret\* shared between client and server. Used to sign the messages exchanged between them.
+  # A *secret* shared between client and server. Used to sign the messages exchanged between them.
   SSO_SECRET = 'random_generated_secret_key_to_sign_exchanged_messages'
   # URL used to redirect the user to the SSO server
   SSO_SERVER_PUBLIC_URL = 'http://external-address.site.tld/'
