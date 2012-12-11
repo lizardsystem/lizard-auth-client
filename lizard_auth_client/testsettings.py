@@ -5,15 +5,6 @@ import os
 import tempfile
 
 
-STATICFILES_FINDERS = (
-    'staticfiles.finders.FileSystemFinder',
-    'staticfiles.finders.AppDirectoriesFinder',
-    # Enable 'old' /media directories in addition to /static.
-    'staticfiles.finders.LegacyAppDirectoriesFinder',
-    # Enable support for django-compressor.
-    'compressor.finders.CompressorFinder',
-    )
-
 SETTINGS_DIR = os.path.dirname(os.path.realpath(__file__))
 BUILDOUT_DIR = os.path.abspath(os.path.join(SETTINGS_DIR, '..'))
 
@@ -162,6 +153,6 @@ CACHES = {
 
 try:
     # Import local settings that aren't stored in svn/git.
-    from controlnext.local_testsettings import *
+    from lizard_auth_client.local_testsettings import *
 except ImportError:
     pass
