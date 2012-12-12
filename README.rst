@@ -28,8 +28,10 @@ Configure the SSO settings as seen in ``testsettings.py``::
   # A *secret* shared between client and server. Used to sign the messages exchanged between them.
   SSO_SECRET = 'random_generated_secret_key_to_sign_exchanged_messages'
   # URL used to redirect the user to the SSO server
+  # Note: needs a trailing slash
   SSO_SERVER_PUBLIC_URL = 'http://external-address.site.tld/'
   # URL used for server-to-server communication
+  # Note: needs a trailing slash
   SSO_SERVER_PRIVATE_URL = 'http://10.0.0.1:80/'
 
 Add the proper URLS to your urls.py. Because the app needs to override the login/logout URLS,

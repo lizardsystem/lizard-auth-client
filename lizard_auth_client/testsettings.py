@@ -101,13 +101,16 @@ SSO_KEY = 'random_generated_key_to_identify_the_client'
 # debug output
 SSO_SECRET = 'random_generated_secret_key_to_sign_exchanged_messages'
 # URL used to redirect the user to the SSO server
+# Note: needs a trailing slash
 SSO_SERVER_PUBLIC_URL = 'http://127.0.0.1:8001/'
 # URL used for server-to-server communication
+# Note: needs a trailing slash
 SSO_SERVER_PRIVATE_URL = 'http://127.0.0.1:8001/'
 
 ROOT_URLCONF = 'lizard_auth_client.urls'
 
-TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+# yes, this somehow doesn't support unicode strings
+TEST_RUNNER = b'django_nose.NoseTestSuiteRunner'
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     # default template context processors
