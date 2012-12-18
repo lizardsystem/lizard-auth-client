@@ -15,5 +15,9 @@ class TestClient(TestCase):
         self.assertRaises(client.AutheticationFailed, wrong_pw)
 
         def bad_url():
-            return client.sso_authenticate('http://127.0.0.1:34577/', 'root', 'wrongpassword')
+            return client.sso_authenticate('http://127.0.0.1:34577/', '', '', 'root', 'a')
         self.assertRaises(client.CommunicationError, bad_url)
+
+        def bad_key():
+            return client.sso_authenticate('http://127.0.0.1:8001/', 'asd', 'asd', 'root', 'a')
+        self.assertRaises(client.CommunicationError, bad_key)

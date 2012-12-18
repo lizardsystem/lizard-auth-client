@@ -2,30 +2,45 @@ import requests
 import json
 from urlparse import urljoin
 
+from itsdangerous import URLSafeTimedSerializer, BadSignature
+
 class AutheticationFailed(Exception):
     pass
 
 class CommunicationError(Exception):
     pass
 
-def _do_post(url_base, username, password):
+def _do_post(sso_server_private_url, sso_key, sso_secret, username, password):
     '''
     Posts the specified username and password combination to the
-    authentication API listening on url_base.
+    authentication API listening on sso_server_private_url.
 
     Returns the response of the service as a dict.
 
     Raises :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
-    url = urljoin(url_base, 'sso/authenticate') + '/'
-    post_data = {
+    # define the message we want to send
+    params = {
         'username': username,
-        'password': password
+        'password': password,
+        'key': sso_key,
+    }
+
+    # encrypt it
+    message = URLSafeTimedSerializer(sso_secret).dumps(params)
+
+    # determine headers and destination URL
+    post_data = {
+        'message': message,
+        'key': sso_key,
     }
     headers = {
         'content-type': 'application/json'
     }
+    url = urljoin(sso_server_private_url, 'sso/authenticate') + '/'
+
+    # do the posts usings the rather nice 'requests' library
     r = requests.post(url, data=post_data, headers=headers)
     if r.status_code == requests.codes.ok:
         result = json.loads(r.text)
@@ -38,7 +53,7 @@ def _do_post(url_base, username, password):
     else:
         r.raise_for_status()
 
-def sso_authenticate(url_base, username, password):
+def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username, password):
     '''
     Returns a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
@@ -50,7 +65,13 @@ def sso_authenticate(url_base, username, password):
     or :class:`CommunicationError`, if one occurred.
     '''
     try:
-        data = _do_post(url_base, username, password)
+        data = _do_post(
+            sso_server_private_url,
+            sso_key,
+            sso_secret,
+            username,
+            password
+        )
     except Exception as ex:
         raise CommunicationError(ex)
 
@@ -73,4 +94,10 @@ def sso_authenticate_django(username, password):
     from django.conf import settings
 
     # call with django setting for SSO url
-    return sso_authenticate(settings.SSO_SERVER_PRIVATE_URL, username, password)
+    return sso_authenticate(
+        settings.SSO_SERVER_PRIVATE_URL,
+        settings.SSO_KEY,
+        settings.SSO_SECRET,
+        username,
+        password
+    )
