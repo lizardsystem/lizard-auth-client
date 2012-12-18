@@ -41,3 +41,23 @@ import them in the root of your urlpatterns::
       '',
       (r'^', include('lizard_auth_client.urls')),
   )
+
+
+Custom authentication
+-----
+
+In a Django context, simple configure the app as above, and do:
+
+  from lizard_auth_client import client as auth_client
+  try:
+    user_data = auth_client.sso_authenticate_django('username', 'password')
+  except auth_client.AutheticationFailed as ex:
+    return some_error_handler('Auth failed')
+  except auth_client.CommunicationError as ex:
+    return some_error_handler('Temporary comm error')
+  except:
+    return some_error_handler('Other error')
+
+It should be usable without Django settings as well:
+
+    user_data = auth_client.sso_authenticate('http://url.tld', 'key', 'secret' 'username', 'password')
