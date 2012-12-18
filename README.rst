@@ -22,7 +22,7 @@ Add it in your INSTALLED_APPS::
 Configure the SSO settings as seen in ``testsettings.py``::
 
   # SSO
-  SSO_STANDALONE = True
+  SSO_STANDALONE = False
   # A key identifying this client. Can be published.
   SSO_KEY = 'random_generated_key_to_identify_the_client'
   # A *secret* shared between client and server. Used to sign the messages exchanged between them.
