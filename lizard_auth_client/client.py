@@ -88,7 +88,7 @@ def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username, pass
 def sso_authenticate_django(username, password):
     '''
     Same as sso_authenticate(), but uses the Django settings module to import
-    the URL base.
+    the URL base and encryption keys.
     '''
     # import here so this module can easily be reused outside of Django
     from django.conf import settings

@@ -7,7 +7,8 @@ from urlparse import urljoin, urlparse
 
 from django.core.urlresolvers import reverse
 from django.conf import settings
-from django.contrib.auth import login, logout
+from django.contrib.auth import login as django_login
+from django.contrib.auth import logout as django_logout
 from django.contrib.auth.models import User, Permission
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.contenttypes.models import ContentType
@@ -70,11 +71,13 @@ class LoginView(View):
         # to the requested page, after SSO login.
         next = get_next(request)
         request.session['sso_after_login_next'] = next
+
         # get a request token, which is used by the SSO server to verify
         # that the user is allowed to make a login request
         request_token = get_request_token()
         if not request_token:
             return HttpResponseBadRequest('Unable to obtain token')
+
         # construct a (signed) set of GET parameters which are used to
         # redirect the user to the SSO server
         params = {
@@ -85,6 +88,7 @@ class LoginView(View):
         query_string = urllib.urlencode([('message', message), ('key', settings.SSO_KEY)])
         url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/authorize') + '/'
         url = '%s?%s' % (url, query_string)
+
         # send the redirect response
         return HttpResponseRedirect(url)
 
@@ -98,10 +102,12 @@ class LocalLoginView(View):
         user = verify_auth_token(request.GET['message'])
         if not user:
             return HttpResponseBadRequest('Verification failed')
+
         # link the user instance to the default database backend
         # and call django-auth's login function
         user.backend = "%s.%s" % (BACKEND.__module__, BACKEND.__class__.__name__)
-        login(request, user)
+        django_login(request, user)
+
         # redirect the user to the stored "next" url, which is probably a
         # protected page
         sso_after_login_next = request.session.get('sso_after_login_next', '/')
@@ -113,9 +119,11 @@ class LogoutView(View):
     Redirect user to SSO server, to log out there.
     '''
     def get(self, request, *args, **kwargs):
-        # store the 'next' parameter
+        # store the 'next' parameter in the session so we can
+        # redirect the user afterwards
         sso_after_logout_next = get_next(request)
         request.session['sso_after_logout_next'] = sso_after_logout_next
+
         # construct a signed message containing the portal key
         params = {
             'action': 'logout',
@@ -125,6 +133,7 @@ class LogoutView(View):
         query_string = urllib.urlencode([('message', message), ('key', settings.SSO_KEY)])
         url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/portal_action') + '/'
         url = '%s?%s' % (url, query_string)
+
         # send the redirect response
         return HttpResponseRedirect(url)
 
@@ -134,7 +143,9 @@ class LocalLogoutView(View):
     '''
     def get(self, request, *args, **kwargs):
         # call django-auth's logout function
-        logout(request)
+        django_logout(request)
+
+        # redirect the user
         next = request.session.get('sso_after_logout_next', '/')
         request.session.delete('sso_after_logout_next')
         return HttpResponseRedirect(next)
@@ -144,39 +155,49 @@ def get_request_token():
     Requests a Request Token from the SSO Server. Returns False if the request
     failed.
     '''
+    # construct a signed message containing the portal key
     params = {
         'key': settings.SSO_KEY
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     url = urljoin(settings.SSO_SERVER_PRIVATE_URL, 'sso/request_token') + '/'
+
+    # send the message to the SSO server
     response = requests.get(url, params={'key': settings.SSO_KEY, 'message': message})
     if response.status_code != 200:
         return False
+
+    # grab the token from the response
     data = URLSafeTimedSerializer(settings.SSO_SECRET).loads(response.content, max_age=300)
     return data['request_token']
 
-def verify_auth_token(message):
+def verify_auth_token(untrusted_message):
     '''
     Verifies a Auth Token. Returns a
     django.contrib.auth.models.User instance if successful or False.
     '''
-    data = URLSafeTimedSerializer(settings.SSO_SECRET).loads(message, max_age=300)
-    if 'auth_token' not in data:
+    # decrypt the message
+    untrusted = URLSafeTimedSerializer(settings.SSO_SECRET).loads(untrusted_message, max_age=300)
+
+    # do some extra validation
+    if 'auth_token' not in untrusted:
         return False
-    if 'request_token' not in data:
+    if 'request_token' not in untrusted:
         return False
-    # call the SSO server and send the token
-    auth_token = data['auth_token']
+
+    # call the SSO server to verify the token
     params = {
-        'auth_token': auth_token,
+        'auth_token': untrusted['auth_token'],
         'key': settings.SSO_KEY
     }
-    message2 = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
+    message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     url = urljoin(settings.SSO_SERVER_PRIVATE_URL, 'sso/verify') + '/'
-    response = requests.get(url, params={'key': settings.SSO_KEY, 'message': message2})
+    response = requests.get(url, params={'key': settings.SSO_KEY, 'message': message})
+
     # ensure the response is sane
     if response.status_code != 200:
         return False
+
     # build a User object from the message
     data = URLSafeTimedSerializer(settings.SSO_SECRET).loads(response.content, max_age=300)
     return load_json_user(data['user'])
@@ -190,6 +211,7 @@ def get_next(request):
     if not next:
         return '/'
     netloc = urlparse(next)[1]
+
     # security check -- don't allow redirection to a different host
     # taken from django.contrib.auth.views.login
     if netloc and netloc != request.get_host():
@@ -202,11 +224,13 @@ def load_json_user(json):
     '''
     data = simplejson.loads(json)
     local_username = 'sso-user-{}'.format(data['pk'])
+
     # create or get a User instance
     try:
         user = User.objects.get(username=local_username)
     except User.DoesNotExist:
         user = User()
+
     # copy simple properies like email and first name
     for key in SIMPLE_KEYS:
         if key == 'username':
@@ -217,9 +241,12 @@ def load_json_user(json):
             continue
         setattr(user, key, data[key])
     user.username = local_username
+
+    # ensure user can't login
     user.set_unusable_password()
     user.save()
-    # copy permissions    
+
+    # copy permissions
     ctype_cache = {}
     permissions = []
     for perm in data['permissions']:
@@ -236,5 +263,6 @@ def load_json_user(json):
             continue
         permissions.append(permission)
     user.user_permissions = permissions
+
     # user now contains a nice User object
     return user
