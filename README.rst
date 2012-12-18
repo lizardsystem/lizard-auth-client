@@ -46,7 +46,7 @@ import them in the root of your urlpatterns::
 Custom authentication
 -----
 
-In a Django context, simple configure the app as above, and do:
+In a Django context, simple configure the app as above, and do::
 
   from lizard_auth_client import client as auth_client
   try:
@@ -58,6 +58,6 @@ In a Django context, simple configure the app as above, and do:
   except:
     return some_error_handler('Other error')
 
-It should be usable without Django settings as well:
+It should be usable without Django settings as well::
 
     user_data = auth_client.sso_authenticate('http://url.tld', 'key', 'secret' 'username', 'password')
