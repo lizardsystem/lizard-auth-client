@@ -162,7 +162,7 @@ def get_request_token():
     url = urljoin(settings.SSO_SERVER_PRIVATE_URL, 'sso/internal/request_token') + '/'
 
     # send the message to the SSO server
-    response = requests.get(url, params={'key': settings.SSO_KEY, 'message': message})
+    response = requests.get(url, params={'key': settings.SSO_KEY, 'message': message}, timeout=10)
     if response.status_code != 200:
         return False
 
@@ -191,7 +191,7 @@ def verify_auth_token(untrusted_message):
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     url = urljoin(settings.SSO_SERVER_PRIVATE_URL, 'sso/internal/verify') + '/'
-    response = requests.get(url, params={'key': settings.SSO_KEY, 'message': message})
+    response = requests.get(url, params={'key': settings.SSO_KEY, 'message': message}, timeout=10)
 
     # ensure the response is sane
     if response.status_code != 200:

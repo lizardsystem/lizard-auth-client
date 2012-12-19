@@ -45,7 +45,7 @@ def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret, **par
     url = urljoin(sso_server_private_url, sso_server_path) + '/'
 
     # do the posts usings the rather nice 'requests' library
-    r = requests.post(url, data=post_data, headers=headers)
+    r = requests.post(url, data=post_data, headers=headers, timeout=10)
     if r.status_code == requests.codes.ok:
         result = json.loads(r.text)
         if isinstance(result, dict):
