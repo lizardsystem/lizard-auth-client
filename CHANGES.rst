@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-0.2 (unreleased)
+0.2 (2012-12-19)
 ----------------
 
 - Added a timeout to all 'requests' calls.
