@@ -5,7 +5,9 @@ Changelog of lizard-auth-client
 0.3 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Added support for lizard-auth-server's new URL scheme.
+
+- Added a test for the new unsigned Auth API.
 
 
 0.2 (2012-12-19)
