@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-0.3 (unreleased)
+0.3 (2013-02-11)
 ----------------
 
 - Added support for lizard-auth-server's new URL scheme.
