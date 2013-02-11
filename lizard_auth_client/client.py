@@ -34,11 +34,13 @@ def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret, **par
     # encrypt it
     message = URLSafeTimedSerializer(sso_secret).dumps(params)
 
-    # determine headers and destination URL
+    # determine POST data
     post_data = {
         'message': message,
         'key': sso_key,
     }
+
+    # determine headers and destination URL
     headers = {
         'content-type': 'application/json'
     }
@@ -57,6 +59,91 @@ def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret, **par
     else:
         r.raise_for_status()
 
+
+def _do_post_unsigned(sso_server_private_url, sso_server_path, sso_key, **params):
+    '''
+    Posts the specified username and password combination to the
+    authentication API listening on sso_server_private_url.
+
+    Returns the response of the service as a dict.
+
+    Raises :class:`HTTPError` or :class:`URLError`
+    or :class:`CommunicationError`, if one occurred.
+    '''
+
+    # determine POST data
+    post_data = {
+        'key': sso_key,
+    }
+    post_data.update(**params)
+
+    # determine headers and destination URL
+    headers = {
+        'content-type': 'application/json'
+    }
+    url = urljoin(sso_server_private_url, sso_server_path) + '/'
+
+    # do the posts usings the rather nice 'requests' library
+    r = requests.post(url, data=post_data, headers=headers, timeout=10)
+    if r.status_code == requests.codes.ok:
+        result = json.loads(r.text)
+        if isinstance(result, dict):
+            return result
+        else:
+            raise CommunicationError(
+                'did not recieve a dict / associative array as response'
+            )
+    else:
+        r.raise_for_status()
+
+def sso_authenticate_unsigned(sso_server_private_url, sso_key, username, password):
+    '''
+    Returns a dict containing user data, if authentication succeeds. Example
+    keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
+
+    Raises :class:`AutheticationFailed`, if the username / password
+    combination is incorrect.
+
+    Raises :class:`HTTPError` or :class:`URLError`
+    or :class:`CommunicationError`, if one occurred.
+    '''
+    try:
+        data = _do_post_unsigned(
+            sso_server_private_url,
+            'api/authenticate_unsigned',
+            sso_key,
+            username=username,
+            password=password
+        )
+    except Exception as ex:
+        raise CommunicationError(ex)
+
+    # validate response a bit
+    if not 'success' in data:
+        raise CommunicationError('got an OK result, but with unknown content')
+
+    # either return the user instance as dict, or raise an authentication error
+    if data['success'] is True:
+        return data['user']
+    else:
+        raise AutheticationFailed(data['error'])
+
+def sso_authenticate_unsigned_django(username, password):
+    '''
+    Same as sso_authenticate_unsigned(), but uses the Django settings module to import
+    the URL base and portal key.
+    '''
+    # import here so this module can easily be reused outside of Django
+    from django.conf import settings
+
+    # call with django setting for SSO url
+    return sso_authenticate_unsigned(
+        settings.SSO_SERVER_PRIVATE_URL,
+        settings.SSO_KEY,
+        username,
+        password
+    )
+
 def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username, password):
     '''
     Returns a dict containing user data, if authentication succeeds. Example
@@ -71,7 +158,7 @@ def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username, pass
     try:
         data = _do_post(
             sso_server_private_url,
-            'sso/internal/authenticate',
+            'api/authenticate',
             sso_key,
             sso_secret,
             username=username,
@@ -121,7 +208,7 @@ def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
     try:
         data = _do_post(
             sso_server_private_url,
-            'sso/internal/get_user',
+            'api/get_user',
             sso_key,
             sso_secret,
             username=username

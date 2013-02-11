@@ -159,7 +159,7 @@ def get_request_token():
         'key': settings.SSO_KEY
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
-    url = urljoin(settings.SSO_SERVER_PRIVATE_URL, 'sso/internal/request_token') + '/'
+    url = urljoin(settings.SSO_SERVER_PRIVATE_URL, 'sso/api/request_token') + '/'
 
     # send the message to the SSO server
     response = requests.get(url, params={'key': settings.SSO_KEY, 'message': message}, timeout=10)
@@ -190,7 +190,7 @@ def verify_auth_token(untrusted_message):
         'key': settings.SSO_KEY
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
-    url = urljoin(settings.SSO_SERVER_PRIVATE_URL, 'sso/internal/verify') + '/'
+    url = urljoin(settings.SSO_SERVER_PRIVATE_URL, 'sso/api/verify') + '/'
     response = requests.get(url, params={'key': settings.SSO_KEY, 'message': message}, timeout=10)
 
     # ensure the response is sane

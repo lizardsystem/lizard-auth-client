@@ -16,6 +16,9 @@ class TestClient(TestCase):
         result = client.sso_authenticate_django('root', 'a')
         self.assertEqual(result['username'], 'root')
 
+        result = client.sso_authenticate_unsigned_django('root', 'a')
+        self.assertEqual(result['username'], 'root')
+
         def wrong_pw():
             return client.sso_authenticate_django('root', 'wrong_password')
         self.assertRaises(client.AutheticationFailed, wrong_pw)

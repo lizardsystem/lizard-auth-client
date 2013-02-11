@@ -77,6 +77,7 @@ DATABASES = {
         'PORT': '',  # empty string for default.
         }
     }
+POSTGIS_VERSION = (1,5,3)
 
 SITE_ID = 1
 TIME_ZONE = 'Europe/Amsterdam'
@@ -95,7 +96,7 @@ SECRET_KEY = 'This is not secret but that is ok.'
 # SSO
 SSO_STANDALONE = True
 # A key identifying this client. Can be published.
-SSO_KEY = 'random_generated_key_to_identify_the_client'
+SSO_KEY = 'random_generated_key_to_identify_the_portal'
 # A *secret* shared between client and server. Used to sign the messages exchanged between them.
 # Note: as long as the name of this settings contains "SECRET", it is hidden in the Django
 # debug output
