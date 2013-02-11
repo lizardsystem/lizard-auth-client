@@ -77,7 +77,6 @@ DATABASES = {
         'PORT': '',  # empty string for default.
         }
     }
-POSTGIS_VERSION = (1,5,3)
 
 SITE_ID = 1
 TIME_ZONE = 'Europe/Amsterdam'
