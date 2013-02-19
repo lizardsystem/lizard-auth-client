@@ -13,12 +13,6 @@ Include this app as a dependecy in setup.py::
       'lizard-auth-client',
   ],
 
-Add it in your INSTALLED_APPS::
-
-  INSTALLED_APPS = (
-      'lizard_auth_client',
-  )
-
 Configure the SSO settings as seen in ``testsettings.py``::
 
   # SSO
@@ -61,3 +55,8 @@ In a Django context, simple configure the app as above, and do::
 It should be usable without Django settings as well::
 
     user_data = auth_client.sso_authenticate('http://url.tld', 'key', 'secret' 'username', 'password')
+
+Tests
+-----
+
+To run the tests a running lizard-auth-server is needed.
