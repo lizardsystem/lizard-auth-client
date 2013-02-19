@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from collections import namedtuple
+
 import requests
 import urllib
 from urlparse import urljoin, urlparse
@@ -72,26 +74,14 @@ class LoginView(View):
         next = get_next(request)
         request.session['sso_after_login_next'] = next
 
-        # get a request token, which is used by the SSO server to verify
-        # that the user is allowed to make a login request
-        request_token = get_request_token()
-        if not request_token:
-            return HttpResponseBadRequest('Unable to obtain token')
+        response = {302: HttpResponseRedirect,
+                    503: HttpResponse}
 
-        # construct a (signed) set of GET parameters which are used to
-        # redirect the user to the SSO server
-        params = {
-            'request_token': request_token,
-            'key': settings.SSO_KEY
-        }
-        message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
-        query_string = urllib.urlencode([('message', message),
-                                         ('key', settings.SSO_KEY)])
-        url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/authorize') + '/'
-        url = '%s?%s' % (url, query_string)
+        sso_request = get_sso_request()
+        http_response = response.get(sso_request.status_code)
 
-        # send the redirect response
-        return HttpResponseRedirect(url)
+        return http_response(sso_request.message,
+                             status=sso_request.status_code)
 
 
 class LocalLoginView(View):
@@ -164,16 +154,16 @@ def get_request_token():
     failed.
     '''
     # construct a signed message containing the portal key
-    params = {
-        'key': settings.SSO_KEY
-    }
+    params = {'key': settings.SSO_KEY}
+
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     url = urljoin(settings.SSO_SERVER_PRIVATE_URL,
                   'sso/api/request_token') + '/'
 
     # send the message to the SSO server
     response = requests.get(url, params={'key': settings.SSO_KEY,
-                                         'message': message}, timeout=10)
+                                         'message': message},
+                            timeout=10)
     if response.status_code != 200:
         return False
 
@@ -234,3 +224,27 @@ def get_next(request):
     if netloc and netloc != request.get_host():
         return '/'
     return next
+
+
+def get_sso_request():
+    # get a request token, which is used by the SSO server to verify
+    # that the user is allowed to make a login request
+
+    sso_request = namedtuple('SSORequest', ('status_code', 'message'))
+
+    request_token = get_request_token()
+    if not request_token:
+        # Status code 503 service (sso server) unavailable
+        return sso_request(503, 'Unable to obtain token')
+
+    # construct a (signed) set of GET parameters which are used to
+    # redirect the user to the SSO server
+    params = {'request_token': request_token,
+              'key': settings.SSO_KEY}
+
+    message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
+    query_string = urllib.urlencode([('message', message),
+                                     ('key', settings.SSO_KEY)])
+    url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/authorize') + '/'
+    url = '%s?%s' % (url, query_string)
+    return sso_request(302, url)
