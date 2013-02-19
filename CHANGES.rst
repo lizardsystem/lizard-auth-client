@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 0.4 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- PEP8 and PyFlakes fixes.
 
 
 0.3 (2013-02-11)

@@ -5,28 +5,25 @@ import requests
 import urllib
 from urlparse import urljoin, urlparse
 
-from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
-from django.contrib.auth.models import User
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.utils import simplejson
-from django.utils.translation import ugettext as _
 from django.http import HttpResponse
 from django.views.generic.base import View
 from django.utils.decorators import method_decorator
-from django.views.decorators.cache import never_cache
 
-from itsdangerous import URLSafeTimedSerializer, BadSignature
+from itsdangerous import URLSafeTimedSerializer
 
 from lizard_auth_client.client import construct_user
 
 
 # used so we can login User objects we instantiated ourselves
 BACKEND = ModelBackend()
+
 
 class TestHomeView(View):
     '''
@@ -41,6 +38,7 @@ class TestHomeView(View):
             ''.format(user)
         )
 
+
 class TestProtectedView(View):
     '''
     Test view, only used in standalone mode.
@@ -49,15 +47,18 @@ class TestProtectedView(View):
     '''
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super(TestProtectedView, self).dispatch(request, *args, **kwargs)
+        return super(TestProtectedView, self).dispatch(
+            request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         user = request.user
         return HttpResponse(
             '<a href="/">home</a> | <a href="/protected">protected</a>'
-            '| <a href="/accounts/logout">logout</a> | user={} | protected @ client'
+            '| <a href="/accounts/logout">logout</a> '
+            '| user={} | protected @ client'
             ''.format(user)
         )
+
 
 class LoginView(View):
     '''
@@ -84,12 +85,14 @@ class LoginView(View):
             'key': settings.SSO_KEY
         }
         message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
-        query_string = urllib.urlencode([('message', message), ('key', settings.SSO_KEY)])
+        query_string = urllib.urlencode([('message', message),
+                                         ('key', settings.SSO_KEY)])
         url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/authorize') + '/'
         url = '%s?%s' % (url, query_string)
 
         # send the redirect response
         return HttpResponseRedirect(url)
+
 
 class LocalLoginView(View):
     '''
@@ -104,7 +107,8 @@ class LocalLoginView(View):
 
         # link the user instance to the default database backend
         # and call django-auth's login function
-        user.backend = "%s.%s" % (BACKEND.__module__, BACKEND.__class__.__name__)
+        user.backend = "%s.%s" % (BACKEND.__module__,
+                                  BACKEND.__class__.__name__)
         django_login(request, user)
 
         # redirect the user to the stored "next" url, which is probably a
@@ -112,6 +116,7 @@ class LocalLoginView(View):
         sso_after_login_next = request.session.get('sso_after_login_next', '/')
         request.session.delete('sso_after_login_next')
         return HttpResponseRedirect(sso_after_login_next)
+
 
 class LogoutView(View):
     '''
@@ -129,12 +134,15 @@ class LogoutView(View):
             'key': settings.SSO_KEY
         }
         message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
-        query_string = urllib.urlencode([('message', message), ('key', settings.SSO_KEY)])
-        url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/portal_action') + '/'
+        query_string = urllib.urlencode([('message', message),
+                                         ('key', settings.SSO_KEY)])
+        url = urljoin(settings.SSO_SERVER_PUBLIC_URL,
+                      'sso/portal_action') + '/'
         url = '%s?%s' % (url, query_string)
 
         # send the redirect response
         return HttpResponseRedirect(url)
+
 
 class LocalLogoutView(View):
     '''
@@ -149,6 +157,7 @@ class LocalLogoutView(View):
         request.session.delete('sso_after_logout_next')
         return HttpResponseRedirect(next)
 
+
 def get_request_token():
     '''
     Requests a Request Token from the SSO Server. Returns False if the request
@@ -159,16 +168,20 @@ def get_request_token():
         'key': settings.SSO_KEY
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
-    url = urljoin(settings.SSO_SERVER_PRIVATE_URL, 'sso/api/request_token') + '/'
+    url = urljoin(settings.SSO_SERVER_PRIVATE_URL,
+                  'sso/api/request_token') + '/'
 
     # send the message to the SSO server
-    response = requests.get(url, params={'key': settings.SSO_KEY, 'message': message}, timeout=10)
+    response = requests.get(url, params={'key': settings.SSO_KEY,
+                                         'message': message}, timeout=10)
     if response.status_code != 200:
         return False
 
     # grab the token from the response
-    data = URLSafeTimedSerializer(settings.SSO_SECRET).loads(response.content, max_age=300)
+    data = URLSafeTimedSerializer(settings.SSO_SECRET).loads(
+        response.content, max_age=300)
     return data['request_token']
+
 
 def verify_auth_token(untrusted_message):
     '''
@@ -176,7 +189,8 @@ def verify_auth_token(untrusted_message):
     django.contrib.auth.models.User instance if successful or False.
     '''
     # decrypt the message
-    untrusted = URLSafeTimedSerializer(settings.SSO_SECRET).loads(untrusted_message, max_age=300)
+    untrusted = URLSafeTimedSerializer(settings.SSO_SECRET).loads(
+        untrusted_message, max_age=300)
 
     # do some extra validation
     if 'auth_token' not in untrusted:
@@ -191,20 +205,23 @@ def verify_auth_token(untrusted_message):
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     url = urljoin(settings.SSO_SERVER_PRIVATE_URL, 'sso/api/verify') + '/'
-    response = requests.get(url, params={'key': settings.SSO_KEY, 'message': message}, timeout=10)
+    response = requests.get(url, params={'key': settings.SSO_KEY,
+                                         'message': message}, timeout=10)
 
     # ensure the response is sane
     if response.status_code != 200:
         return False
 
     # build a User object from the message
-    data = URLSafeTimedSerializer(settings.SSO_SECRET).loads(response.content, max_age=300)
+    data = URLSafeTimedSerializer(settings.SSO_SECRET).loads(
+        response.content, max_age=300)
     user_data = simplejson.loads(data['user'])
     return construct_user(user_data)
 
+
 def get_next(request):
     '''
-    Given a request, returns the URL where a user should be redirected to 
+    Given a request, returns the URL where a user should be redirected to
     after login. Defaults to '/'.
     '''
     next = request.GET.get('next', None)

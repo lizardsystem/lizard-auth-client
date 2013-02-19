@@ -2,18 +2,23 @@ import requests
 import json
 from urlparse import urljoin
 
-from itsdangerous import URLSafeTimedSerializer, BadSignature
+from itsdangerous import URLSafeTimedSerializer
+
 
 class AutheticationFailed(Exception):
     pass
 
+
 class CommunicationError(Exception):
     pass
+
 
 class UserNotFound(Exception):
     pass
 
-def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret, **params):
+
+def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
+             **params):
     '''
     Posts the specified username and password combination to the
     authentication API listening on sso_server_private_url.
@@ -52,15 +57,13 @@ def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret, **par
         result = json.loads(r.text)
         if isinstance(result, dict):
             return result
-        else:
-            raise CommunicationError(
-                'did not recieve a dict / associative array as response'
-            )
-    else:
-        r.raise_for_status()
+        raise CommunicationError(
+            'did not recieve a dict / associative array as response')
+    r.raise_for_status()
 
 
-def _do_post_unsigned(sso_server_private_url, sso_server_path, sso_key, **params):
+def _do_post_unsigned(sso_server_private_url, sso_server_path, sso_key,
+                      **params):
     '''
     Posts the specified username and password combination to the
     authentication API listening on sso_server_private_url.
@@ -96,7 +99,9 @@ def _do_post_unsigned(sso_server_private_url, sso_server_path, sso_key, **params
     else:
         r.raise_for_status()
 
-def sso_authenticate_unsigned(sso_server_private_url, sso_key, username, password):
+
+def sso_authenticate_unsigned(sso_server_private_url, sso_key, username,
+                              password):
     '''
     Returns a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
@@ -125,13 +130,13 @@ def sso_authenticate_unsigned(sso_server_private_url, sso_key, username, passwor
     # either return the user instance as dict, or raise an authentication error
     if data['success'] is True:
         return data['user']
-    else:
-        raise AutheticationFailed(data['error'])
+    raise AutheticationFailed(data['error'])
+
 
 def sso_authenticate_unsigned_django(username, password):
     '''
-    Same as sso_authenticate_unsigned(), but uses the Django settings module to import
-    the URL base and portal key.
+    Same as sso_authenticate_unsigned(), but uses the Django settings module
+    to import the URL base and portal key.
     '''
     # import here so this module can easily be reused outside of Django
     from django.conf import settings
@@ -144,7 +149,9 @@ def sso_authenticate_unsigned_django(username, password):
         password
     )
 
-def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username, password):
+
+def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username,
+                     password):
     '''
     Returns a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
@@ -174,8 +181,8 @@ def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username, pass
     # either return the user instance as dict, or raise an authentication error
     if data['success'] is True:
         return data['user']
-    else:
-        raise AutheticationFailed(data['error'])
+    raise AutheticationFailed(data['error'])
+
 
 def sso_authenticate_django(username, password):
     '''
@@ -193,6 +200,7 @@ def sso_authenticate_django(username, password):
         username,
         password
     )
+
 
 def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
     '''
@@ -220,11 +228,12 @@ def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
     if not 'success' in data:
         raise CommunicationError('got an OK result, but with unknown content')
 
-    # either return the user instance as dict, or raise an UserNotFound exception
+    # either return the user instance as dict, or raise an UserNotFound
+    # exception
     if data['success'] is True:
         return data['user']
-    else:
-        raise UserNotFound(data['error'])
+    raise UserNotFound(data['error'])
+
 
 def sso_get_user_django(username):
     '''
@@ -242,6 +251,7 @@ def sso_get_user_django(username):
         username
     )
 
+
 def sso_populate_user_django(username):
     '''
     Returns an populated Django User instance with data fetched
@@ -253,6 +263,7 @@ def sso_populate_user_django(username):
     or :class:`CommunicationError`, if one occurred.
     '''
     return construct_user(sso_get_user_django(username))
+
 
 def construct_user(data):
     '''
@@ -296,12 +307,14 @@ def construct_user(data):
         ctype = ctype_cache.get(perm['codename'], None)
         if not ctype:
             try:
-                ctype = ContentType.objects.get_by_natural_key(perm['content_type'][0], perm['content_type'][1])
+                ctype = ContentType.objects.get_by_natural_key(
+                    perm['content_type'][0], perm['content_type'][1])
             except ContentType.DoesNotExist:
                 continue
             ctype_cache[perm['codename']] = ctype
         try:
-            permission = Permission.objects.get(content_type=ctype, codename=perm['codename'])
+            permission = Permission.objects.get(content_type=ctype,
+                                                codename=perm['codename'])
         except Permission.DoesNotExist:
             continue
         permissions.append(permission)
