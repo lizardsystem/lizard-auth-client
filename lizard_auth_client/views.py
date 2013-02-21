@@ -90,7 +90,7 @@ class LoginApiView(View):
             # Wrap it in a normal HttpResponse, and have client-side code
             # handle the actual redirect.
             response_class = HttpResponse
-            content_dict = {'login_url': wrapped_response.url}
+            content_dict = {'login_url': wrapped_response.redirect_url}
         else:
             # Response is something else, like an error message.
             # Use the response class as-is and wrap the message
@@ -134,10 +134,10 @@ class LoginView(View):
 
         wrapped_response = get_request_token_and_determine_response()
 
-        if isinstance(wrapped_response.http_response,
-                      HttpResponseRedirect):
+        if issubclass(wrapped_response.http_response,
+                      HttpResponseRedirectBase):
             return wrapped_response.http_response(
-                wrapped_response.url
+                wrapped_response.redirect_url
             )
         else:
             return wrapped_response.http_response(
