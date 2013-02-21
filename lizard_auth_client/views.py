@@ -27,6 +27,10 @@ from lizard_auth_client.client import construct_user
 BACKEND = ModelBackend()
 
 
+class HttpResponseServiceUnavailable(HttpResponse):
+    status_code = 503
+
+
 class TestHomeView(View):
     '''
     Test view, only used in standalone mode.
@@ -62,6 +66,56 @@ class TestProtectedView(View):
         )
 
 
+class LoginApiView(View):
+    '''
+    Login API, which can optionally be included in the urls of the
+    root Django app. This allows a non-webbrowser client, like
+    JavaScripts XmlHttpRequest, to implement HTTP redirects in their
+    own custom way.
+    '''
+    def get(self, request, *args, **kwargs):
+        # Redirect to the webclient after the SSO server dance
+        request.session['sso_after_login_next'] = settings.WEBCLIENT
+
+        # Get the login url with the token
+        wrapped_response = get_request_token_and_determine_response()
+
+        if isinstance(wrapped_response.http_response,
+                      HttpResponseRedirect):
+            # The response is a redirect (302) to the SSO server.
+            # Wrap it in a normal HttpResponse, and have client-side code
+            # handle the actual redirect.
+            response_class = HttpResponse
+            content_dict = {'login_url': wrapped_response.url}
+        else:
+            # Response is something else, like an error message.
+            # Use the response class as-is and wrap the message
+            # in JSON.
+            response_class = wrapped_response.http_response
+            content_dict = {'message': wrapped_response.message}
+
+        content = simplejson.dumps(content_dict)
+        return response_class(content=content)
+
+
+class LogoutApiView(View):
+    '''
+    Logout API, which can optionally be included in the urls of the
+    root Django app. This allows a non-webbrowser client, like
+    JavaScripts XmlHttpRequest, to implement HTTP redirects in their
+    own custom way.
+    '''
+    def get(self, request, *args, **kwargs):
+        # Redirect to the webclient after the SSO server dance
+        request.session['sso_after_logout_next'] = settings.WEBCLIENT
+
+        # Simple wrap the logout url in a JSON dict
+        logout_url = build_sso_portal_action_url('logout')
+        content_dict = {'logout_url': logout_url}
+        content = simplejson.dumps(content_dict)
+        return HttpResponse(content=content)
+
+
 class LoginView(View):
     '''
     View that redirects the user to the SSO server.
@@ -74,14 +128,17 @@ class LoginView(View):
         next = get_next(request)
         request.session['sso_after_login_next'] = next
 
-        response = {302: HttpResponseRedirect,
-                    503: HttpResponse}
+        wrapped_response = get_request_token_and_determine_response()
 
-        sso_request = get_sso_request()
-        http_response = response.get(sso_request.status_code)
-
-        return http_response(sso_request.message,
-                             status=sso_request.status_code)
+        if isinstance(wrapped_response.http_response,
+                      HttpResponseRedirect):
+            return wrapped_response.http_response(
+                wrapped_response.url
+            )
+        else:
+            return wrapped_response.http_response(
+                wrapped_response.message
+            )
 
 
 class LocalLoginView(View):
@@ -115,10 +172,10 @@ class LogoutView(View):
     def get(self, request, *args, **kwargs):
         # store the 'next' parameter in the session so we can
         # redirect the user afterwards
-        sso_after_logout_next = get_next(request)
-        request.session['sso_after_logout_next'] = sso_after_logout_next
+        next = get_next(request)
+        request.session['sso_after_logout_next'] = next
 
-        url = get_sso_logout()
+        url = build_sso_portal_action_url('logout')
         # send the redirect response
         return HttpResponseRedirect(url)
 
@@ -143,16 +200,23 @@ def get_request_token():
     failed.
     '''
     # construct a signed message containing the portal key
-    params = {'key': settings.SSO_KEY}
+    params = {
+        'key': settings.SSO_KEY
+    }
 
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     url = urljoin(settings.SSO_SERVER_PRIVATE_URL,
                   'sso/api/request_token') + '/'
 
     # send the message to the SSO server
-    response = requests.get(url, params={'key': settings.SSO_KEY,
-                                         'message': message},
-                            timeout=10)
+    response = requests.get(
+        url,
+        params={
+            'key': settings.SSO_KEY,
+            'message': message
+        },
+        timeout=10
+    )
     if response.status_code != 200:
         return False
 
@@ -184,8 +248,14 @@ def verify_auth_token(untrusted_message):
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     url = urljoin(settings.SSO_SERVER_PRIVATE_URL, 'sso/api/verify') + '/'
-    response = requests.get(url, params={'key': settings.SSO_KEY,
-                                         'message': message}, timeout=10)
+    response = requests.get(
+        url,
+        params={
+            'key': settings.SSO_KEY,
+            'message': message
+        },
+        timeout=10
+    )
 
     # ensure the response is sane
     if response.status_code != 200:
@@ -215,43 +285,54 @@ def get_next(request):
     return next
 
 
-def get_sso_request():
+def get_request_token_and_determine_response():
+    '''
+    Retrieve a Request token from the SSO server, and determine the proper
+    HttpResponse to send to the user.
+
+    When logging using via the REST API, the response is wrapped in JSON,
+    because the redirection takes place in a client-side script.
+    '''
+    WrappedResponse = namedtuple('WrappedResponse', 'http_response, message, redirect_url')
+
     # get a request token, which is used by the SSO server to verify
     # that the user is allowed to make a login request
-
-    sso_request = namedtuple('SSORequest', ('status_code', 'message'))
-
     request_token = get_request_token()
     if not request_token:
         # Status code 503 service (sso server) unavailable
-        return sso_request(503, 'Unable to obtain token')
+        return WrappedResponse(HttpResponseServiceUnavailable, 'Unable to obtain token', None)
 
     # construct a (signed) set of GET parameters which are used to
     # redirect the user to the SSO server
-    params = {'request_token': request_token,
-              'key': settings.SSO_KEY}
-
-    message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
-    query_string = urllib.urlencode([('message', message),
-                                     ('key', settings.SSO_KEY)])
-    url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/authorize') + '/'
-    url = '%s?%s' % (url, query_string)
-    return sso_request(302, url)
-
-
-def get_sso_logout():
-    """
-    Construct a url with a signed message containing the portal key.
-    """
-
     params = {
-        'action': 'logout',
+        'request_token': request_token,
         'key': settings.SSO_KEY
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urllib.urlencode([('message', message),
                                      ('key', settings.SSO_KEY)])
-    url = urljoin(settings.SSO_SERVER_PUBLIC_URL,
-                  'sso/portal_action') + '/'
+    # build an absolute URL pointing to the SSO server out of it
+    url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/authorize') + '/'
+    url = '%s?%s' % (url, query_string)
+
+    return WrappedResponse(HttpResponseRedirect, 'OK', url)
+
+
+def build_sso_portal_action_url(action):
+    '''
+    Constructs and signs a message containing the specified action parameter,
+    and returns a URL which can be used to redirect the user.
+
+    For example, with action='logout', this can be used to logout the user
+    on the SSO server.
+    '''
+    params = {
+        'action': action,
+        'key': settings.SSO_KEY
+    }
+    message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
+    query_string = urllib.urlencode([('message', message),
+                                     ('key', settings.SSO_KEY)])
+    url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/portal_action') + '/'
     url = '%s?%s' % (url, query_string)
     return url
