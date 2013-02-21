@@ -12,7 +12,11 @@ from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.http import (
+    HttpResponseBadRequest,
+    HttpResponseRedirect,
+    HttpResponseRedirectBase
+)
 from django.utils import simplejson
 from django.http import HttpResponse
 from django.views.generic.base import View
@@ -80,8 +84,8 @@ class LoginApiView(View):
         # Get the login url with the token
         wrapped_response = get_request_token_and_determine_response()
 
-        if isinstance(wrapped_response.http_response,
-                      HttpResponseRedirect):
+        if issubclass(wrapped_response.http_response,
+                      HttpResponseRedirectBase):
             # The response is a redirect (302) to the SSO server.
             # Wrap it in a normal HttpResponse, and have client-side code
             # handle the actual redirect.
