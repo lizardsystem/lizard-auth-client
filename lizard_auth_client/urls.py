@@ -12,6 +12,11 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from lizard_auth_client import views
 
 
+if not hasattr(settings, 'SSO_ENABLED'):
+    sso_enabled = False
+else:
+    sso_enabled = settings.SSO_ENABLED
+
 def check_settings():
     '''
     Ensure settings are valid, as this Django app is mostly included by
@@ -36,34 +41,38 @@ def check_settings():
             'SSO_SERVER_PRIVATE_URL in your settings. '
             'These URIs are used to locate the SSO server.'
         )
-check_settings()
 
-urlpatterns = patterns(
-    '',
-    # Note: ensure LOGIN_URL isn't defined in the settings
-    # URLS the do the SSO redirect for login/logout
-    url(r'^accounts/login/$',
-        views.LoginView.as_view(),
-        name='lizard_auth_client.sso_login'),
-    url(r'^accounts/logout/$',
-        views.LogoutView.as_view(),
-        name='lizard_auth_client.sso_logout'),
-    # Named aliases of the above URLs, for compatibility with other Django apps
-    url(r'^accounts/login/$',
-        views.LoginView.as_view(),
-        name='login'),
-    url(r'^accounts/logout/$',
-        views.LogoutView.as_view(),
-        name='logout'),
-    # URLS that perform the local login/logout
-    # these are used by the SSO server to redirect the user back again
-    url(r'^sso/local_login/$',
-        views.LocalLoginView.as_view(),
-        name='lizard_auth_client.sso_local_login'),
-    url(r'^sso/local_logout/$',
-        views.LocalLogoutView.as_view(),
-        name='lizard_auth_client.sso_local_logout'),
-)
+if sso_enabled:
+    check_settings()
+
+    urlpatterns = patterns(
+        '',
+        # Note: ensure LOGIN_URL isn't defined in the settings
+        # URLS the do the SSO redirect for login/logout
+        url(r'^accounts/login/$',
+            views.LoginView.as_view(),
+            name='lizard_auth_client.sso_login'),
+        url(r'^accounts/logout/$',
+            views.LogoutView.as_view(),
+            name='lizard_auth_client.sso_logout'),
+        # Named aliases of the above URLs, for compatibility with other Django apps
+        url(r'^accounts/login/$',
+            views.LoginView.as_view(),
+            name='login'),
+        url(r'^accounts/logout/$',
+            views.LogoutView.as_view(),
+            name='logout'),
+        # URLS that perform the local login/logout
+        # these are used by the SSO server to redirect the user back again
+        url(r'^sso/local_login/$',
+            views.LocalLoginView.as_view(),
+            name='lizard_auth_client.sso_local_login'),
+        url(r'^sso/local_logout/$',
+            views.LocalLogoutView.as_view(),
+            name='lizard_auth_client.sso_local_logout'),
+    )
+else:
+    urlpatterns = patterns('')
 
 if getattr(settings, 'SSO_STANDALONE', False) is True:
     # when running standalone (for testing purposes), add some extra URLS

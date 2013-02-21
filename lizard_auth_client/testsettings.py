@@ -94,6 +94,7 @@ SECRET_KEY = 'This is not secret but that is ok.'
 
 # SSO
 SSO_STANDALONE = True
+SSO_ENABLED = True
 # A key identifying this client. Can be published.
 SSO_KEY = 'random_generated_key_to_identify_the_portal'
 # A *secret* shared between client and server. Used to sign the messages exchanged between them.
