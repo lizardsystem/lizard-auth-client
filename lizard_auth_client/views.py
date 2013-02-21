@@ -95,7 +95,7 @@ class LoginApiView(View):
             content_dict = {'message': wrapped_response.message}
 
         content = simplejson.dumps(content_dict)
-        return response_class(content=content)
+        return response_class(content=content, content_type='application/json')
 
 
 class LogoutApiView(View):
@@ -113,7 +113,7 @@ class LogoutApiView(View):
         logout_url = build_sso_portal_action_url('logout')
         content_dict = {'logout_url': logout_url}
         content = simplejson.dumps(content_dict)
-        return HttpResponse(content=content)
+        return HttpResponse(content=content, content_type='application/json')
 
 
 class LoginView(View):
