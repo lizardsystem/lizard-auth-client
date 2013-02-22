@@ -7,6 +7,11 @@ Changelog of lizard-auth-client
 
 - PEP8 and PyFlakes fixes.
 
+- Add a rest API to get the HTTP redirect URLS.
+
+- Made checking the SSO config more optional, so you can include this in your
+  apps, but keep SSO disabled anyway.
+
 
 0.3 (2013-02-11)
 ----------------
