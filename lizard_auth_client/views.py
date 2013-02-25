@@ -128,12 +128,12 @@ class LocalLogoutView(View):
     Log out locally. Mostly the user is redirected here by the SSO server.
     '''
     def get(self, request, *args, **kwargs):
-        # call django-auth's logout function
+        # get the redirect url
+        next = request.session.get('sso_after_logout_next', '/')
+
+        # django_logout also calls session.flush()
         django_logout(request)
 
-        # redirect the user
-        next = request.session.get('sso_after_logout_next', '/')
-        request.session.delete('sso_after_logout_next')
         return HttpResponseRedirect(next)
 
 
