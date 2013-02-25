@@ -118,18 +118,7 @@ class LogoutView(View):
         sso_after_logout_next = get_next(request)
         request.session['sso_after_logout_next'] = sso_after_logout_next
 
-        # construct a signed message containing the portal key
-        params = {
-            'action': 'logout',
-            'key': settings.SSO_KEY
-        }
-        message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
-        query_string = urllib.urlencode([('message', message),
-                                         ('key', settings.SSO_KEY)])
-        url = urljoin(settings.SSO_SERVER_PUBLIC_URL,
-                      'sso/portal_action') + '/'
-        url = '%s?%s' % (url, query_string)
-
+        url = get_sso_logout()
         # send the redirect response
         return HttpResponseRedirect(url)
 
@@ -248,3 +237,21 @@ def get_sso_request():
     url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/authorize') + '/'
     url = '%s?%s' % (url, query_string)
     return sso_request(302, url)
+
+
+def get_sso_logout():
+    """
+    Construct a url with a signed message containing the portal key.
+    """
+
+    params = {
+        'action': 'logout',
+        'key': settings.SSO_KEY
+    }
+    message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
+    query_string = urllib.urlencode([('message', message),
+                                     ('key', settings.SSO_KEY)])
+    url = urljoin(settings.SSO_SERVER_PUBLIC_URL,
+                  'sso/portal_action') + '/'
+    url = '%s?%s' % (url, query_string)
+    return url
