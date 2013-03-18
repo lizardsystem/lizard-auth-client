@@ -107,11 +107,18 @@ SSO_SERVER_PUBLIC_URL = 'http://127.0.0.1:8001/'
 # URL used for server-to-server communication
 # Note: needs a trailing slash
 SSO_SERVER_PRIVATE_URL = 'http://127.0.0.1:8001/'
+# Timeout for cached credentials with the SSOBackend Authentication Backend.
+SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS = 60
 
 ROOT_URLCONF = 'lizard_auth_client.urls'
 
 # yes, this somehow doesn't support unicode strings
 TEST_RUNNER = b'django_nose.NoseTestSuiteRunner'
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'lizard_auth_client.backends.SSOBackend',
+)
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     # default template context processors
