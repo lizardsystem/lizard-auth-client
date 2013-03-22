@@ -15,7 +15,6 @@ KEY_CHARACTERS = string.letters + string.digits
 # Keys that can be directly copied from the User object and passed to the
 # client.
 SIMPLE_KEYS = [
-    'pk',
     'username',
     'first_name',
     'last_name',
