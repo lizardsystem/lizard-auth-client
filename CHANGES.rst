@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 0.5 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Fixed a bug when synching user profiles.
 
 
 0.4 (2013-02-22)
