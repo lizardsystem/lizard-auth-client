@@ -124,7 +124,7 @@ class LoginView(View):
     '''
     View that redirects the user to the SSO server.
 
-    Requests a Request Token and then redirects the User to the the SSO Server.
+    Requests a Request Token and then redirects the User to the SSO Server.
     '''
     def get(self, request, *args, **kwargs):
         # store the GET parameter named 'next', so we can redirect the user

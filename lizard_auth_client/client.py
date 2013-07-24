@@ -316,52 +316,49 @@ def construct_user(data):
     Django User instance.
     '''
     # import here so this module can easily be reused outside of Django
-    from django.contrib.auth.models import User, Permission
-    from django.contrib.contenttypes.models import ContentType
-
-    # disabled for now
-    # use the Primary Key of the User on the SSO server to
-    # generate a new username
-    #local_username = 'sso-user-{}'.format(data['pk'])
-    # /disabled for now
-
-    # just copy the username from the sso server for now
-    local_username = data['username']
+    from django.contrib.auth.models import User
+    from lizard_auth_client.models import UserProfile, Role, Organisation
 
     # create or get a User instance
     try:
-        user = User.objects.get(username=local_username)
+        user = User.objects.get(username=data['username'])
     except User.DoesNotExist:
         user = User()
 
     # copy simple properies like email and first name
-    for key in ['first_name', 'last_name', 'email']:
+    for key in ['username', 'first_name', 'last_name', 'email', 'is_active', 'is_staff', 'is_superuser']:
         setattr(user, key, data[key])
-    user.username = local_username
-
     # ensure user can't login
     user.set_unusable_password()
     user.save()
 
-    # copy permissions
-    ctype_cache = {}
-    permissions = []
-    for perm in data['permissions']:
-        ctype = ctype_cache.get(perm['codename'], None)
-        if not ctype:
-            try:
-                ctype = ContentType.objects.get_by_natural_key(
-                    perm['content_type'][0], perm['content_type'][1])
-            except ContentType.DoesNotExist:
-                continue
-            ctype_cache[perm['codename']] = ctype
+    # create or get its organisations
+    for organisation in data['organisations']:
         try:
-            permission = Permission.objects.get(content_type=ctype,
-                                                codename=perm['codename'])
-        except Permission.DoesNotExist:
-            continue
-        permissions.append(permission)
-    user.user_permissions = permissions
+            org = Organisation.objects.get(unique_id=organisation['unique_id'])
+            org.name = organisation['name']
+        except Organisation.DoesNotExist:
+            org = Organisation(name=organisation['name'],
+                                        unique_id=organisation['unique_id'])
+        org.save()
+        profile = UserProfile.objects.get(user=user)
+        profile.organisations.add(org)
+        profile.save()
 
-    # user now contains a nice User object
+    # create or get its roles
+    for role in data['roles']:
+        try:
+            organisation = Organisation.objects.get(unique_id=role['organisation_unique_id'])
+            r = Role.objects.get(code=role['code'], 
+                                 organisation=organisation.id)
+        except Role.DoesNotExist:   
+            r = Role()            
+        r.code = role['code']
+        r.organisation = Organisation.objects.get(unique_id=role['organisation_unique_id'])
+        r.name = role['name']
+        r.external_description = role['external_description']
+        r.save()
+        profile.roles.add(r)
+        profile.save()
+
     return user
