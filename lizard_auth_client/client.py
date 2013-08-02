@@ -326,7 +326,7 @@ def construct_user(data):
         user = User()
 
     # copy simple properies like email and first name
-    for key in ['username', 'first_name', 'last_name', 'email', 'is_active', 'is_staff', 'is_superuser']:
+    for key in ['username', 'first_name', 'last_name', 'email']:
         setattr(user, key, data[key])
     # ensure user can't login
     user.set_unusable_password()
@@ -336,10 +336,9 @@ def construct_user(data):
     for organisation in data['organisations']:
         try:
             org = Organisation.objects.get(unique_id=organisation['unique_id'])
-            org.name = organisation['name']
         except Organisation.DoesNotExist:
-            org = Organisation(name=organisation['name'],
-                                        unique_id=organisation['unique_id'])
+            org = Organisation(unique_id=organisation['unique_id'])
+        org.name = organisation.get('name')
         org.save()
         profile = UserProfile.objects.get(user=user)
         profile.organisations.add(org)
