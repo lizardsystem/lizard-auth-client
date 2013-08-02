@@ -103,10 +103,10 @@ SSO_KEY = 'random_generated_key_to_identify_the_portal'
 SSO_SECRET = 'random_generated_secret_key_to_sign_exchanged_messages'
 # URL used to redirect the user to the SSO server
 # Note: needs a trailing slash
-SSO_SERVER_PUBLIC_URL = 'http://127.0.0.1:8001/'
+SSO_SERVER_PUBLIC_URL = 'http://dev.sso.lizard.net/'
 # URL used for server-to-server communication
 # Note: needs a trailing slash
-SSO_SERVER_PRIVATE_URL = 'http://127.0.0.1:8001/'
+SSO_SERVER_PRIVATE_URL = 'http://dev.sso.lizard.net:9874/'
 # Timeout for cached credentials with the SSOBackend Authentication Backend.
 SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS = 60
 
