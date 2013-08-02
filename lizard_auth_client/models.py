@@ -74,24 +74,24 @@ class UserProfile(models.Model):
     @property
     def has_role(self, role):
     	'''
-    	returns true if the user has the given role or False
+    	TODO: returns true if the user has the given role or False
     	'''
     	pass
 
-    # @property
-    # def roles(self):
-    # 	'''
-    # 	returns all the roles a user has
-    # 	'''
-    # 	pass
+    @property
+    def has_roles(self):
+    	'''
+    	TODO: returns all the roles a user has
+    	'''
+    	pass
 
     @property
     def in_organization(self, organization):
     	pass
 
-    # @property
-    # def organizations(self):
-    # 	pass
+    @property
+    def in_organizations(self):
+    	pass
     
 
 # have the creation of a User trigger the creation of a Profile
