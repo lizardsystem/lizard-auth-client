@@ -2,9 +2,7 @@ from django.http import HttpResponseRedirect
 from django.conf import settings
 from re import compile
 
-#EXEMPT_URLS = [compile(settings.LOGIN_URL.lstrip('/'))]
-#if hasattr(settings, 'LOGIN_EXEMPT_URLS'):
-#    EXEMPT_URLS += [compile(expr) for expr in settings.LOGIN_EXEMPT_URLS]
+EXEMPT_URLS = ['accounts/login/', 'sso/local_login/']
 
 class LoginRequiredMiddleware:
     """
@@ -25,6 +23,5 @@ class LoginRequiredMiddleware:
         'django.core.context_processors.auth'."
         if not request.user.is_authenticated():
             path = request.path_info.lstrip('/')
-            if path != 'accounts/login/' and path != 'sso/local_login/':
-                #import pdb; pdb.set_trace()
+            if path not in EXEMPT_URLS:
                 return HttpResponseRedirect(settings.LOGIN_URL)
