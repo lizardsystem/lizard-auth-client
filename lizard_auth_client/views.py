@@ -14,9 +14,9 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
 from django.http import (
     HttpResponseBadRequest,
-    HttpResponseRedirect,
-    HttpResponseRedirectBase
+    HttpResponseRedirect
 )
+from django.http.response import HttpResponseRedirectBase
 from django.utils import simplejson
 from django.http import HttpResponse
 from django.views.generic.base import View
