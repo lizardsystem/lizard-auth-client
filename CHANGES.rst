@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 0.7 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- We don't use UserProfile anymore, so it was deleted.
 
 
 0.6 (2013-08-30)
