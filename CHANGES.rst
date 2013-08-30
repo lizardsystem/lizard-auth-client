@@ -5,7 +5,9 @@ Changelog of lizard-auth-client
 0.6 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Added organisations and roles.
+- Removed permissions
+- Added middleware to log users in automatically
 
 
 0.5 (2013-03-24)

@@ -4,6 +4,8 @@ from urlparse import urljoin
 
 from itsdangerous import URLSafeTimedSerializer
 
+from lizard_auth_client import models
+
 
 class AutheticationFailed(Exception):
     pass
@@ -335,7 +337,8 @@ def construct_user(data):
         user = User()
 
     # copy simple properies like email and first name
-    for key in ['first_name', 'last_name', 'email']:
+    for key in ['first_name', 'last_name', 'email', 'is_active',
+                'is_staff', 'is_superuser']:
         setattr(user, key, data[key])
     user.username = local_username
 
@@ -343,25 +346,68 @@ def construct_user(data):
     user.set_unusable_password()
     user.save()
 
-    # copy permissions
-    ctype_cache = {}
-    permissions = []
-    for perm in data['permissions']:
-        ctype = ctype_cache.get(perm['codename'], None)
-        if not ctype:
-            try:
-                ctype = ContentType.objects.get_by_natural_key(
-                    perm['content_type'][0], perm['content_type'][1])
-            except ContentType.DoesNotExist:
-                continue
-            ctype_cache[perm['codename']] = ctype
-        try:
-            permission = Permission.objects.get(content_type=ctype,
-                                                codename=perm['codename'])
-        except Permission.DoesNotExist:
-            continue
-        permissions.append(permission)
-    user.user_permissions = permissions
+    # Note we don't set any permissions here -- not handled by SSO
+    # anymore.
 
     # user now contains a nice User object
     return user
+
+
+def synchronize_roles(user, received_role_data):
+    """Setup organizations and roles for this user based on information
+    received from the SSO server.
+
+    roles is a dictionary that has three keys:
+    'organisations': a list of dictionaries describing some organisations
+    'roles': a list of dictionaries describing some roles
+    'organisation_roles': a list of pairs [organisation, role] that describes
+                          which roles in which organisations this user has.
+
+    Only the relevant organisations and roles are sent, so if we already
+    have some role or organisation locally that isn't in the list, we should
+    keep it. However, if an organisation_role isn't present, then the user
+    doesn't have that role anymore, and we should remove it.
+
+    We assume the data's structure is correct if present, and will get
+    an internal server error if it's not."""
+
+    organisations = dict()
+    roles = dict()
+
+    for org_data in received_role_data['organisations']:
+        organisation, created = models.Organisation.objects.get_or_create(
+            unique_id=org_data['unique_id'])
+        if created or organisation.name != org_data['name']:
+            organisation.name = org_data['name']
+            organisation.save()
+        organisations[organisation.unique_id] = organisation
+
+    for role_data in received_role_data['roles']:
+        role, created = models.Role.objects.get_or_create(
+            unique_id=role_data['unique_id'])
+
+        changed = False
+        for field in (
+            'code', 'name', 'external_description', 'internal_description'):
+            if getattr(role, field) != role_data[field]:
+                setattr(role, field, role_data[field])
+                changed = True
+
+        if created or changed:
+            role.save()
+        roles[role.unique_id] = role
+
+    # Delete existing organisation roles
+    models.UserOrganisationRole.objects.filter(user=user).delete()
+
+    # Renew them
+    userorganisationroles = [
+        models.UserOrganisationRole(
+            user=user,
+            organisation=organisations[org_unique_id],
+            role=roles[role_unique_id])
+        for org_unique_id, role_unique_id
+        in received_role_data['organisation_roles']]
+    models.UserOrganisationRole.objects.bulk_create(
+        userorganisationroles)
+

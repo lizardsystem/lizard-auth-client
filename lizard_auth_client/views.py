@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from collections import namedtuple
 
+import logging
 import requests
 import urllib
 from urlparse import urljoin, urlparse
@@ -12,7 +13,7 @@ from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
-from django.http import (
+from django.http.response import (
     HttpResponseBadRequest,
     HttpResponseRedirect,
     HttpResponseRedirectBase
@@ -24,8 +25,9 @@ from django.utils.decorators import method_decorator
 
 from itsdangerous import URLSafeTimedSerializer
 
-from lizard_auth_client.client import construct_user
+from lizard_auth_client import client
 
+logger = logging.getLogger(__name__)
 
 # used so we can login User objects we instantiated ourselves
 BACKEND = ModelBackend()
@@ -269,7 +271,15 @@ def verify_auth_token(untrusted_message):
     data = URLSafeTimedSerializer(settings.SSO_SECRET).loads(
         response.content, max_age=300)
     user_data = simplejson.loads(data['user'])
-    return construct_user(user_data)
+
+    user = client.construct_user(user_data)
+
+    if 'roles' in data:
+        logger.debug("Received roles data: " + data['roles'])
+        role_data = simplejson.loads(data['roles'])
+        client.synchronize_roles(user, role_data)
+
+    return user
 
 
 def get_next(request):
@@ -297,7 +307,8 @@ def get_request_token_and_determine_response():
     When logging using via the REST API, the response is wrapped in JSON,
     because the redirection takes place in a client-side script.
     '''
-    WrappedResponse = namedtuple('WrappedResponse', 'http_response, message, redirect_url')
+    WrappedResponse = namedtuple(
+        'WrappedResponse', 'http_response, message, redirect_url')
 
     # get a request token, which is used by the SSO server to verify
     # that the user is allowed to make a login request
