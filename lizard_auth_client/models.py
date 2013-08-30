@@ -92,7 +92,7 @@ class UserProfile(models.Model):
     @property
     def in_organizations(self):
     	pass
-    
+
 
 # have the creation of a User trigger the creation of a Profile
 def create_user_profile(sender, instance, created, **kwargs):
@@ -103,22 +103,29 @@ post_save.connect(create_user_profile, sender=User)
 
 
 class Role(models.Model):
+    unique_id = models.CharField(max_length=32, unique=True)
     code = models.CharField(max_length=255, null=False, blank=False)
     name = models.CharField(max_length=255, null=False, blank=False)
     external_description = models.TextField()
     internal_description = models.TextField()
-    organisation = models.ForeignKey('Organisation')
-
-    class Meta:
-        unique_together = (('organisation', 'code'), )
 
     def __unicode__(self):
         return self.name
 
 
 class Organisation(models.Model):
-    name = models.CharField(max_length=255, null=False, blank=False, unique=True)
+    # Don't make Organisation name unique because data is only
+    # synchronized when someone in an organisation logs in -- we can't
+    # guarantee that names will stay unique that way.
+    name = models.CharField(max_length=255, null=False, blank=False)
     unique_id = models.CharField(max_length=32, unique=True)
 
     def __unicode__(self):
         return self.name
+
+
+class UserOrganisationRole(models.Model):
+    """Stores which roles in which organisations a user has."""
+    user = models.ForeignKey(User)
+    organisation = models.ForeignKey(Organisation)
+    role = models.ForeignKey(Role)
