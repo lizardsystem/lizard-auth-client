@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from collections import namedtuple
 
-import logging
 import requests
 import urllib
 from urlparse import urljoin, urlparse
@@ -26,8 +25,6 @@ from django.utils.decorators import method_decorator
 from itsdangerous import URLSafeTimedSerializer
 
 from lizard_auth_client import client
-
-logger = logging.getLogger(__name__)
 
 # used so we can login User objects we instantiated ourselves
 BACKEND = ModelBackend()
@@ -275,7 +272,6 @@ def verify_auth_token(untrusted_message):
     user = client.construct_user(user_data)
 
     if 'roles' in data:
-        logger.debug("Received roles data: " + data['roles'])
         role_data = simplejson.loads(data['roles'])
         client.synchronize_roles(user, role_data)
 
