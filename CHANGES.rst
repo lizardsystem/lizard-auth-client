@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-0.6 (unreleased)
+0.6 (2013-08-30)
 ----------------
 
 - Added organisations and roles.
