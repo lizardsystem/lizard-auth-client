@@ -32,3 +32,7 @@ class UserOrganisationRole(models.Model):
     user = models.ForeignKey(User)
     organisation = models.ForeignKey(Organisation)
     role = models.ForeignKey(Role)
+
+    def __unicode__(self):
+        return '%s %s %s' % (
+            str(self.user), str(self.organisation), str(self.role))
