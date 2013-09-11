@@ -160,11 +160,15 @@ class LocalLoginView(View):
         user.backend = "%s.%s" % (BACKEND.__module__,
                                   BACKEND.__class__.__name__)
         django_login(request, user)
-
+        print('request session key: %r' % request.session.session_key)
         # redirect the user to the stored "next" url, which is probably a
         # protected page
-        sso_after_login_next = request.session.get('sso_after_login_next', '/')
-        request.session.delete('sso_after_login_next')
+        if 'sso_after_login_next' in request.session:
+            sso_after_login_next = request.session['sso_after_login_next']
+            del request.session['sso_after_login_next']
+        else:
+            sso_after_login_next = '/'
+
         return HttpResponseRedirect(sso_after_login_next)
 
 
