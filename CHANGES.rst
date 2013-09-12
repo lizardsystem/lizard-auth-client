@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 0.8 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Added models to Admin.
 
 
 0.7 (2013-08-30)
