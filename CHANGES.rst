@@ -7,6 +7,8 @@ Changelog of lizard-auth-client
 
 - Fixed bug LocalLoginView delete session key.
 
+- Added models to Admin.
+
 
 0.7 (2013-08-30)
 ----------------
