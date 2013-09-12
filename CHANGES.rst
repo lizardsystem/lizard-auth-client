@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-0.8 (unreleased)
+0.8 (2013-09-12)
 ----------------
 
 - Fixed bug LocalLoginView delete session key.
