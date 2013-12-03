@@ -16,7 +16,6 @@ Include this app as a dependecy in setup.py::
 Configure the SSO settings as seen in ``testsettings.py``::
 
   # SSO
-  SSO_STANDALONE = False
   SSO_ENABLED = True
   # A key identifying this client. Can be published.
   SSO_KEY = 'random_generated_key_to_identify_the_client'
@@ -29,6 +28,10 @@ Configure the SSO settings as seen in ``testsettings.py``::
   # Note: needs a trailing slash
   SSO_SERVER_PRIVATE_URL = 'http://10.0.0.1:80/'
 
+Only for local testing of this very app do you need this additional setting::
+
+  SSO_STANDALONE = True
+
 Add the proper URLS to your urls.py. Because the app needs to override the login/logout URLS,
 import them in the root of your urlpatterns::
 
@@ -37,21 +40,28 @@ import them in the root of your urlpatterns::
       (r'^', include('lizard_auth_client.urls')),
   )
 
+There is an additional setting that you can use to limit the attributes that
+are copied from the SSO server. Normally ``is_staff`` and ``is_superuser`` is
+also copied, for instance. If you don't want that::
+
+    SSO_SYNCED_USER_KEYS = ['first_name', 'last_name', 'email', 'is_active']
+
+
 
 Custom authentication
------
+---------------------
 
 In a Django context, simple configure the app as above, and do::
 
   from lizard_auth_client import client as auth_client
   try:
-    user_data = auth_client.sso_authenticate_django('username', 'password')
+      user_data = auth_client.sso_authenticate_django('username', 'password')
   except auth_client.AutheticationFailed as ex:
-    return some_error_handler('Auth failed')
+      return some_error_handler('Auth failed')
   except auth_client.CommunicationError as ex:
-    return some_error_handler('Temporary comm error')
+      return some_error_handler('Temporary comm error')
   except:
-    return some_error_handler('Other error')
+      return some_error_handler('Other error')
 
 It should be usable without Django settings as well::
 
@@ -61,10 +71,10 @@ It should be usable without Django settings as well::
 Middleware
 ----------
 
-The middleware automaticaly logs in users when they are known at the server. And forces users to login at the server if they are not known. 
+The middleware automaticaly logs in users when they are known at the server. And forces users to login at the server if they are not known.
 
 To enable you need to add to your settings file at MIDDLEWARE_CLASSES:
-  
+
   'lizard_auth_client.middleware.LoginRequiredMiddleware',
 
 

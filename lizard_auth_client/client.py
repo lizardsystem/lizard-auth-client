@@ -340,8 +340,11 @@ def construct_user(data):
         user = User()
 
     # copy simple properies like email and first name
-    for key in ['first_name', 'last_name', 'email', 'is_active',
-                'is_staff', 'is_superuser']:
+    from django.conf import settings  # Yes, local import
+    keys = getattr(settings, 'SSO_SYNCED_USER_KEYS',
+                   ['first_name', 'last_name', 'email', 'is_active',
+                    'is_staff', 'is_superuser'])
+    for key in keys:
         setattr(user, key, data[key])
     user.username = local_username
 

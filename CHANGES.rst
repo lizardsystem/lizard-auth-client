@@ -5,7 +5,8 @@ Changelog of lizard-auth-client
 0.9 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Added optional ``SSO_SYNC_USER_KEYS`` setting. Use it for instance to
+  prevent syncing of the ``is_superuser`` and ``is_staff`` user attributes.
 
 
 0.8 (2013-09-12)
