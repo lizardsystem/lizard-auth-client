@@ -1,6 +1,9 @@
 import requests
 import json
-from urlparse import urljoin
+try:
+    from urlparse import urljoin
+except ImportError:
+    from urllib.parse import urljoin
 
 from itsdangerous import URLSafeTimedSerializer
 
@@ -410,4 +413,3 @@ def synchronize_roles(user, received_role_data):
         in received_role_data['organisation_roles']]
     models.UserOrganisationRole.objects.bulk_create(
         userorganisationroles)
-
