@@ -8,6 +8,8 @@ Changelog of lizard-auth-client
 - Added optional ``SSO_SYNC_USER_KEYS`` setting. Use it for instance to
   prevent syncing of the ``is_superuser`` and ``is_staff`` user attributes.
 
+- Added python 3 and django 1.6 support.
+
 
 0.8 (2013-09-12)
 ----------------
