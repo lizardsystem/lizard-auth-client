@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-0.9 (unreleased)
+0.9 (2013-12-04)
 ----------------
 
 - Added optional ``SSO_SYNC_USER_KEYS`` setting. Use it for instance to
