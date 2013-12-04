@@ -5,7 +5,10 @@ from collections import namedtuple
 
 import requests
 import urllib
-from urlparse import urljoin, urlparse
+try:
+    from urlparse import urljoin, urlparse, urlencode
+except ImportError:
+    from urllib.parse import urljoin, urlparse, urlencode
 
 from django.conf import settings
 from django.contrib.auth import login as django_login
@@ -323,7 +326,7 @@ def get_request_token_and_determine_response():
         'key': settings.SSO_KEY
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
-    query_string = urllib.urlencode([('message', message),
+    query_string = urlencode([('message', message),
                                      ('key', settings.SSO_KEY)])
     # build an absolute URL pointing to the SSO server out of it
     url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/authorize') + '/'

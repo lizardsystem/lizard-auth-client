@@ -1,6 +1,9 @@
 import requests
 import json
-from urlparse import urljoin
+try:
+    from urlparse import urljoin
+except ImportError:
+    from urllib.parse import urljoin
 
 from itsdangerous import URLSafeTimedSerializer
 
@@ -336,9 +339,13 @@ def construct_user(data):
     except User.DoesNotExist:
         user = User()
 
+    # import here so this module can easily be reused outside of Django
+    from django.conf import settings
     # copy simple properies like email and first name
-    for key in ['first_name', 'last_name', 'email', 'is_active',
-                'is_staff', 'is_superuser']:
+    keys = getattr(settings, 'SSO_SYNCED_USER_KEYS',
+                   ['first_name', 'last_name', 'email', 'is_active',
+                    'is_staff', 'is_superuser'])
+    for key in keys:
         setattr(user, key, data[key])
     user.username = local_username
 
@@ -410,4 +417,3 @@ def synchronize_roles(user, received_role_data):
         in received_role_data['organisation_roles']]
     models.UserOrganisationRole.objects.bulk_create(
         userorganisationroles)
-
