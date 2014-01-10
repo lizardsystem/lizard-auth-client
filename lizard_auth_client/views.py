@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from collections import namedtuple
 
 import requests
-import urllib
 try:
     from urlparse import urljoin, urlparse, urlencode
 except ImportError:
@@ -348,7 +347,7 @@ def build_sso_portal_action_url(action):
         'key': settings.SSO_KEY
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
-    query_string = urllib.urlencode([('message', message),
+    query_string = urlencode([('message', message),
                                      ('key', settings.SSO_KEY)])
     url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/portal_action') + '/'
     url = '%s?%s' % (url, query_string)
