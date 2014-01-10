@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from collections import namedtuple
 
 import requests
-import urllib
 try:
     from urlparse import urljoin, urlparse, urlencode
 except ImportError:

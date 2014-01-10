@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 import os
-import tempfile
 
 
 SETTINGS_DIR = os.path.dirname(os.path.realpath(__file__))

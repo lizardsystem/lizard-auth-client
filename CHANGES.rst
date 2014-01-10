@@ -5,7 +5,8 @@ Changelog of lizard-auth-client
 0.10 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Fixed a missing urllib import (for python 3) that I fixed in other places
+  already.
 
 
 0.9 (2013-12-04)
