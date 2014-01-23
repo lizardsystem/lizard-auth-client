@@ -1,6 +1,3 @@
-from re import compile
-from bisect import bisect_left
-
 from django.http import HttpResponseRedirect
 from django.conf import settings
 
