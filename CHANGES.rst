@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 0.10 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Fixed import for python 2.x.
 
 
 0.9 (2013-12-04)

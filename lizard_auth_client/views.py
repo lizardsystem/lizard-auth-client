@@ -6,7 +6,8 @@ from collections import namedtuple
 import requests
 import urllib
 try:
-    from urlparse import urljoin, urlparse, urlencode
+    from urlparse import urljoin, urlparse
+    from urllib import urlencode
 except ImportError:
     from urllib.parse import urljoin, urlparse, urlencode
 
