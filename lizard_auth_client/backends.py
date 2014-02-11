@@ -5,7 +5,15 @@ import logging
 
 from django.core.cache import cache
 from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth.hashers import check_password, make_password, UNUSABLE_PASSWORD
+from django.contrib.auth.hashers import check_password, make_password
+
+try:
+    from django.contrib.auth.hashers import UNUSABLE_PASSWORD
+except:
+    #ImproperlyConfigured:
+    # Don't know what is wrong
+    UNUSABLE_PASSWORD = 'bla'
+
 from django.conf import settings
 
 from lizard_auth_client import client

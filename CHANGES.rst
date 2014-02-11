@@ -5,6 +5,8 @@ Changelog of lizard-auth-client
 0.11 (unreleased)
 -----------------
 
+- Fixed import error UNUSABLE_PASSWORD in Django 1.6.
+
 - Fixed import for python 2.x.
 
 
