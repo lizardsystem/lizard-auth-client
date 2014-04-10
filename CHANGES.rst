@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-0.12 (unreleased)
+0.12 (2014-04-10)
 -----------------
 
 - Fix imports of HttpRedirect classes because their location changed
