@@ -1,7 +1,7 @@
 Changelog of lizard-auth-client
 ===================================================
 
-0.5.2 (unreleased)
+0.5.2 (2014-04-10)
 ------------------
 
 - Nothing changed yet.
