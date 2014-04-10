@@ -235,6 +235,35 @@ def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
     raise UserNotFound(data['error'])
 
 
+def sso_get_users(sso_server_private_url, sso_key, sso_secret):
+    '''
+    Returns a list of dicts containing user data for the portal in question.
+    Example keys are 'first_name', 'pk', 'last_name', 'organisation', etc.
+
+    Raises :class:`HTTPError` or :class:`URLError`
+    or :class:`CommunicationError`, if one occurred.
+    '''
+    try:
+        data = _do_post(
+            sso_server_private_url,
+            'api/get_users',
+            sso_key,
+            sso_secret
+        )
+    except Exception as ex:
+        raise CommunicationError(ex)
+
+    # validate response a bit
+    if not 'success' in data:
+        raise CommunicationError('got an OK result, but with unknown content')
+
+    # either return the users as a list of dicts,
+    # or raise an UserNotFound exception
+    if data['success'] is True:
+        return data['users']
+    raise UserNotFound(data['error'])
+
+
 def sso_get_user_django(username):
     '''
     Same as sso_get_user(), but uses the Django settings module to import
@@ -249,6 +278,22 @@ def sso_get_user_django(username):
         settings.SSO_KEY,
         settings.SSO_SECRET,
         username
+    )
+
+
+def sso_get_users_django():
+    '''
+    Same as sso_get_users(), but uses the Django settings module to import
+    the URL base and encryption keys.
+    '''
+    # import here so this module can easily be reused outside of Django
+    from django.conf import settings
+
+    # call with django setting for SSO url
+    return sso_get_users(
+        settings.SSO_SERVER_PRIVATE_URL,
+        settings.SSO_KEY,
+        settings.SSO_SECRET
     )
 
 
