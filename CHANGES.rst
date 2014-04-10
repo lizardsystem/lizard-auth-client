@@ -1,6 +1,13 @@
 Changelog of lizard-auth-client
 ===================================================
 
+0.5.1 (2014-04-10)
+------------------
+
+- Fixed imports of various HttpResponseRedirect classes, because
+  they are different between Django 1.4 and 1.5. The new version
+  works with both.
+
 
 0.5 (2013-03-24)
 ----------------
