@@ -14,8 +14,8 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
 from django.http import (
     HttpResponseBadRequest,
+    HttpResponsePermanentRedirect,
     HttpResponseRedirect,
-    HttpResponseRedirectBase
 )
 from django.utils import simplejson
 from django.http import HttpResponse
@@ -84,8 +84,15 @@ class LoginApiView(View):
         # Get the login url with the token
         wrapped_response = get_request_token_and_determine_response()
 
-        if issubclass(wrapped_response.http_response,
-                      HttpResponseRedirectBase):
+        # This check could be done by checking if http_response is a
+        # subclass of HttpResponseRedirectBase, but that class is
+        # undocumented and has moved to another module between Django
+        # 1.4 and 1.5, so don't do that.
+        if issubclass(
+            wrapped_response.http_response, HttpResponseRedirect
+            ) or issubclass(
+            wrapped_response.http_response, HttpResponsePermanentRedirect):
+
             # The response is a redirect (302) to the SSO server.
             # Wrap it in a normal HttpResponse, and have client-side code
             # handle the actual redirect.
