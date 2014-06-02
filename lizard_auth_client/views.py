@@ -90,10 +90,9 @@ class LoginApiView(View):
         # subclass of HttpResponseRedirectBase, but that class is
         # undocumented and has moved to another module between Django
         # 1.4 and 1.5, so don't do that.
-        if issubclass(
-            wrapped_response.http_response, HttpResponseRedirect
-            ) or issubclass(
-            wrapped_response.http_response, HttpResponsePermanentRedirect):
+        if (issubclass(wrapped_response.http_response, HttpResponseRedirect) or
+                issubclass(wrapped_response.http_response,
+                           HttpResponsePermanentRedirect)):
             # The response is a redirect (302) to the SSO server.
             # Wrap it in a normal HttpResponse, and have client-side code
             # handle the actual redirect.
@@ -142,8 +141,9 @@ class LoginView(View):
 
         wrapped_response = get_request_token_and_determine_response()
 
-        if issubclass(wrapped_response.http_response,
-                      HttpResponseRedirectBase):
+        if (issubclass(wrapped_response.http_response, HttpResponseRedirect) or
+            issubclass(wrapped_response.http_response,
+                       HttpResponsePermanentRedirect)):
             return wrapped_response.http_response(
                 wrapped_response.redirect_url
             )
@@ -323,7 +323,8 @@ def get_request_token_and_determine_response():
     request_token = get_request_token()
     if not request_token:
         # Status code 503 service (sso server) unavailable
-        return WrappedResponse(HttpResponseServiceUnavailable, 'Unable to obtain token', None)
+        return WrappedResponse(HttpResponseServiceUnavailable,
+                               'Unable to obtain token', None)
 
     # construct a (signed) set of GET parameters which are used to
     # redirect the user to the SSO server
@@ -333,7 +334,7 @@ def get_request_token_and_determine_response():
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
-                                     ('key', settings.SSO_KEY)])
+                              ('key', settings.SSO_KEY)])
     # build an absolute URL pointing to the SSO server out of it
     url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/authorize') + '/'
     url = '%s?%s' % (url, query_string)
@@ -355,7 +356,7 @@ def build_sso_portal_action_url(action):
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
-                                     ('key', settings.SSO_KEY)])
+                              ('key', settings.SSO_KEY)])
     url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/portal_action') + '/'
     url = '%s?%s' % (url, query_string)
     return url
