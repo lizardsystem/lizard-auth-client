@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 0.13 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Fixed HttpResponseRedirectBase import error.
 
 
 0.12 (2014-04-10)
