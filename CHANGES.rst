@@ -5,7 +5,13 @@ Changelog of lizard-auth-client
 0.14 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Using ``get_user_model()`` and ``settings.AUTH_USER_MODEL`` where applicable
+  to get the user model instead of just using the hardcoded default django
+  ``User``. See
+  https://docs.djangoproject.com/en/1.6/topics/auth/customizing/#referencing-the-user-model
+  . With a try/except and hasattr to keep it working on django 1.4.
+
+  Without this, lizard-auth-client doesn't work on our Sentry installation.
 
 
 0.13 (2014-06-06)
