@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.db import models
 
 
 class Role(models.Model):
@@ -29,7 +30,10 @@ class Organisation(models.Model):
 
 class UserOrganisationRole(models.Model):
     """Stores which roles in which organisations a user has."""
-    user = models.ForeignKey(User)
+    if hasattr(settings, 'AUTH_USER_MODEL'):
+        user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    else:
+        user = models.ForeignKey(User)
     organisation = models.ForeignKey(Organisation)
     role = models.ForeignKey(Role)
 
