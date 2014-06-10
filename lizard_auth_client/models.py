@@ -30,11 +30,8 @@ class Organisation(models.Model):
 
 class UserOrganisationRole(models.Model):
     """Stores which roles in which organisations a user has."""
-    if hasattr(settings, 'AUTH_USER_MODEL'):
-        user = models.ForeignKey(settings.AUTH_USER_MODEL)
-    else:
-        user = models.ForeignKey(User)
-    organisation = models.ForeignKey(Organisation)
+    user_model = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
+    organisation = models.ForeignKey(user_model)
     role = models.ForeignKey(Role)
 
     def __unicode__(self):
