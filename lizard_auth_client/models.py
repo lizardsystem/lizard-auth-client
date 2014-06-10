@@ -31,7 +31,8 @@ class Organisation(models.Model):
 class UserOrganisationRole(models.Model):
     """Stores which roles in which organisations a user has."""
     user_model = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
-    organisation = models.ForeignKey(user_model)
+    user = models.ForeignKey(user_model)
+    organisation = models.ForeignKey(Organisation)
     role = models.ForeignKey(Role)
 
     def __unicode__(self):
