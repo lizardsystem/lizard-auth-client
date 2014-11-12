@@ -321,7 +321,12 @@ def construct_user(data):
     Django User instance.
     '''
     # import here so this module can easily be reused outside of Django
-    from django.contrib.auth.models import User
+    try:
+        from django.contrib.auth import get_user_model
+        # django 1.5+ custom user model.
+        User = get_user_model()
+    except ImportError:
+        from django.contrib.auth.models import User
 
     # disabled for now
     # use the Primary Key of the User on the SSO server to

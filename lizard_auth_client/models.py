@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import User
 
 
 class Role(models.Model):
@@ -29,7 +29,8 @@ class Organisation(models.Model):
 
 class UserOrganisationRole(models.Model):
     """Stores which roles in which organisations a user has."""
-    user = models.ForeignKey(User)
+    user_model = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
+    user = models.ForeignKey(user_model)
     organisation = models.ForeignKey(Organisation)
     role = models.ForeignKey(Role)
 
