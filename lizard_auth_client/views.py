@@ -15,7 +15,7 @@ from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
-from django.http.response import (
+from django.http import (
     HttpResponseBadRequest,
     HttpResponseRedirect,
     HttpResponsePermanentRedirect,
