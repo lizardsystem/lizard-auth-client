@@ -17,6 +17,7 @@ if not hasattr(settings, 'SSO_ENABLED'):
 else:
     sso_enabled = settings.SSO_ENABLED
 
+
 def check_settings():
     '''
     Ensure settings are valid, as this Django app is mostly included by
@@ -55,7 +56,9 @@ if sso_enabled:
         url(r'^accounts/logout/$',
             views.LogoutView.as_view(),
             name='lizard_auth_client.sso_logout'),
-        # Named aliases of the above URLs, for compatibility with other Django apps
+
+        # Named aliases of the above URLs, for compatibility with
+        # other Django apps
         url(r'^accounts/login/$',
             views.LoginView.as_view(),
             name='login'),

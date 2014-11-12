@@ -399,7 +399,8 @@ def synchronize_roles(user, received_role_data):
 
         changed = False
         for field in (
-            'code', 'name', 'external_description', 'internal_description'):
+                'code', 'name', 'external_description',
+                'internal_description'):
             if getattr(role, field) != role_data[field]:
                 setattr(role, field, role_data[field])
                 changed = True
