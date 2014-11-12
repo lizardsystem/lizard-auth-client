@@ -14,6 +14,7 @@ install_requires = [
     'django-nose',
     'requests',
     'itsdangerous',
+    'south',
     ],
 
 tests_require = [
