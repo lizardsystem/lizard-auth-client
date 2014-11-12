@@ -15,6 +15,7 @@ install_requires = [
     'requests',
     'itsdangerous',
     'south',
+    'mock',
     ],
 
 tests_require = [
