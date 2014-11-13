@@ -52,13 +52,10 @@ def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
     }
 
     # determine headers and destination URL
-    headers = {
-        'content-type': 'application/json'
-    }
     url = urljoin(sso_server_private_url, sso_server_path) + '/'
 
     # do the posts usings the rather nice 'requests' library
-    r = requests.post(url, data=post_data, headers=headers, timeout=10)
+    r = requests.post(url, data=post_data, timeout=10)
     if r.status_code == requests.codes.ok:
         result = json.loads(r.text)
         if isinstance(result, dict):
@@ -87,13 +84,10 @@ def _do_post_unsigned(sso_server_private_url, sso_server_path, sso_key,
     post_data.update(**params)
 
     # determine headers and destination URL
-    headers = {
-        'content-type': 'application/json'
-    }
     url = urljoin(sso_server_private_url, sso_server_path) + '/'
 
     # do the posts usings the rather nice 'requests' library
-    r = requests.post(url, data=post_data, headers=headers, timeout=10)
+    r = requests.post(url, data=post_data, timeout=10)
     if r.status_code == requests.codes.ok:
         result = json.loads(r.text)
         if isinstance(result, dict):
