@@ -51,7 +51,7 @@ class TestClient(TestCase):
                 'error': 'Wrong password'}):
             def wrong_pw():
                 return client.sso_authenticate_django('root', 'wrong_password')
-            self.assertRaises(client.AutheticationFailed, wrong_pw)
+            self.assertRaises(client.AuthenticationFailed, wrong_pw)
 
     def test_bad_url(self):
         from lizard_auth_client import client

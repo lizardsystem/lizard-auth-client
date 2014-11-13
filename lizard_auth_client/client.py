@@ -10,7 +10,8 @@ from itsdangerous import URLSafeTimedSerializer
 from lizard_auth_client import models
 
 
-class AutheticationFailed(Exception):
+
+class AuthenticationFailed(Exception):
     pass
 
 
@@ -111,7 +112,7 @@ def sso_authenticate_unsigned(sso_server_private_url, sso_key, username,
     Returns a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
 
-    Raises :class:`AutheticationFailed`, if the username / password
+    Raises :class:`AuthenticationFailed`, if the username / password
     combination is incorrect.
 
     Raises :class:`HTTPError` or :class:`URLError`
@@ -135,7 +136,7 @@ def sso_authenticate_unsigned(sso_server_private_url, sso_key, username,
     # either return the user instance as dict, or raise an authentication error
     if data['success'] is True:
         return data['user']
-    raise AutheticationFailed(data['error'])
+    raise AuthenticationFailed(data['error'])
 
 
 def sso_authenticate_unsigned_django(username, password):
@@ -186,7 +187,7 @@ def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username,
     # either return the user instance as dict, or raise an authentication error
     if data['success'] is True:
         return data['user']
-    raise AutheticationFailed(data['error'])
+    raise AuthenticationFailed(data['error'])
 
 
 def sso_authenticate_django(username, password):
