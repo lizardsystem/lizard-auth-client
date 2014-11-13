@@ -10,7 +10,6 @@ from itsdangerous import URLSafeTimedSerializer
 from lizard_auth_client import models
 
 
-
 class AuthenticationFailed(Exception):
     pass
 
@@ -417,3 +416,67 @@ def synchronize_roles(user, received_role_data):
         in received_role_data['organisation_roles']]
     models.UserOrganisationRole.objects.bulk_create(
         userorganisationroles)
+
+
+def sso_get_organisations(sso_server_private_url, sso_key, sso_secret):
+    '''
+    Returns a list of dicts containing organisation data for
+    the portal in question.
+    Keys are 'unique_id' and 'name'.
+
+    Raises :class:`HTTPError` or :class:`URLError`
+    or :class:`CommunicationError`, if one occurred.
+    '''
+    try:
+        data = _do_post(
+            sso_server_private_url,
+            'api/get_organisations',
+            sso_key,
+            sso_secret
+        )
+    except Exception as ex:
+        raise CommunicationError(ex)
+
+    # validate response a bit
+    if not 'success' in data:
+        raise CommunicationError('got an OK result, but with unknown content')
+
+    return data['organisations']
+
+
+def sso_get_organisations_django():
+    '''
+    Same as sso_get_organisations(), but uses the Django settings
+    module to import the URL base and encryption keys.
+    '''
+    # import here so this module can easily be reused outside of Django
+    from django.conf import settings
+
+    # call with django setting for SSO url
+    return sso_get_organisations(
+        settings.SSO_SERVER_PRIVATE_URL,
+        settings.SSO_KEY,
+        settings.SSO_SECRET
+    )
+
+
+def synchronize_organisations():
+    '''
+    Call sso_get_organisations_django() and sync the organisation
+    data based on the result.
+
+    Do nothing in case of CommunicationError.
+    '''
+
+    try:
+        organisations = sso_get_organisations_django()
+    except CommunicationError:
+        # Shame.
+        return
+
+    for organisation in organisations:
+        org_instance, created = models.Organisation.objects.get_or_create(
+            unique_id=organisation['unique_id'])
+        if created or org_instance.name != organisation['name']:
+            org_instance.name = organisation['name']
+            org_instance.save()
