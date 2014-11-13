@@ -9,11 +9,13 @@ long_description = '\n\n'.join([
     ])
 
 install_requires = [
-    'Django',
+    'Django >= 1.4, < 1.7',
     'django-extensions',
     'django-nose',
     'requests',
     'itsdangerous',
+    'south',
+    'mock',
     ],
 
 tests_require = [
@@ -28,8 +30,8 @@ setup(name='lizard-auth-client',
                    'Framework :: Django',
                    ],
       keywords=[],
-      author='Erik-Jan Vos',
-      author_email='erikjan.vos@nelen-schuurmans.nl',
+      author='Erik-Jan Vos, Remco Gerlich',
+      author_email='remco.gerlich@nelen-schuurmans.nl',
       url='http://www.nelen-schuurmans.nl/',
       license='MIT',
       packages=['lizard_auth_client'],

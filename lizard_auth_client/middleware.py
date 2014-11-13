@@ -31,13 +31,14 @@ for key in exempt_urls_from_settings:
             exempt_urls.append(url)
 
 # strip slashes on both sides
-exempt_urls = [url.strip('/') for url in exempt_urls]
+exempt_urls = [exempt_url.strip('/') for exempt_url in exempt_urls]
 
 # strip whitespace
-exempt_urls = [url.strip() for url in exempt_urls]
+exempt_urls = [exempt_url.strip() for exempt_url in exempt_urls]
 
 # strip out empty urls
-exempt_urls = [url for url in exempt_urls if url]
+exempt_urls = [exempt_url for exempt_url in exempt_urls if url]
+
 
 class LoginRequiredMiddleware(object):
     """
@@ -51,9 +52,9 @@ class LoginRequiredMiddleware(object):
         assert hasattr(request, 'user'), '''The Login Required middleware
         requires authentication middleware to be installed. Edit your
         MIDDLEWARE_CLASSES setting to insert
-        'django.contrib.auth.middlware.AuthenticationMiddleware'. If that doesn't
-        work, ensure your TEMPLATE_CONTEXT_PROCESSORS setting includes
-        'django.core.context_processors.auth'.'''
+        'django.contrib.auth.middlware.AuthenticationMiddleware'.
+        If that doesn't work, ensure your TEMPLATE_CONTEXT_PROCESSORS
+        setting includes 'django.core.context_processors.auth'.'''
 
         if not request.user.is_authenticated():
             path = request.path_info.strip('/')

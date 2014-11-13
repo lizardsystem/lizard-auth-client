@@ -20,7 +20,9 @@ from lizard_auth_client import client
 
 logger = logging.getLogger(__name__)
 
-SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS = getattr(settings, 'SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS', 60)
+SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS = getattr(
+    settings, 'SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS', 60)
+
 
 class SSOBackend(ModelBackend):
     """
@@ -40,24 +42,34 @@ class SSOBackend(ModelBackend):
                 # Try getting the user_data from cache first.
                 cached_credentials = cache.get(cache_key)
                 if cached_credentials is not None:
-                    logger.debug('Found user "%s" in the credential cache.', username)
+                    logger.debug(
+                        'Found user "%s" in the credential cache.', username)
                     # Found in cache, check the (hashed) password.
-                    cached_user_data, cached_hashed_password = cached_credentials
+                    (cached_user_data,
+                     cached_hashed_password) = cached_credentials
                     if check_password(password, cached_hashed_password):
                         logger.debug('Cached hashed password is OK.')
                         user_data = cached_user_data
                     else:
-                        logger.debug('Failed cached password check for user "%s".', username)
+                        logger.debug(
+                            'Failed cached password check for user "%s".',
+                            username)
                 else:
-                    logger.debug('Could not find user "%s" in the credential cache.', username)
+                    logger.debug(
+                        'Could not find user "%s" in the credential cache.',
+                        username)
                     # Not found in cache, call the SSO server.
-                    user_data = client.sso_authenticate_django(username, password)
+                    user_data = client.sso_authenticate_django(
+                        username, password)
                     # Store user_data in cache.
                     hashed_password = make_password(password)
                     if hashed_password is UNUSABLE_PASSWORD:
                         return None
                     else:
-                        cache.set(cache_key, (user_data, hashed_password), SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS)
+                        cache.set(
+                            cache_key,
+                            (user_data, hashed_password),
+                            SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS)
                 # Use either the cached user profile data, or fresh data from
                 # the SSO server to construct a Django User instance.
                 if user_data:

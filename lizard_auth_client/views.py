@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from collections import namedtuple
+import json
 
 import requests
 try:
@@ -15,12 +16,11 @@ from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
-from django.http.response import (
+from django.http import (
     HttpResponseBadRequest,
     HttpResponseRedirect,
     HttpResponsePermanentRedirect,
 )
-from django.utils import simplejson
 from django.http import HttpResponse
 from django.views.generic.base import View
 from django.utils.decorators import method_decorator
@@ -105,7 +105,7 @@ class LoginApiView(View):
             response_class = wrapped_response.http_response
             content_dict = {'message': wrapped_response.message}
 
-        content = simplejson.dumps(content_dict)
+        content = json.dumps(content_dict)
         return response_class(content=content, content_type='application/json')
 
 
@@ -123,7 +123,7 @@ class LogoutApiView(View):
         # Simple wrap the logout url in a JSON dict
         logout_url = build_sso_portal_action_url('logout')
         content_dict = {'logout_url': logout_url}
-        content = simplejson.dumps(content_dict)
+        content = json.dumps(content_dict)
         return HttpResponse(content=content, content_type='application/json')
 
 
@@ -279,12 +279,12 @@ def verify_auth_token(untrusted_message):
     # build a User object from the message
     data = URLSafeTimedSerializer(settings.SSO_SECRET).loads(
         response.content, max_age=300)
-    user_data = simplejson.loads(data['user'])
+    user_data = json.loads(data['user'])
 
     user = client.construct_user(user_data)
 
     if 'roles' in data:
-        role_data = simplejson.loads(data['roles'])
+        role_data = json.loads(data['roles'])
         client.synchronize_roles(user, role_data)
 
     return user

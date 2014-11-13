@@ -66,7 +66,7 @@ DATABASES = {
     # that as an error.
     'default': {
         'NAME': os.path.join(BUILDOUT_DIR, 'var', 'sqlite', 'test.db'),
-        'ENGINE': 'django.contrib.gis.db.backends.spatialite',
+        'ENGINE': 'django.db.backends.sqlite3',
         # If you want to use postgres, use the two lines below.
         # 'NAME': 'lizard_auth_client',
         # 'ENGINE': 'django.contrib.gis.db.backends.postgis',
@@ -147,13 +147,12 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.gis',
-    'django.contrib.markup',
     'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.staticfiles',
     'django_extensions',
+    'south',
 )
 
 CACHES = {
