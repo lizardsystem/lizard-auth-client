@@ -461,22 +461,35 @@ def sso_get_organisations_django():
 
 
 def synchronize_organisations():
-    '''
-    Call sso_get_organisations_django() and sync the organisation
+    '''Call sso_get_organisations_django() and sync the organisation
     data based on the result.
 
     Do nothing in case of CommunicationError.
+
+    Returns a two-tuple with the numbers of new and updated
+    organisations.
+
     '''
 
     try:
         organisations = sso_get_organisations_django()
     except CommunicationError:
         # Shame.
-        return
+        return (0, 0)
+
+    new_orgs = 0
+    updated_orgs = 0
 
     for organisation in organisations:
         org_instance, created = models.Organisation.objects.get_or_create(
             unique_id=organisation['unique_id'])
         if created or org_instance.name != organisation['name']:
+            if created:
+                new_orgs += 1
+            else:
+                updated_orgs += 1
+
             org_instance.name = organisation['name']
             org_instance.save()
+
+    return (new_orgs, updated_orgs)
