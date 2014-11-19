@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-0.14 (unreleased)
+0.14 (2014-11-19)
 -----------------
 
 - Using ``get_user_model()`` and ``settings.AUTH_USER_MODEL`` where applicable
