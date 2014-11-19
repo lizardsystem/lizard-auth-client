@@ -1,5 +1,10 @@
+import logging
 import requests
 import json
+
+logger = logging.getLogger(__name__)
+
+
 try:
     from urlparse import urljoin
 except ImportError:
@@ -10,7 +15,7 @@ from itsdangerous import URLSafeTimedSerializer
 from lizard_auth_client import models
 
 
-class AutheticationFailed(Exception):
+class AuthenticationFailed(Exception):
     pass
 
 
@@ -25,10 +30,10 @@ class UserNotFound(Exception):
 def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
              **params):
     '''
-    Posts the specified username and password combination to the
+    Post the specified username and password combination to the
     authentication API listening on sso_server_private_url.
 
-    Returns the response of the service as a dict.
+    Return the response of the service as a dict.
 
     Raises :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
@@ -51,31 +56,31 @@ def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
     }
 
     # determine headers and destination URL
-    headers = {
-        'content-type': 'application/json'
-    }
     url = urljoin(sso_server_private_url, sso_server_path) + '/'
 
     # do the posts usings the rather nice 'requests' library
-    r = requests.post(url, data=post_data, headers=headers, timeout=10)
+    r = requests.post(url, data=post_data, timeout=10)
     if r.status_code == requests.codes.ok:
         result = json.loads(r.text)
         if isinstance(result, dict):
+            logger.debug("Data received in _do_post: {}".format(result))
             return result
+        logger.exception(
+            "Did not recieve a dict / associative array as response.")
         raise CommunicationError(
-            'did not recieve a dict / associative array as response')
+            'Did not recieve a dict / associative array as response.')
     r.raise_for_status()
 
 
 def _do_post_unsigned(sso_server_private_url, sso_server_path, sso_key,
                       **params):
     '''
-    Posts the specified username and password combination to the
+    Post the specified username and password combination to the
     authentication API listening on sso_server_private_url.
 
-    Returns the response of the service as a dict.
+    Return the response of the service as a dict.
 
-    Raises :class:`HTTPError` or :class:`URLError`
+    Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
 
@@ -86,20 +91,21 @@ def _do_post_unsigned(sso_server_private_url, sso_server_path, sso_key,
     post_data.update(**params)
 
     # determine headers and destination URL
-    headers = {
-        'content-type': 'application/json'
-    }
     url = urljoin(sso_server_private_url, sso_server_path) + '/'
 
     # do the posts usings the rather nice 'requests' library
-    r = requests.post(url, data=post_data, headers=headers, timeout=10)
+    r = requests.post(url, data=post_data, timeout=10)
     if r.status_code == requests.codes.ok:
         result = json.loads(r.text)
         if isinstance(result, dict):
+            logger.debug(
+                "Data received in _do_post_unsigned: {}".format(result))
             return result
         else:
+            logger.exception(
+                "Did not recieve a dict / associative array as response.")
             raise CommunicationError(
-                'did not recieve a dict / associative array as response'
+                'Did not recieve a dict / associative array as response.'
             )
     else:
         r.raise_for_status()
@@ -108,13 +114,13 @@ def _do_post_unsigned(sso_server_private_url, sso_server_path, sso_key,
 def sso_authenticate_unsigned(sso_server_private_url, sso_key, username,
                               password):
     '''
-    Returns a dict containing user data, if authentication succeeds. Example
+    Return a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
 
-    Raises :class:`AutheticationFailed`, if the username / password
+    Raise :class:`AuthenticationFailed`, if the username / password
     combination is incorrect.
 
-    Raises :class:`HTTPError` or :class:`URLError`
+    Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
     try:
@@ -135,7 +141,7 @@ def sso_authenticate_unsigned(sso_server_private_url, sso_key, username,
     # either return the user instance as dict, or raise an authentication error
     if data['success'] is True:
         return data['user']
-    raise AutheticationFailed(data['error'])
+    raise AuthenticationFailed(data['error'])
 
 
 def sso_authenticate_unsigned_django(username, password):
@@ -158,13 +164,13 @@ def sso_authenticate_unsigned_django(username, password):
 def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username,
                      password):
     '''
-    Returns a dict containing user data, if authentication succeeds. Example
+    Return a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
 
-    Raises :class:`AutheticationFailed`, if the username / password
+    Raise :class:`AutheticationFailed`, if the username / password
     combination is incorrect.
 
-    Raises :class:`HTTPError` or :class:`URLError`
+    Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
     try:
@@ -177,6 +183,7 @@ def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username,
             password=password
         )
     except Exception as ex:
+        logger.exception("Exception occurred in _do_post: {}".format(ex))
         raise CommunicationError(ex)
 
     # validate response a bit
@@ -186,7 +193,7 @@ def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username,
     # either return the user instance as dict, or raise an authentication error
     if data['success'] is True:
         return data['user']
-    raise AutheticationFailed(data['error'])
+    raise AuthenticationFailed(data['error'])
 
 
 def sso_authenticate_django(username, password):
@@ -209,13 +216,13 @@ def sso_authenticate_django(username, password):
 
 def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
     '''
-    Returns a dict containing user data, if the username is found on the
+    Return a dict containing user data, if the username is found on the
     SSO server. Example keys are 'first_name', 'pk', 'last_name',
     'organisation', et cetera.
 
-    Raises :class:`UserNotFound`, if the username can't be found.
+    Raise :class:`UserNotFound`, if the username can't be found.
 
-    Raises :class:`HTTPError` or :class:`URLError`
+    Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
     try:
@@ -227,6 +234,7 @@ def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
             username=username
         )
     except Exception as ex:
+        logger.exception("Exception occurred in _do_post: {}".format(ex))
         raise CommunicationError(ex)
 
     # validate response a bit
@@ -242,10 +250,10 @@ def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
 
 def sso_get_users(sso_server_private_url, sso_key, sso_secret):
     '''
-    Returns a list of dicts containing user data for the portal in question.
+    Return a list of dicts containing user data for the portal in question.
     Example keys are 'first_name', 'pk', 'last_name', 'organisation', etc.
 
-    Raises :class:`HTTPError` or :class:`URLError`
+    Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
     try:
@@ -256,6 +264,7 @@ def sso_get_users(sso_server_private_url, sso_key, sso_secret):
             sso_secret
         )
     except Exception as ex:
+        logger.exception("Exception occurred in _do_post: {}".format(ex))
         raise CommunicationError(ex)
 
     # validate response a bit
@@ -304,12 +313,12 @@ def sso_get_users_django():
 
 def sso_populate_user_django(username):
     '''
-    Returns an populated Django User instance with data fetched
+    Return an populated Django User instance with data fetched
     from the SSO server.
 
-    Raises :class:`UserNotFound`, if the username can't be found.
+    Raise :class:`UserNotFound`, if the username can't be found.
 
-    Raises :class:`HTTPError` or :class:`URLError`
+    Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
     return construct_user(sso_get_user_django(username))
@@ -317,7 +326,7 @@ def sso_populate_user_django(username):
 
 def construct_user(data):
     '''
-    Given a dict container user data, returns a populated and saved
+    Given a dict container user data, return a populated and saved
     Django User instance.
     '''
     # import here so this module can easily be reused outside of Django
@@ -422,3 +431,80 @@ def synchronize_roles(user, received_role_data):
         in received_role_data['organisation_roles']]
     models.UserOrganisationRole.objects.bulk_create(
         userorganisationroles)
+
+
+def sso_get_organisations(sso_server_private_url, sso_key, sso_secret):
+    '''
+    Return a list of dicts containing organisation data for
+    the portal in question.
+    Keys are 'unique_id' and 'name'.
+
+    Raise :class:`HTTPError` or :class:`URLError`
+    or :class:`CommunicationError`, if one occurred.
+    '''
+    try:
+        data = _do_post(
+            sso_server_private_url,
+            'api/get_organisations',
+            sso_key,
+            sso_secret
+        )
+    except Exception as ex:
+        logger.exception("Exception occurred in _do_post: {}".format(ex))
+        raise CommunicationError(ex)
+
+    # validate response a bit
+    if not 'success' in data:
+        raise CommunicationError('got an OK result, but with unknown content')
+
+    return data['organisations']
+
+
+def sso_get_organisations_django():
+    '''
+    Same as sso_get_organisations(), but uses the Django settings
+    module to import the URL base and encryption keys.
+    '''
+    # import here so this module can easily be reused outside of Django
+    from django.conf import settings
+
+    # call with django setting for SSO url
+    return sso_get_organisations(
+        settings.SSO_SERVER_PRIVATE_URL,
+        settings.SSO_KEY,
+        settings.SSO_SECRET
+    )
+
+
+def synchronize_organisations():
+    '''Call sso_get_organisations_django() and sync the organisation
+    data based on the result.
+
+    Do nothing in case of CommunicationError.
+
+    Return a two-tuple with the numbers of new and updated
+    organisations.
+    '''
+
+    try:
+        organisations = sso_get_organisations_django()
+    except CommunicationError:
+        # Shame.
+        return (0, 0)
+
+    new_orgs = 0
+    updated_orgs = 0
+
+    for organisation in organisations:
+        org_instance, created = models.Organisation.objects.get_or_create(
+            unique_id=organisation['unique_id'])
+        if created or org_instance.name != organisation['name']:
+            if created:
+                new_orgs += 1
+            else:
+                updated_orgs += 1
+
+            org_instance.name = organisation['name']
+            org_instance.save()
+
+    return (new_orgs, updated_orgs)

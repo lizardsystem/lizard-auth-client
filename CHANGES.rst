@@ -13,6 +13,22 @@ Changelog of lizard-auth-client
 
   Without this, lizard-auth-client doesn't work on our Sentry installation.
 
+- Renamed the 'AutheticationFailure' exception to 'AuthenticationFailure'. I suspect that
+  this exception wasn't used outside this app, but if it was, you need to fix the typo too.
+
+- Fix the _do_post method in client.py. It seems this code has never worked before...
+
+- Add functions to call the sync organisations API.
+
+- Add a management command ``sso_sync_organisations`` that calls
+  ``client.synchronise_organisations()``, copying all the organisations
+  that didn't exist here yet from the SSO server (regardless of
+  portals) and updating any changed names.
+
+  This solves the situation where data belonging to some organisation needs to be
+  imported (and foreign keys to it set), but no user of that organisation had ever
+  logged in so it didn't exist yet.
+
 
 0.13 (2014-06-06)
 -----------------
