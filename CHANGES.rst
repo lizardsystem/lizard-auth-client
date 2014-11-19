@@ -20,8 +20,8 @@ Changelog of lizard-auth-client
 
 - Add functions to call the sync organisations API.
 
-- Add a management command `sso_sync_organisations` that calls
-  `client.synchronise_organisations()`, copying all the organisations
+- Add a management command ``sso_sync_organisations`` that calls
+  ``client.synchronise_organisations()``, copying all the organisations
   that didn't exist here yet from the SSO server (regardless of
   portals) and updating any changed names.
 

@@ -1,5 +1,10 @@
+import logging
 import requests
 import json
+
+logger = logging.getLogger(__name__)
+
+
 try:
     from urlparse import urljoin
 except ImportError:
@@ -25,10 +30,10 @@ class UserNotFound(Exception):
 def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
              **params):
     '''
-    Posts the specified username and password combination to the
+    Post the specified username and password combination to the
     authentication API listening on sso_server_private_url.
 
-    Returns the response of the service as a dict.
+    Return the response of the service as a dict.
 
     Raises :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
@@ -58,21 +63,24 @@ def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
     if r.status_code == requests.codes.ok:
         result = json.loads(r.text)
         if isinstance(result, dict):
+            logger.debug("Data received in _do_post: {}".format(result))
             return result
+        logger.exception(
+            "Did not recieve a dict / associative array as response.")
         raise CommunicationError(
-            'did not recieve a dict / associative array as response')
+            'Did not recieve a dict / associative array as response.')
     r.raise_for_status()
 
 
 def _do_post_unsigned(sso_server_private_url, sso_server_path, sso_key,
                       **params):
     '''
-    Posts the specified username and password combination to the
+    Post the specified username and password combination to the
     authentication API listening on sso_server_private_url.
 
-    Returns the response of the service as a dict.
+    Return the response of the service as a dict.
 
-    Raises :class:`HTTPError` or :class:`URLError`
+    Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
 
@@ -90,10 +98,14 @@ def _do_post_unsigned(sso_server_private_url, sso_server_path, sso_key,
     if r.status_code == requests.codes.ok:
         result = json.loads(r.text)
         if isinstance(result, dict):
+            logger.debug(
+                "Data received in _do_post_unsigned: {}".format(result))
             return result
         else:
+            logger.exception(
+                "Did not recieve a dict / associative array as response.")
             raise CommunicationError(
-                'did not recieve a dict / associative array as response'
+                'Did not recieve a dict / associative array as response.'
             )
     else:
         r.raise_for_status()
@@ -102,13 +114,13 @@ def _do_post_unsigned(sso_server_private_url, sso_server_path, sso_key,
 def sso_authenticate_unsigned(sso_server_private_url, sso_key, username,
                               password):
     '''
-    Returns a dict containing user data, if authentication succeeds. Example
+    Return a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
 
-    Raises :class:`AuthenticationFailed`, if the username / password
+    Raise :class:`AuthenticationFailed`, if the username / password
     combination is incorrect.
 
-    Raises :class:`HTTPError` or :class:`URLError`
+    Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
     try:
@@ -152,13 +164,13 @@ def sso_authenticate_unsigned_django(username, password):
 def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username,
                      password):
     '''
-    Returns a dict containing user data, if authentication succeeds. Example
+    Return a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
 
-    Raises :class:`AutheticationFailed`, if the username / password
+    Raise :class:`AutheticationFailed`, if the username / password
     combination is incorrect.
 
-    Raises :class:`HTTPError` or :class:`URLError`
+    Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
     try:
@@ -203,13 +215,13 @@ def sso_authenticate_django(username, password):
 
 def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
     '''
-    Returns a dict containing user data, if the username is found on the
+    Return a dict containing user data, if the username is found on the
     SSO server. Example keys are 'first_name', 'pk', 'last_name',
     'organisation', et cetera.
 
-    Raises :class:`UserNotFound`, if the username can't be found.
+    Raise :class:`UserNotFound`, if the username can't be found.
 
-    Raises :class:`HTTPError` or :class:`URLError`
+    Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
     try:
@@ -236,10 +248,10 @@ def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
 
 def sso_get_users(sso_server_private_url, sso_key, sso_secret):
     '''
-    Returns a list of dicts containing user data for the portal in question.
+    Return a list of dicts containing user data for the portal in question.
     Example keys are 'first_name', 'pk', 'last_name', 'organisation', etc.
 
-    Raises :class:`HTTPError` or :class:`URLError`
+    Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
     try:
@@ -298,12 +310,12 @@ def sso_get_users_django():
 
 def sso_populate_user_django(username):
     '''
-    Returns an populated Django User instance with data fetched
+    Return an populated Django User instance with data fetched
     from the SSO server.
 
-    Raises :class:`UserNotFound`, if the username can't be found.
+    Raise :class:`UserNotFound`, if the username can't be found.
 
-    Raises :class:`HTTPError` or :class:`URLError`
+    Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
     return construct_user(sso_get_user_django(username))
@@ -311,7 +323,7 @@ def sso_populate_user_django(username):
 
 def construct_user(data):
     '''
-    Given a dict container user data, returns a populated and saved
+    Given a dict container user data, return a populated and saved
     Django User instance.
     '''
     # import here so this module can easily be reused outside of Django
@@ -420,11 +432,11 @@ def synchronize_roles(user, received_role_data):
 
 def sso_get_organisations(sso_server_private_url, sso_key, sso_secret):
     '''
-    Returns a list of dicts containing organisation data for
+    Return a list of dicts containing organisation data for
     the portal in question.
     Keys are 'unique_id' and 'name'.
 
-    Raises :class:`HTTPError` or :class:`URLError`
+    Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
     '''
     try:
@@ -466,9 +478,8 @@ def synchronize_organisations():
 
     Do nothing in case of CommunicationError.
 
-    Returns a two-tuple with the numbers of new and updated
+    Return a two-tuple with the numbers of new and updated
     organisations.
-
     '''
 
     try:
