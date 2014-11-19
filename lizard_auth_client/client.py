@@ -183,6 +183,7 @@ def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username,
             password=password
         )
     except Exception as ex:
+        logger.exception("Exception occurred in _do_post: {}".format(ex))
         raise CommunicationError(ex)
 
     # validate response a bit
@@ -233,6 +234,7 @@ def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
             username=username
         )
     except Exception as ex:
+        logger.exception("Exception occurred in _do_post: {}".format(ex))
         raise CommunicationError(ex)
 
     # validate response a bit
@@ -262,6 +264,7 @@ def sso_get_users(sso_server_private_url, sso_key, sso_secret):
             sso_secret
         )
     except Exception as ex:
+        logger.exception("Exception occurred in _do_post: {}".format(ex))
         raise CommunicationError(ex)
 
     # validate response a bit
@@ -447,6 +450,7 @@ def sso_get_organisations(sso_server_private_url, sso_key, sso_secret):
             sso_secret
         )
     except Exception as ex:
+        logger.exception("Exception occurred in _do_post: {}".format(ex))
         raise CommunicationError(ex)
 
     # validate response a bit
