@@ -2,6 +2,8 @@ import logging
 import requests
 import json
 
+from django.conf import settings
+
 from . import signals
 
 logger = logging.getLogger(__name__)
@@ -27,6 +29,15 @@ class CommunicationError(Exception):
 
 class UserNotFound(Exception):
     pass
+
+# Check some old settings we don't want to use anymore.
+if hasattr(settings, 'SSO_SYNCED_USER_KEYS'):
+    logger.warn("Deprecation warning: SSO_SYNCED_USER_KEYS isn't "
+                "used anymore, see CHANGES.rst.")
+
+if "p-web-ws-00-d8" in settings.SSO_SERVER_PRIVATE_URL:
+    logger.warn("Deprecation warning: outdated SSO_SERVER_PRIVATE_URL, "
+                "use 110-sso-c1 instead of p-web-ws-00-d8.")
 
 
 def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
