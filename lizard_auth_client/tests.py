@@ -61,14 +61,6 @@ class TestClient(TestCase):
                                            'root', 'a')
         self.assertRaises(client.CommunicationError, bad_url)
 
-    def test_bad_key(self):
-        from lizard_auth_client import client
-
-        def bad_key():
-            return client.sso_authenticate('http://127.0.0.1:8001/', 'asd',
-                                           'asd', 'root', 'a')
-        self.assertRaises(client.CommunicationError, bad_key)
-
     def test_retrieve_user(self):
         from lizard_auth_client import client
 
