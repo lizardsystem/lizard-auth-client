@@ -2,6 +2,8 @@ import logging
 import requests
 import json
 
+from . import signals
+
 logger = logging.getLogger(__name__)
 
 
@@ -431,6 +433,11 @@ def synchronize_roles(user, received_role_data):
         in received_role_data['organisation_roles']]
     models.UserOrganisationRole.objects.bulk_create(
         userorganisationroles)
+
+    signals.user_synchronized.send(
+        sender=synchronize_roles, user=user, organisation_roles=[
+            (uor.organisation, uor.role)
+            for uor in userorganisationroles])
 
 
 def sso_get_organisations(sso_server_private_url, sso_key, sso_secret):
