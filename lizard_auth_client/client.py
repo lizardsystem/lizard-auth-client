@@ -2,6 +2,10 @@ import logging
 import requests
 import json
 
+from django.conf import settings
+
+from lizard_auth_client import signals
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,6 +29,15 @@ class CommunicationError(Exception):
 
 class UserNotFound(Exception):
     pass
+
+# Check some old settings we don't want to use anymore.
+if hasattr(settings, 'SSO_SYNCED_USER_KEYS'):
+    logger.warn("Deprecation warning: SSO_SYNCED_USER_KEYS isn't "
+                "used anymore, see CHANGES.rst for version 1.0.")
+
+if "p-web-ws-00-d8" in settings.SSO_SERVER_PRIVATE_URL:
+    logger.warn("Deprecation warning: outdated SSO_SERVER_PRIVATE_URL, "
+                "use 110-sso-c1 instead of p-web-ws-00-d8.")
 
 
 def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
@@ -352,13 +365,8 @@ def construct_user(data):
     except User.DoesNotExist:
         user = User()
 
-    # import here so this module can easily be reused outside of Django
-    from django.conf import settings
     # copy simple properies like email and first name
-    keys = getattr(settings, 'SSO_SYNCED_USER_KEYS',
-                   ['first_name', 'last_name', 'email', 'is_active',
-                    'is_staff', 'is_superuser'])
-    for key in keys:
+    for key in ['first_name', 'last_name', 'email', 'is_active']:
         setattr(user, key, data[key])
     user.username = local_username
 
@@ -431,6 +439,11 @@ def synchronize_roles(user, received_role_data):
         in received_role_data['organisation_roles']]
     models.UserOrganisationRole.objects.bulk_create(
         userorganisationroles)
+
+    signals.user_synchronized.send(
+        sender=synchronize_roles, user=user, organisation_roles=[
+            (uor.organisation, uor.role)
+            for uor in userorganisationroles])
 
 
 def sso_get_organisations(sso_server_private_url, sso_key, sso_secret):

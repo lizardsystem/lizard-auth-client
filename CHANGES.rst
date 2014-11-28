@@ -5,7 +5,27 @@ Changelog of lizard-auth-client
 0.15 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Moved to a better solution for the is_staff and is_superuser User flags:
+
+  1. SSO_SYNCED_USER_KEYS is not used anymore (and setting it gives a
+     warning at import time of client.py). Only first_name, last_name,
+     email and is_active of a user are copied.
+
+  2. Instead of those, a setting SSO_CLIENT_SUPERUSER_ROLES and/or
+     SSO_CLIENT_STAFF_ROLES can be set to an iterable of roll codes. If the
+     user has one of those roles (regardless of in which organisation),
+     then is_superuser and/or is_staff are set, respectively.
+
+  3. This is implemented using Django signals. If you want more customization
+     of user permissions, you can write your own callback for
+     lizard_auth_client.signals.user_synchronized to react to the user's
+     roles getting synchronized. In that case, the callback in signals.py
+     is a handy example.
+
+- Added a warning log in case an actual internal server name at Nelen &
+  Schuurmans is set is private SSO URL; we should move to a new one (110-sso-c1)
+  that is an alias, so we have more flexibility.
+
 
 
 0.14 (2014-11-19)
