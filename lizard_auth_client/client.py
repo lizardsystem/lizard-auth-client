@@ -4,7 +4,7 @@ import json
 
 from django.conf import settings
 
-from . import signals
+from lizard_auth_client import signals
 
 logger = logging.getLogger(__name__)
 
