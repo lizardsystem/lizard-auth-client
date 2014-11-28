@@ -354,13 +354,8 @@ def construct_user(data):
     except User.DoesNotExist:
         user = User()
 
-    # import here so this module can easily be reused outside of Django
-    from django.conf import settings
     # copy simple properies like email and first name
-    keys = getattr(settings, 'SSO_SYNCED_USER_KEYS',
-                   ['first_name', 'last_name', 'email', 'is_active',
-                    'is_staff', 'is_superuser'])
-    for key in keys:
+    for key in ['first_name', 'last_name', 'email', 'is_active']:
         setattr(user, key, data[key])
     user.username = local_username
 
