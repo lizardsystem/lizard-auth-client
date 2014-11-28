@@ -2,8 +2,8 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-0.15 (unreleased)
------------------
+1.0 (2014-11-28)
+----------------
 
 - Moved to a better solution for the is_staff and is_superuser User flags:
 
