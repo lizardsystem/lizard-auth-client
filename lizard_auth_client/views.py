@@ -84,7 +84,7 @@ class LoginApiView(View):
         request.session['sso_after_login_next'] = settings.WEBCLIENT
 
         # Get the login url with the token
-        wrapped_response = get_request_token_and_determine_response()
+        wrapped_response = get_request_token_and_determine_response(request)
 
         # This check could be done by checking if http_response is a
         # subclass of HttpResponseRedirectBase, but that class is
@@ -139,7 +139,7 @@ class LoginView(View):
         next = get_next(request)
         request.session['sso_after_login_next'] = next
 
-        wrapped_response = get_request_token_and_determine_response()
+        wrapped_response = get_request_token_and_determine_response(request)
 
         if (issubclass(wrapped_response.http_response, HttpResponseRedirect) or
             issubclass(wrapped_response.http_response,
@@ -307,7 +307,7 @@ def get_next(request):
     return next
 
 
-def get_request_token_and_determine_response():
+def get_request_token_and_determine_response(request):
     '''
     Retrieve a Request token from the SSO server, and determine the proper
     HttpResponse to send to the user.
@@ -328,9 +328,11 @@ def get_request_token_and_determine_response():
 
     # construct a (signed) set of GET parameters which are used to
     # redirect the user to the SSO server
+    protocol = getattr(settings, 'PROTOCOL', 'https')
     params = {
         'request_token': request_token,
-        'key': settings.SSO_KEY
+        'key': settings.SSO_KEY,
+        'next': '{}://{}'.format(protocol, request.get_host())
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
