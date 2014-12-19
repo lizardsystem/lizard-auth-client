@@ -84,7 +84,7 @@ class LoginApiView(View):
         request.session['sso_after_login_next'] = settings.WEBCLIENT
 
         # Get the login url with the token
-        wrapped_response = get_request_token_and_determine_response(request)
+        wrapped_response = get_request_token_and_determine_response('/')
 
         # This check could be done by checking if http_response is a
         # subclass of HttpResponseRedirectBase, but that class is
