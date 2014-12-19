@@ -6,10 +6,10 @@ import json
 
 import requests
 try:
-    from urlparse import urljoin, urlparse
+    from urlparse import urljoin
     from urllib import urlencode
 except ImportError:
-    from urllib.parse import urljoin, urlparse, urlencode
+    from urllib.parse import urljoin, urlencode
 
 from django.conf import settings
 from django.contrib.auth import login as django_login
@@ -121,7 +121,7 @@ class LogoutApiView(View):
         request.session['sso_after_logout_next'] = settings.WEBCLIENT
 
         # Simple wrap the logout url in a JSON dict
-        logout_url = build_sso_portal_action_url('logout')
+        logout_url = build_sso_portal_action_url('logout', '/')
         content_dict = {'logout_url': logout_url}
         content = json.dumps(content_dict)
         return HttpResponse(content=content, content_type='application/json')
@@ -139,7 +139,7 @@ class LoginView(View):
         next = get_next(request)
         request.session['sso_after_login_next'] = next
 
-        wrapped_response = get_request_token_and_determine_response(request)
+        wrapped_response = get_request_token_and_determine_response(next)
 
         if (issubclass(wrapped_response.http_response, HttpResponseRedirect) or
             issubclass(wrapped_response.http_response,
@@ -190,7 +190,7 @@ class LogoutView(View):
         next = get_next(request)
         request.session['sso_after_logout_next'] = next
 
-        url = build_sso_portal_action_url('logout')
+        url = build_sso_portal_action_url('logout', next)
         # send the redirect response
         return HttpResponseRedirect(url)
 
@@ -298,16 +298,10 @@ def get_next(request):
     next = request.GET.get('next', None)
     if not next:
         return '/'
-    netloc = urlparse(next)[1]
-
-    # security check -- don't allow redirection to a different host
-    # taken from django.contrib.auth.views.login
-    if netloc and netloc != request.get_host():
-        return '/'
     return next
 
 
-def get_request_token_and_determine_response(request):
+def get_request_token_and_determine_response(next):
     '''
     Retrieve a Request token from the SSO server, and determine the proper
     HttpResponse to send to the user.
@@ -332,7 +326,7 @@ def get_request_token_and_determine_response(request):
     params = {
         'request_token': request_token,
         'key': settings.SSO_KEY,
-        'next': '{}://{}'.format(protocol, request.get_host())
+        'next': next
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
@@ -344,7 +338,7 @@ def get_request_token_and_determine_response(request):
     return WrappedResponse(HttpResponseRedirect, 'OK', url)
 
 
-def build_sso_portal_action_url(action):
+def build_sso_portal_action_url(action, next):
     '''
     Constructs and signs a message containing the specified action parameter,
     and returns a URL which can be used to redirect the user.
@@ -354,7 +348,8 @@ def build_sso_portal_action_url(action):
     '''
     params = {
         'action': action,
-        'key': settings.SSO_KEY
+        'key': settings.SSO_KEY,
+        'next': next
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
