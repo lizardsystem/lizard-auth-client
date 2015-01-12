@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-1.1 (unreleased)
+1.1 (2015-01-12)
 ----------------
 
 - Added support for login on custom domains.
