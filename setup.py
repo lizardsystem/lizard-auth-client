@@ -34,7 +34,6 @@ setup(
     url='http://www.nelen-schuurmans.nl/',
     license='MIT',
     packages=['lizard_auth_client'],
-    include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
     tests_require=tests_require,
