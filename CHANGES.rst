@@ -5,24 +5,24 @@ Changelog of lizard-auth-client
 1.2 (unreleased)
 ----------------
 
-- Add support for Django 1.7.
-  Update the Django requirement and move South dependency to
+- Added support for Django 1.7.
+  Updated the Django requirement and moved South dependency to
   ``extras_require``.
-  To make lizard_auth_client Django 1.7 compatible we need to follow these
-  instructions:
+  Had to follow these instructions to make lizard_auth_client Django 1.7
+  compatible:
   https://docs.djangoproject.com/en/1.7/topics/migrations/#libraries-third-party-apps
   Note that South is only necessary for projects using Django < 1.7.
 
-- Move South ``migrations`` to ``south_migrations`` folder.
+- Moved South ``migrations`` to ``south_migrations`` folder.
   South 1.0 will always check south_migrations first before using the normal
   migrations folder.
   See: https://docs.djangoproject.com/en/1.7/topics/migrations/#libraries-third-party-apps
 
-- Add new Django-style migrations.
+- Added new Django-style migrations.
 
-- Remove ``south`` from the ``INSTALLED_APPS`` in the ``testsettings``.
+- Removed ``south`` from the ``INSTALLED_APPS`` in the ``testsettings``.
 
-- Remove ``include_package_data`` from ``setup.py``.
+- Removed ``include_package_data`` from ``setup.py``.
 
 
 1.1 (2015-01-12)
