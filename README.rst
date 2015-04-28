@@ -73,7 +73,7 @@ Middleware
 
 The middleware automaticaly logs in users when they are known at the server. And forces users to login at the server if they are not known.
 
-To enable you need to add to your settings file at MIDDLEWARE_CLASSES:
+To enable you need to add to your settings file at MIDDLEWARE_CLASSES::
 
   'lizard_auth_client.middleware.LoginRequiredMiddleware',
 
