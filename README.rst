@@ -7,10 +7,12 @@ Based on the Django Simple SSO project (https://github.com/ojii/django-simple-ss
 Usage
 -----
 
-Include this app as a dependecy in setup.py::
+Include this app as a dependency in setup.py::
 
   install_requires = [
+      ...
       'lizard-auth-client',
+      ...
   ],
 
 Configure the SSO settings as seen in ``testsettings.py``::
@@ -47,6 +49,24 @@ also copied, for instance. If you don't want that::
     SSO_SYNCED_USER_KEYS = ['first_name', 'last_name', 'email', 'is_active']
 
 
+Usage note for django < 1.7
+---------------------------
+
+On django versions older than 1.7, you need South 1.0 for the database
+migrations.
+
+In your project's ``setup.py``, add ``lizard-auth-client[south]`` in addition
+to ``lizard-auth-client``::
+
+    install_requires = [
+      ...
+      'lizard-auth-client',
+      'lizard-auth-client[south]',
+      ...
+  ],
+
+This adds the proper south (version) requirement to your project.
+
 
 Custom authentication
 ---------------------
@@ -73,7 +93,7 @@ Middleware
 
 The middleware automaticaly logs in users when they are known at the server. And forces users to login at the server if they are not known.
 
-To enable you need to add to your settings file at MIDDLEWARE_CLASSES:
+To enable you need to add to your settings file at MIDDLEWARE_CLASSES::
 
   'lizard_auth_client.middleware.LoginRequiredMiddleware',
 
