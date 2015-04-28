@@ -7,7 +7,7 @@ Based on the Django Simple SSO project (https://github.com/ojii/django-simple-ss
 Usage
 -----
 
-Include this app as a dependecy in setup.py::
+Include this app as a dependency in setup.py::
 
   install_requires = [
       'lizard-auth-client',
