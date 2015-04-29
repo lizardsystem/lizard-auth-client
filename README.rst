@@ -103,11 +103,18 @@ It should be usable without Django settings as well::
 Middleware
 ----------
 
-The middleware automaticaly logs in users when they are known at the server. And forces users to login at the server if they are not known.
+The middleware automaticaly logs in users when they are known at the
+server. And forces users to login at the server if they are not known.
 
-To enable you need to add to your settings file at MIDDLEWARE_CLASSES::
+To enable it, add this to your settings' ``MIDDLEWARE_CLASSES``::
 
+    ...
     'lizard_auth_client.middleware.LoginRequiredMiddleware',
+    ...
+
+Note: ``django.contrib.auth.middleware.AuthenticationMiddleware``, enabled by
+default, should be *above* the LoginRequiredMiddleware.
+
 
 
 Tests
