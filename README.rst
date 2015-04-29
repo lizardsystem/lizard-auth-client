@@ -54,11 +54,6 @@ import them in the root of your urlpatterns::
         (r'^', include('lizard_auth_client.urls')),
     )
 
-There is an additional setting that you can use to limit the attributes that
-are copied from the SSO server. Normally ``is_staff`` and ``is_superuser`` is
-also copied, for instance. If you don't want that::
-
-    SSO_SYNCED_USER_KEYS = ['first_name', 'last_name', 'email', 'is_active']
 
 
 Usage note for django < 1.7
