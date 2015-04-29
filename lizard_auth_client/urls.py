@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.conf.urls import include
 from django.conf.urls import patterns
 from django.conf.urls import url
-from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.core.exceptions import ImproperlyConfigured
 
 from lizard_auth_client import views
 
@@ -84,6 +84,7 @@ if sso_enabled:
     )
 else:
     urlpatterns = patterns('')
+
 
 if getattr(settings, 'SSO_STANDALONE', False) is True:
     # when running standalone (for testing purposes), add some extra URLS
