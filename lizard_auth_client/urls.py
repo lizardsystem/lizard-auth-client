@@ -12,10 +12,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from lizard_auth_client import views
 
 
-if not hasattr(settings, 'SSO_ENABLED'):
-    sso_enabled = False
-else:
-    sso_enabled = settings.SSO_ENABLED
+sso_enabled = getattr(settings, 'SSO_ENABLED', False)
 
 
 def check_settings():
