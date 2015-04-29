@@ -55,7 +55,6 @@ import them in the root of your urlpatterns::
     )
 
 
-
 Usage note for django < 1.7
 ---------------------------
 
