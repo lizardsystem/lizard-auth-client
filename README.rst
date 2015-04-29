@@ -15,17 +15,29 @@ Include this app as a dependency in setup.py::
       ...
   ],
 
+And add it to ``INSTALLED_APPS`` in your django settings::
+
+    INSTALLED_APPS = (
+        ...
+        'lizard_auth_client',
+        ...)
+
 Configure the SSO settings as seen in ``testsettings.py``::
 
-  # SSO
+  # SSO *can* be disabled for development with local accounts.
   SSO_ENABLED = True
+
+  # Create a portal on the SSO server, this generates the SSO_KEY and
+  # SSO_SECRET for you.
   # A key identifying this client. Can be published.
   SSO_KEY = 'random_generated_key_to_identify_the_client'
-  # A *secret* shared between client and server. Used to sign the messages exchanged between them.
+  # A *secret* shared between client and server.
+  # Used to sign the messages exchanged between them.
   SSO_SECRET = 'random_generated_secret_key_to_sign_exchanged_messages'
-  # URL used to redirect the user to the SSO server
+
+  # URL used to redirect the user to the SSO server.
   # Note: needs a trailing slash
-  SSO_SERVER_PUBLIC_URL = 'http://external-address.site.tld/'
+  SSO_SERVER_PUBLIC_URL = 'https://external-address.site.tld/'
   # URL used for server-to-server communication
   # Note: needs a trailing slash
   SSO_SERVER_PRIVATE_URL = 'http://10.0.0.1:80/'
