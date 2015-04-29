@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-1.2 (unreleased)
+1.2 (2015-04-29)
 ----------------
 
 - Added support for Django 1.7.
