@@ -39,6 +39,17 @@ def check_settings():
             'SSO_SERVER_PRIVATE_URL in your settings. '
             'These URIs are used to locate the SSO server.'
         )
+    # Check some old settings we don't want to use anymore.
+    if hasattr(settings, 'SSO_SYNCED_USER_KEYS'):
+        raise ImproperlyConfigured(
+            "Deprecation warning: SSO_SYNCED_USER_KEYS isn't "
+            "used anymore, see CHANGES.rst for version 1.0.")
+
+    if "p-web-ws-00-d8" in getattr(settings, 'SSO_SERVER_PRIVATE_URL', ''):
+        raise ImproperlyConfigured(
+            "Deprecation warning: outdated SSO_SERVER_PRIVATE_URL, "
+            "use 110-sso-c1 instead of p-web-ws-00-d8.")
+
 
 if sso_enabled:
     check_settings()
