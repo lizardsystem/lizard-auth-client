@@ -9,11 +9,11 @@ Usage
 
 Include this app as a dependency in setup.py::
 
-  install_requires = [
-      ...
-      'lizard-auth-client',
-      ...
-  ],
+    install_requires = [
+        ...
+        'lizard-auth-client',
+        ...
+    ],
 
 And add it to ``INSTALLED_APPS`` in your django settings::
 
@@ -24,35 +24,35 @@ And add it to ``INSTALLED_APPS`` in your django settings::
 
 Configure the SSO settings as seen in ``testsettings.py``::
 
-  # SSO *can* be disabled for development with local accounts.
-  SSO_ENABLED = True
+    # SSO *can* be disabled for development with local accounts.
+    SSO_ENABLED = True
 
-  # Create a portal on the SSO server, this generates the SSO_KEY and
-  # SSO_SECRET for you.
-  # A key identifying this client. Can be published.
-  SSO_KEY = 'random_generated_key_to_identify_the_client'
-  # A *secret* shared between client and server.
-  # Used to sign the messages exchanged between them.
-  SSO_SECRET = 'random_generated_secret_key_to_sign_exchanged_messages'
+    # Create a portal on the SSO server, this generates the SSO_KEY and
+    # SSO_SECRET for you.
+    # A key identifying this client. Can be published.
+    SSO_KEY = 'random_generated_key_to_identify_the_client'
+    # A *secret* shared between client and server.
+    # Used to sign the messages exchanged between them.
+    SSO_SECRET = 'random_generated_secret_key_to_sign_exchanged_messages'
 
-  # URL used to redirect the user to the SSO server.
-  # Note: needs a trailing slash
-  SSO_SERVER_PUBLIC_URL = 'https://external-address.site.tld/'
-  # URL used for server-to-server communication
-  # Note: needs a trailing slash
-  SSO_SERVER_PRIVATE_URL = 'http://10.0.0.1:80/'
+    # URL used to redirect the user to the SSO server.
+    # Note: needs a trailing slash
+    SSO_SERVER_PUBLIC_URL = 'https://external-address.site.tld/'
+    # URL used for server-to-server communication
+    # Note: needs a trailing slash
+    SSO_SERVER_PRIVATE_URL = 'http://10.0.0.1:80/'
 
 Only for local testing of this very app do you need this additional setting::
 
-  SSO_STANDALONE = True
+    SSO_STANDALONE = True
 
 Add the proper URLS to your urls.py. Because the app needs to override the login/logout URLS,
 import them in the root of your urlpatterns::
 
-  urlpatterns = patterns(
-      '',
-      (r'^', include('lizard_auth_client.urls')),
-  )
+    urlpatterns = patterns(
+        '',
+        (r'^', include('lizard_auth_client.urls')),
+    )
 
 There is an additional setting that you can use to limit the attributes that
 are copied from the SSO server. Normally ``is_staff`` and ``is_superuser`` is
@@ -71,11 +71,11 @@ In your project's ``setup.py``, add ``lizard-auth-client[south]`` in addition
 to ``lizard-auth-client``::
 
     install_requires = [
-      ...
-      'lizard-auth-client',
-      'lizard-auth-client[south]',
-      ...
-  ],
+        ...
+        'lizard-auth-client',
+        'lizard-auth-client[south]',
+        ...
+    ],
 
 This adds the proper south (version) requirement to your project.
 
@@ -85,15 +85,15 @@ Custom authentication
 
 In a Django context, simple configure the app as above, and do::
 
-  from lizard_auth_client import client as auth_client
-  try:
-      user_data = auth_client.sso_authenticate_django('username', 'password')
-  except auth_client.AutheticationFailed as ex:
-      return some_error_handler('Auth failed')
-  except auth_client.CommunicationError as ex:
-      return some_error_handler('Temporary comm error')
-  except:
-      return some_error_handler('Other error')
+    from lizard_auth_client import client as auth_client
+    try:
+        user_data = auth_client.sso_authenticate_django('username', 'password')
+    except auth_client.AutheticationFailed as ex:
+        return some_error_handler('Auth failed')
+    except auth_client.CommunicationError as ex:
+        return some_error_handler('Temporary comm error')
+    except:
+        return some_error_handler('Other error')
 
 It should be usable without Django settings as well::
 
@@ -107,7 +107,7 @@ The middleware automaticaly logs in users when they are known at the server. And
 
 To enable you need to add to your settings file at MIDDLEWARE_CLASSES::
 
-  'lizard_auth_client.middleware.LoginRequiredMiddleware',
+    'lizard_auth_client.middleware.LoginRequiredMiddleware',
 
 
 Tests
