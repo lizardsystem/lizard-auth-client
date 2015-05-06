@@ -1,21 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.conf.urls import include
 from django.conf.urls import patterns
 from django.conf.urls import url
-from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.core.exceptions import ImproperlyConfigured
 
 from lizard_auth_client import views
 
 
-if not hasattr(settings, 'SSO_ENABLED'):
-    sso_enabled = False
-else:
-    sso_enabled = settings.SSO_ENABLED
+sso_enabled = getattr(settings, 'SSO_ENABLED', False)
 
 
 def check_settings():
@@ -42,6 +39,17 @@ def check_settings():
             'SSO_SERVER_PRIVATE_URL in your settings. '
             'These URIs are used to locate the SSO server.'
         )
+    # Check some old settings we don't want to use anymore.
+    if hasattr(settings, 'SSO_SYNCED_USER_KEYS'):
+        raise ImproperlyConfigured(
+            "Deprecation warning: SSO_SYNCED_USER_KEYS isn't "
+            "used anymore, see CHANGES.rst for version 1.0.")
+
+    if "p-web-ws-00-d8" in getattr(settings, 'SSO_SERVER_PRIVATE_URL', ''):
+        raise ImproperlyConfigured(
+            "Deprecation warning: outdated SSO_SERVER_PRIVATE_URL, "
+            "use 110-sso-c1 instead of p-web-ws-00-d8.")
+
 
 if sso_enabled:
     check_settings()
@@ -76,6 +84,7 @@ if sso_enabled:
     )
 else:
     urlpatterns = patterns('')
+
 
 if getattr(settings, 'SSO_STANDALONE', False) is True:
     # when running standalone (for testing purposes), add some extra URLS
