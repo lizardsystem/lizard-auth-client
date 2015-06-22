@@ -1,7 +1,8 @@
 # From https://github.com/github/gitignore/blob/master/Python.gitignore
 
 # Pyc/pyo files.
-*.py[co]
+*.pyc
+*.pyo
 
 # Packages
 *.egg
