@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-1.4 (unreleased)
+1.4 (2015-06-22)
 ----------------
 
 - Added django 1.7 app name configuration.
