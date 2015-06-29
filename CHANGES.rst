@@ -2,8 +2,8 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-1.5 (unreleased)
-----------------
+1.4.1 (2015-06-29)
+------------------
 
 - Packaging fix. The migrations/ and management/ directories were missing.
 
