@@ -31,6 +31,7 @@ setup(
     keywords=[],
     author='Erik-Jan Vos, Remco Gerlich',
     author_email='remco.gerlich@nelen-schuurmans.nl',
+    include_package_data=True,
     url='http://www.nelen-schuurmans.nl/',
     license='MIT',
     packages=['lizard_auth_client'],
