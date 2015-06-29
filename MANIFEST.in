@@ -2,3 +2,4 @@
 include *.rst
 # Include everything in our project directory.
 graft lizard_auth_client
+graft doc
