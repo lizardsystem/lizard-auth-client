@@ -1,9 +1,12 @@
+from __future__ import print_function
+
 import logging
 import requests
 import json
+import sys
 
+from django.core.management import call_command
 from django.conf import settings
-
 from lizard_auth_client import signals
 
 logger = logging.getLogger(__name__)
@@ -31,8 +34,8 @@ class UserNotFound(Exception):
     pass
 
 
-def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
-             **params):
+def _do_post( \
+    sso_server_private_url, sso_server_path, sso_key, sso_secret, **params):
     '''
     Post the specified username and password combination to the
     authentication API listening on sso_server_private_url.
@@ -56,7 +59,7 @@ def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
     # determine POST data
     post_data = {
         'message': message,
-        'key': sso_key,
+        'key': sso_key
     }
 
     # determine headers and destination URL
@@ -76,8 +79,8 @@ def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
     r.raise_for_status()
 
 
-def _do_post_unsigned(sso_server_private_url, sso_server_path, sso_key,
-                      **params):
+def _do_post_unsigned( \
+    sso_server_private_url, sso_server_path, sso_key, **params):
     '''
     Post the specified username and password combination to the
     authentication API listening on sso_server_private_url.
@@ -115,8 +118,8 @@ def _do_post_unsigned(sso_server_private_url, sso_server_path, sso_key,
         r.raise_for_status()
 
 
-def sso_authenticate_unsigned(sso_server_private_url, sso_key, username,
-                              password):
+def sso_authenticate_unsigned( \
+    sso_server_private_url, sso_key, username, password):
     '''
     Return a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
@@ -165,8 +168,8 @@ def sso_authenticate_unsigned_django(username, password):
     )
 
 
-def sso_authenticate(sso_server_private_url, sso_key, sso_secret, username,
-                     password):
+def sso_authenticate( \
+    sso_server_private_url, sso_key, sso_secret, username, password):
     '''
     Return a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
@@ -402,6 +405,7 @@ def synchronize_roles(user, received_role_data):
         organisations[organisation.unique_id] = organisation
 
     for role_data in received_role_data['roles']:
+
         role, created = models.Role.objects.get_or_create(
             unique_id=role_data['unique_id'])
 
@@ -417,6 +421,7 @@ def synchronize_roles(user, received_role_data):
             role.save()
         roles[role.unique_id] = role
 
+
     # Delete existing organisation roles
     models.UserOrganisationRole.objects.filter(user=user).delete()
 
@@ -428,6 +433,7 @@ def synchronize_roles(user, received_role_data):
             role=roles[role_unique_id])
         for org_unique_id, role_unique_id
         in received_role_data['organisation_roles']]
+
     models.UserOrganisationRole.objects.bulk_create(
         userorganisationroles)
 
@@ -464,6 +470,40 @@ def sso_get_organisations(sso_server_private_url, sso_key, sso_secret):
     return data['organisations']
 
 
+def sso_get_roles(sso_server_private_url, sso_key, sso_secret):
+    """
+    """
+    try:
+        data = _do_post(
+            sso_server_private_url,
+            'api/get_roles',
+            sso_key,
+            sso_secret
+            )
+    except Exception as ex:
+        logger.exception("Exception occurred in _do_post: {}".format(ex))
+        raise CommunicationError(ex)
+
+    # validate response a bit
+    if not 'success' in data:
+        raise CommunicationError('got an OK result, but with unknown content')
+
+    return data
+
+
+def sso_get_roles_django():
+    """
+    """
+    from django.conf import settings
+
+    # call with django setting for SSO url
+    return sso_get_roles(
+        settings.SSO_SERVER_PRIVATE_URL,
+        settings.SSO_KEY,
+        settings.SSO_SECRET
+    )
+
+
 def sso_get_organisations_django():
     '''
     Same as sso_get_organisations(), but uses the Django settings
@@ -478,6 +518,65 @@ def sso_get_organisations_django():
         settings.SSO_KEY,
         settings.SSO_SECRET
     )
+
+
+def sso_get_organisation_roles(sso_server_private_url, sso_key, sso_secret):
+    """
+    """
+    try:
+        data = _do_post(
+            sso_server_private_url,
+            'api/get_organisation_roles',
+            sso_key,
+            sso_secret
+            )
+    except Exception as ex:
+        logger.exception("Exception occurred in _do_post: {}".format(ex))
+        raise CommunicationError(ex)
+
+    # validate response a bit
+    if not 'success' in data:
+        raise CommunicationError('got an OK result, but with unknown content')
+
+    return data
+
+
+def sso_get_organisation_roles_django():
+    """
+    """
+    # import here so this module can easily be reused outside of Django
+    from django.conf import settings
+
+    # call with django setting for SSO url
+    return sso_get_organisation_roles(
+        settings.SSO_SERVER_PRIVATE_URL,
+        settings.SSO_KEY,
+        settings.SSO_SECRET
+    )
+
+
+def sso_get_user_organisation_roles_django(wanted_username):
+    """
+    """
+    from django.conf import settings
+
+    try:
+        data = _do_post(
+            settings.SSO_SERVER_PRIVATE_URL,
+            'api/get_user_organisation_roles',
+            settings.SSO_KEY,
+            settings.SSO_SECRET,
+            username=wanted_username
+            )
+    except Exception as ex:
+        logger.exception("Exception occurred in _do_post: {}".format(ex))
+        raise CommunicationError(ex)
+
+    # validate response a bit
+    if not 'success' in data:
+        raise CommunicationError('got an OK result, but with unknown content')
+
+    return data
 
 
 def synchronize_organisations():
@@ -512,3 +611,33 @@ def synchronize_organisations():
             org_instance.save()
 
     return (new_orgs, updated_orgs)
+
+
+def get_billable_organisation(username):
+    """
+    Retrieve the organisation for which the given user is a "billing" user: this
+    organisation is subsequently this users' 'billable organisation'
+    """
+    txt = {
+        'provide_username':
+            '[E] Please provide the username for the user you are trying to sync.',
+        'found_bo':
+            "[+] Found billable organisation '%s' for '%s'.\n",
+        'unexpected_err':
+            "[E] There was an unexpected error: %s\n" \
+            "[E] Aborting..."
+    }
+    # TODO: retrieve BILLING_ROLE from settings.py; make ansible-compatible
+    # via .j2 template...
+    BILLING_ROLE = 'Billing'
+    call_command('sso_sync_user_organisation_roles', username)
+    try:
+        uor = models.UserOrganisationRole.objects.filter(
+            role__name=BILLING_ROLE,
+            user__username=username)[0]
+        billable_org = uor.organisation
+        print(txt['found_bo'] % (billable_org.name, username))
+    except Exception as err:
+        print(txt['unexpected_err'] % str(err))
+        sys.exit(-1)
+    return billable_org
