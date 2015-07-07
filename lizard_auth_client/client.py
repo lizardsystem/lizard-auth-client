@@ -618,23 +618,40 @@ def get_billable_organisation(username):
     Retrieve the organisation for which the given user is a "billing" user: this
     organisation is subsequently this users' 'billable organisation'
     """
+    print("[F] client.get_billable_organisation")
+
+    # TODO: retrieve BILLING_ROLE from settings.py; make ansible-compatible
+    # via .j2 template...
+    BILLING_ROLE = 'Billing'
+
     txt = {
         'provide_username':
             '[E] Please provide the username for the user you are trying to sync.',
         'found_bo':
-            "[+] Found billable organisation '%s' for '%s'.\n",
+            "[+] OK. found billable organisation '%s' for username '%s'.",
         'unexpected_err':
-            "[E] There was an unexpected error: %s\n" \
-            "[E] Aborting..."
+            "[E] There was an unexpected error: \n%s\n" \
+            "[E] Aborting...",
+        'no_billing_role':
+            "[E] No UserOrganisationRole with name '%s' for username '%s'!\n" \
+            "[E] Aborting...\n",
+        "too_much_billing_roles":
+            "[E] Got too many UserOrganisationRoles where this user is '%s'.\n" \
+            "[E] Aborting...\n"
+            % BILLING_ROLE
     }
-    # TODO: retrieve BILLING_ROLE from settings.py; make ansible-compatible
-    # via .j2 template...
-    BILLING_ROLE = 'Billing'
+
     call_command('sso_sync_user_organisation_roles', username)
     try:
-        uor = models.UserOrganisationRole.objects.filter(
+        uors = models.UserOrganisationRole.objects.filter(
             role__name=BILLING_ROLE,
-            user__username=username)[0]
+            user__username=username)
+        if len(uors) == 0:
+            raise Exception(txt['no_billing_role'] % (BILLING_ROLE, username))
+        elif len(uors) > 1:
+            raise Exception(txt['too_much_billing_roles'])
+        else:
+            uor = uors[0]
         billable_org = uor.organisation
         print(txt['found_bo'] % (billable_org.name, username))
     except Exception as err:
