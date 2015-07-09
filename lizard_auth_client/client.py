@@ -490,8 +490,7 @@ def sso_get_roles(sso_server_private_url, sso_key, sso_secret):
     if not 'success' in data:
         raise CommunicationError('got an OK result, but with unknown content')
 
-    return data
-    # return data['roles']
+    return data['roles']
 
 
 def sso_get_roles_django():
@@ -547,7 +546,7 @@ def sso_get_user_organisation_roles_django(wanted_username):
     if not 'success' in data:
         raise CommunicationError('got an OK result, but with unknown content')
 
-    return data
+    return data['user_organisation_roles_data']
 
 
 def synchronize_organisations():
@@ -592,21 +591,11 @@ def get_billable_organisation(user):
     billing_role = models.Role.BILLING_ROLE_CODE
     username = user.username
     txt = {
-        'provide_username':
-            '[E] Please provide the username for the user you are trying to sync.',
         'found_bo':
             "[+] OK, found billable organisation '%s' for username '%s'.",
         'unexpected_err':
             "[E] There was an unexpected error: \n%s\n" \
             "[E] Aborting...",
-        'no_billing_role':
-            "[E] No UserOrganisationRole with name '%s' for username '%s' " \
-            "given the current portal.\n" \
-            "[E] Aborting...\n",
-        "too_much_billing_roles":
-            "[E] Got too many UserOrganisationRoles where this user is '%s'.\n" \
-            "[E] Aborting...\n"
-            % billing_role
     }
     call_command('sso_sync_user_organisation_roles', username)
     try:

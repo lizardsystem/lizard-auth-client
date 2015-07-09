@@ -42,7 +42,7 @@ class Command(BaseCommand):
         if len(args) != 1:
             raise Exception(txt['provide_username'])
         wanted_username = args[0]
-        for role_data in sso_get_roles_django()['roles']:
+        for role_data in sso_get_roles_django():
             try:
                 role = Role(**role_data)
                 role.save()
@@ -62,20 +62,12 @@ class Command(BaseCommand):
         uor_data = sso_get_user_organisation_roles_django(
             wanted_username)
         count = 0
-        for uor_dict in uor_data['user_organisation_roles_data']:
+        for uor_dict in uor_data:
             uor_prepared_dict = {}
             uor_prepared_dict['user'] = user
-
-            # the_organisation = Organisation.objects.get(
-            #     unique_id=uor_dict['organisation_uuid'])
             the_organisation = Organisation.create_from_dict(
                 uor_dict['organisation'])
-
-            # the_role = Role.objects.get(
-            #     unique_id=uor_dict['role_uuid'])
-            the_role = Role.create_from_dict(
-                uor_dict['role'])
-
+            the_role = Role.create_from_dict(uor_dict['role'])
             uor_prepared_dict['organisation'] = the_organisation
             uor_prepared_dict['role'] = the_role
             uor = UserOrganisationRole(**uor_prepared_dict)
