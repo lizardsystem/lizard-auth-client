@@ -613,47 +613,6 @@ def synchronize_organisations():
     return (new_orgs, updated_orgs)
 
 
-# def get_billable_organisation(username):
-#     """
-#     Retrieve the organisation for which the given user is a "billing" user: this
-#     organisation is subsequently this users' 'billable organisation'
-#     """
-#     billing_role = lza_settings.BILLING_ROLE
-#     txt = {
-#         'provide_username':
-#             '[E] Please provide the username for the user you are trying to sync.',
-#         'found_bo':
-#             "[+] OK, found billable organisation '%s' for username '%s'.",
-#         'unexpected_err':
-#             "[E] There was an unexpected error: \n%s\n" \
-#             "[E] Aborting...",
-#         'no_billing_role':
-#             "[E] No UserOrganisationRole with name '%s' for username '%s' " \
-#             "given the current portal.\n" \
-#             "[E] Aborting...\n",
-#         "too_much_billing_roles":
-#             "[E] Got too many UserOrganisationRoles where this user is '%s'.\n" \
-#             "[E] Aborting...\n"
-#             % billing_role
-#     }
-#     call_command('sso_sync_user_organisation_roles', username)
-#     try:
-#         uors = models.UserOrganisationRole.objects.filter(
-#             role__name=billing_role,
-#             user__username=username)
-#         if len(uors) == 0:
-#             raise Exception(txt['no_billing_role'] % (billing_role, username))
-#         elif len(uors) > 1:
-#             raise Exception(txt['too_much_billing_roles'])
-#         else:
-#             uor = uors[0]
-#         billable_org = uor.organisation
-#         print(txt['found_bo'] % (billable_org.name, username))
-#     except Exception as err:
-#         raise Exception(txt['unexpected_err'] % str(err))
-#     else:
-#         return billable_org
-
 def get_billable_organisation(user):
     """
     Retrieve the organisation for which the given user is a "billing" user: this
