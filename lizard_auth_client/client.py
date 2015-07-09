@@ -523,7 +523,8 @@ def sso_get_organisations_django():
         settings.SSO_SECRET
     )
 
-def sso_get_user_organisation_roles_django(wanted_username):
+
+def sso_get_user_organisation_roles_django(user):
     """
     Retrieve the serielized OrgansationRole data from the SSO server, given
     (i) the current portal and (ii) the wanted_username.
@@ -536,7 +537,7 @@ def sso_get_user_organisation_roles_django(wanted_username):
             'api/user_organisation_roles',
             settings.SSO_KEY,
             settings.SSO_SECRET,
-            username=wanted_username
+            username=user.username
             )
     except Exception as ex:
         logger.exception("Exception occurred in _do_post: {}".format(ex))

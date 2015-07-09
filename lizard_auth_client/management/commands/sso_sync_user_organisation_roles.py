@@ -55,16 +55,14 @@ class Command(BaseCommand):
         call_command('sso_sync_organisations')
         call_command('sso_sync_user', wanted_username)
         user_model = get_user_model()
-        user = user_model.objects.get(username=wanted_username)
+        wanted_user = user_model.objects.get(username=wanted_username)
         # Delete existing UserOrganisationRoles for the curent user
-        UserOrganisationRole.objects.filter(
-            user__username=wanted_username).delete()
-        uor_data = sso_get_user_organisation_roles_django(
-            wanted_username)
+        UserOrganisationRole.objects.filter(user=wanted_user).delete()
+        uor_data = sso_get_user_organisation_roles_django(wanted_user)
         count = 0
         for uor_dict in uor_data:
             uor_prepared_dict = {}
-            uor_prepared_dict['user'] = user
+            uor_prepared_dict['user'] = wanted_user
             the_organisation = Organisation.create_from_dict(
                 uor_dict['organisation'])
             the_role = Role.create_from_dict(uor_dict['role'])
