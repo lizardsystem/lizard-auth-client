@@ -136,3 +136,102 @@ class TestSuperuserStaffCallback(TestCase):
             })
         self.assertFalse(self.user.is_staff)
         self.assertTrue(self.user.is_superuser)
+
+
+class TestOrganisation(TestCase):
+    def test_create_from_dict(self):
+        org = models.Organisation.create_from_dict({
+            'unique_id': "NENS",
+            'name': "Nelen & Schuurmans"
+        })
+
+        # Check that is has been saved and the fields are correct
+        self.assertTrue(org.pk)
+        self.assertEquals(org.unique_id, "NENS")
+        self.assertEquals(org.name, "Nelen & Schuurmans")
+
+
+class TestRole(TestCase):
+    def test_create_from_dict(self):
+        # Also add an irrelevant field
+        role = models.Role.create_from_dict({
+            'unique_id': 'KLANT',
+            'code': 'klant',
+            'name': 'Klant',
+            'external_description': 'Hooggeachte klant',
+            'internal_description': 'Melkkoe',
+            'nog_een_veld': 'dat niet relevant is'
+        })
+
+        # Check that it has been saved and that the fields are correct
+        self.assertTrue(role.pk)
+        self.assertEquals(role.unique_id, 'KLANT')
+        self.assertEquals(role.code, 'klant')
+        self.assertEquals(role.name, 'Klant')
+        self.assertEquals(role.external_description, 'Hooggeachte klant')
+        self.assertEquals(role.internal_description, 'Melkkoe')
+        self.assertFalse(hasattr(role, 'nog_een_veld'))
+
+
+class TestUserOrganisationRole(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(
+            username='testuser', is_staff=False, is_superuser=False)
+
+    def test_create_from_list_of_dicts(self):
+        # Check that user has no roles yet
+        self.assertFalse(models.UserOrganisationRole.objects.filter(
+            user=self.user).exists())
+
+        models.UserOrganisationRole.create_from_list_of_dicts(
+            self.user, [{
+                'organisation': {
+                    'unique_id': "NENS",
+                    'name': "Nelen & Schuurmans"
+                },
+                'role': {
+                    'unique_id': 'KLANT',
+                    'code': 'klant',
+                    'name': 'Klant',
+                    'external_description': 'Hooggeachte klant',
+                    'internal_description': 'Melkkoe',
+                    'nog_een_veld': 'dat niet relevant is'
+                }
+            }])
+
+        # Check that user has the right role
+        self.assertTrue(models.UserOrganisationRole.objects.get(
+            user=self.user,
+            organisation__unique_id='NENS',
+            role__code='klant'))
+
+
+class TestGetOrganisationsWithRole(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(
+            username='testuser', is_staff=False, is_superuser=False)
+
+        models.UserOrganisationRole.create_from_list_of_dicts(
+            self.user, [{
+                'organisation': {
+                    'unique_id': "NENS",
+                    'name': "Nelen & Schuurmans"
+                },
+                'role': {
+                    'unique_id': 'KLANT',
+                    'code': 'billing',
+                    'name': 'Billing',
+                    'external_description': 'Billing goes here',
+                    'internal_description': 'Billing goes here',
+                }
+            }])
+
+    def test_call_get_organisations_with_role(self):
+        orgs = list(models.get_organisations_with_role(self.user, 'billing'))
+
+        self.assertEquals(len(orgs), 1)
+        self.assertEquals(orgs[0].name, 'Nelen & Schuurmans')
+
+    def test_call_get_organisation_with_role(self):
+        org = models.get_organisation_with_role(self.user, 'billing')
+        self.assertEquals(org.name, 'Nelen & Schuurmans')
