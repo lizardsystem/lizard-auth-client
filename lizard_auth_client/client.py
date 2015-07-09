@@ -7,7 +7,6 @@ import sys
 
 from django.core.management import call_command
 from django.conf import settings
-from lizard_auth_client import settings as lza_settings
 from lizard_auth_client import signals
 
 logger = logging.getLogger(__name__)
@@ -660,7 +659,7 @@ def get_billable_organisation(user):
     Retrieve the organisation for which the given user is a "billing" user: this
     organisation is subsequently this users' 'billable organisation'
     """
-    billing_role = lza_settings.BILLING_ROLE
+    billing_role = models.Role.BILLING_ROLE_CODE
     username = user.username
     txt = {
         'provide_username':
