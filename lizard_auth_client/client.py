@@ -7,6 +7,7 @@ import sys
 
 from django.core.management import call_command
 from django.conf import settings
+from lizard_auth_client import settings as lza_settings
 from lizard_auth_client import signals
 
 logger = logging.getLogger(__name__)
@@ -520,39 +521,39 @@ def sso_get_organisations_django():
     )
 
 
-def sso_get_organisation_roles(sso_server_private_url, sso_key, sso_secret):
-    """
-    """
-    try:
-        data = _do_post(
-            sso_server_private_url,
-            'api/organisation_roles',
-            sso_key,
-            sso_secret
-            )
-    except Exception as ex:
-        logger.exception("Exception occurred in _do_post: {}".format(ex))
-        raise CommunicationError(ex)
+# def sso_get_organisation_roles(sso_server_private_url, sso_key, sso_secret):
+#     """
+#     """
+#     try:
+#         data = _do_post(
+#             sso_server_private_url,
+#             'api/organisation_roles',
+#             sso_key,
+#             sso_secret
+#             )
+#     except Exception as ex:
+#         logger.exception("Exception occurred in _do_post: {}".format(ex))
+#         raise CommunicationError(ex)
 
-    # validate response a bit
-    if not 'success' in data:
-        raise CommunicationError('got an OK result, but with unknown content')
+#     # validate response a bit
+#     if not 'success' in data:
+#         raise CommunicationError('got an OK result, but with unknown content')
 
-    return data
+#     return data
 
 
-def sso_get_organisation_roles_django():
-    """
-    """
-    # import here so this module can easily be reused outside of Django
-    from django.conf import settings
+# def sso_get_organisation_roles_django():
+#     """
+#     """
+#     # import here so this module can easily be reused outside of Django
+#     from django.conf import settings
 
-    # call with django setting for SSO url
-    return sso_get_organisation_roles(
-        settings.SSO_SERVER_PRIVATE_URL,
-        settings.SSO_KEY,
-        settings.SSO_SECRET
-    )
+#     # call with django setting for SSO url
+#     return sso_get_organisation_roles(
+#         settings.SSO_SERVER_PRIVATE_URL,
+#         settings.SSO_KEY,
+#         settings.SSO_SECRET
+#     )
 
 
 def sso_get_user_organisation_roles_django(wanted_username):
@@ -618,7 +619,7 @@ def get_billable_organisation(username):
     Retrieve the organisation for which the given user is a "billing" user: this
     organisation is subsequently this users' 'billable organisation'
     """
-    billing_role = settings.BILLING_ROLE
+    billing_role = lza_settings.BILLING_ROLE
     txt = {
         'provide_username':
             '[E] Please provide the username for the user you are trying to sync.',

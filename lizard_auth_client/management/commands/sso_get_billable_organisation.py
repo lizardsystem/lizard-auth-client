@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         if len(args) != 1:
-            raise CommandError'[E] Please provide a username')
+            raise CommandError('[E] Please provide a username')
         else:
             username = args[0]
             billable_org = client.get_billable_organisation(username)

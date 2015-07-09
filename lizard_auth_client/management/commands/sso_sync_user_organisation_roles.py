@@ -65,10 +65,17 @@ class Command(BaseCommand):
         for uor_dict in uor_data['user_organisation_roles_data']:
             uor_prepared_dict = {}
             uor_prepared_dict['user'] = user
-            the_organisation = Organisation.objects.get(
-                unique_id=uor_dict['organisation_uuid'])
-            the_role = Role.objects.get(
-                unique_id=uor_dict['role_uuid'])
+
+            # the_organisation = Organisation.objects.get(
+            #     unique_id=uor_dict['organisation_uuid'])
+            the_organisation = Organisation.create_from_dict(
+                uor_dict['organisation'])
+
+            # the_role = Role.objects.get(
+            #     unique_id=uor_dict['role_uuid'])
+            the_role = Role.create_from_dict(
+                uor_dict['role'])
+
             uor_prepared_dict['organisation'] = the_organisation
             uor_prepared_dict['role'] = the_role
             uor = UserOrganisationRole(**uor_prepared_dict)
