@@ -2,9 +2,10 @@ from __future__ import print_function
 
 import sys
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.core.management import call_command
 from django.contrib.auth import get_user_model
+from django.db.utils import IntegrityError
 
 from lizard_auth_client.client import sso_get_roles_django, \
                                       sso_get_user_organisation_roles_django
@@ -45,7 +46,7 @@ class Command(BaseCommand):
             try:
                 role = Role(**role_data)
                 role.save()
-            except:
+            except IntegrityError:
                 # Catch exception for duplicate key/attr errors:
                 # This happens when a role is already present, and
                 # therefore there's no reason to build/save the a new
@@ -55,12 +56,9 @@ class Command(BaseCommand):
         call_command('sso_sync_user', wanted_username)
         user_model = get_user_model()
         user = user_model.objects.get(username=wanted_username)
-        try:
-            UserOrganisationRole.objects.filter(
-                user__username=wanted_username).delete()
-        except Exception as err:
-            print(txt['del_old_uors'] % (wanted_username, str(err)))
-            sys.exit(-1)
+        # Delete existing UserOrganisationRoles for the curent user
+        UserOrganisationRole.objects.filter(
+            user__username=wanted_username).delete()
         uor_data = sso_get_user_organisation_roles_django(
             wanted_username)
         count = 0

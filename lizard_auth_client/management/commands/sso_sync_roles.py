@@ -4,7 +4,7 @@ import os
 import sys
 import shutil
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from lizard_auth_client.client import sso_get_roles_django
 from lizard_auth_client.models import Role
@@ -18,12 +18,28 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         """
         """
-        print("[*] About to SSO-sync Roles data...")
+        txt = {
+            "intro":
+                "[*] About to SSO-sync Roles data...",
+            "roles_received":
+                "[+] OK, got Role data from lizard_auth_server API: %s",
+            "role_start":
+                "[*] Trying to build Role instance...",
+            "role_build_ok":
+                "[+] OK, succesfully build Role instance: %s",
+            "role_build_fail":
+                 "[E] Could not build Role instance from: %s\n" \
+                 "[-] The message: %s\n" \
+                 "[-] Aborting...\n"
+
+        }
+
+        print(txt['intro'])
         try:
             roles_data = sso_get_roles_django()
-            print("[+] OK, got Role data from lizard_auth_server API: %s" % str(roles_data))
+            print(txt['roles_received'] % str(roles_data))
         except Exception as err:
-            print("[E] err = '%s'" % str(err))
+            raise CommandError("[E] err = '%s'" % str(err))
 
         init_role_count = Role.objects.count()
         Role.objects.all().delete()
@@ -33,12 +49,10 @@ class Command(BaseCommand):
             try:
                 role = Role(**role_data)
                 role.save()
-                print("[+] OK, succesfully build Role instance: %s" % role)
+                print(txt['role_build'] % role)
             except Exception as err:
-                print("[E] Could not build Role instance from: %s" % str(role_data))
-                print("[-] The message: %s" % str(err))
-                print("[-] Aborting...\n")
-                sys.exit(-1)
+                raise CommandError(
+                    txt['role_build_fail'] % (str(role_data), str(err)))
 
         final_role_count = Role.objects.count()
         if init_role_count == final_role_count:

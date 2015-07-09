@@ -3,7 +3,7 @@ from __future__ import print_function
 import sys
 
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from lizard_auth_client.models import (
     Role,
     Organisation,
@@ -29,9 +29,7 @@ def kill_m_all(model, prefix=''):
         model.objects.all().delete()
         print("[+] OK, deleted all %s instances." % name)
     except Exception as err:
-        print("[E] Fail while killing all %s instances: %s" \
-              % (name, str(err)))
-        print("[-] Aborting...")
-        sys.exit(-1)
-
+        msg = "[E] Fail while killing all %s instances: %s\n" \
+              "[E] Aborting...\n"
+        raise CommandError(msg)
 

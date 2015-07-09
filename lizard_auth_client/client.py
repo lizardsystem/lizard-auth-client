@@ -476,7 +476,7 @@ def sso_get_roles(sso_server_private_url, sso_key, sso_secret):
     try:
         data = _do_post(
             sso_server_private_url,
-            'api/get_roles',
+            'api/roles',
             sso_key,
             sso_secret
             )
@@ -526,7 +526,7 @@ def sso_get_organisation_roles(sso_server_private_url, sso_key, sso_secret):
     try:
         data = _do_post(
             sso_server_private_url,
-            'api/get_organisation_roles',
+            'api/organisation_roles',
             sso_key,
             sso_secret
             )
@@ -563,7 +563,7 @@ def sso_get_user_organisation_roles_django(wanted_username):
     try:
         data = _do_post(
             settings.SSO_SERVER_PRIVATE_URL,
-            'api/get_user_organisation_roles',
+            'api/user_organisation_roles',
             settings.SSO_KEY,
             settings.SSO_SECRET,
             username=wanted_username
@@ -618,17 +618,12 @@ def get_billable_organisation(username):
     Retrieve the organisation for which the given user is a "billing" user: this
     organisation is subsequently this users' 'billable organisation'
     """
-    print("[F] client.get_billable_organisation")
-
-    # TODO: retrieve BILLING_ROLE from settings.py; make ansible-compatible
-    # via .j2 template...
-    BILLING_ROLE = 'Billing'
-
+    billing_role = settings.BILLING_ROLE
     txt = {
         'provide_username':
             '[E] Please provide the username for the user you are trying to sync.',
         'found_bo':
-            "[+] OK. found billable organisation '%s' for username '%s'.",
+            "[+] OK, found billable organisation '%s' for username '%s'.",
         'unexpected_err':
             "[E] There was an unexpected error: \n%s\n" \
             "[E] Aborting...",
@@ -638,16 +633,15 @@ def get_billable_organisation(username):
         "too_much_billing_roles":
             "[E] Got too many UserOrganisationRoles where this user is '%s'.\n" \
             "[E] Aborting...\n"
-            % BILLING_ROLE
+            % billing_role
     }
-
     call_command('sso_sync_user_organisation_roles', username)
     try:
         uors = models.UserOrganisationRole.objects.filter(
-            role__name=BILLING_ROLE,
+            role__name=billing_role,
             user__username=username)
         if len(uors) == 0:
-            raise Exception(txt['no_billing_role'] % (BILLING_ROLE, username))
+            raise Exception(txt['no_billing_role'] % (billing_role, username))
         elif len(uors) > 1:
             raise Exception(txt['too_much_billing_roles'])
         else:
@@ -655,6 +649,6 @@ def get_billable_organisation(username):
         billable_org = uor.organisation
         print(txt['found_bo'] % (billable_org.name, username))
     except Exception as err:
-        print(txt['unexpected_err'] % str(err))
-        sys.exit(-1)
-    return billable_org
+        raise Exception(txt['unexpected_err'] % str(err))
+    else:
+        return billable_org

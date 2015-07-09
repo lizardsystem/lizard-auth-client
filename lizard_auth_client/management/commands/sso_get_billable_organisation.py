@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 # import sys
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from lizard_auth_client import client
 
 class Command(BaseCommand):
@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         if len(args) != 1:
-            raise Exception('[E] Please provide a username')
+            raise CommandError'[E] Please provide a username')
         else:
             username = args[0]
             billable_org = client.get_billable_organisation(username)
