@@ -629,7 +629,8 @@ def get_billable_organisation(username):
             "[E] There was an unexpected error: \n%s\n" \
             "[E] Aborting...",
         'no_billing_role':
-            "[E] No UserOrganisationRole with name '%s' for username '%s'!\n" \
+            "[E] No UserOrganisationRole with name '%s' for username '%s' " \
+            "given the current portal.\n" \
             "[E] Aborting...\n",
         "too_much_billing_roles":
             "[E] Got too many UserOrganisationRoles where this user is '%s'.\n" \
