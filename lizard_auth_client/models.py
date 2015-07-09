@@ -12,7 +12,7 @@ class Role(models.Model):
     external_description = models.TextField()
     internal_description = models.TextField()
 
-    BILLING_ROLE_CODE = 'Billing'
+    BILLING_ROLE_CODE = 'billing'
 
     def __unicode__(self):
         return self.name

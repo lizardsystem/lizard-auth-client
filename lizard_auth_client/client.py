@@ -472,6 +472,8 @@ def sso_get_organisations(sso_server_private_url, sso_key, sso_secret):
 
 def sso_get_roles(sso_server_private_url, sso_key, sso_secret):
     """
+    Return a list of dicts containing role data for
+    the portal in question.
     """
     try:
         data = _do_post(
@@ -489,10 +491,13 @@ def sso_get_roles(sso_server_private_url, sso_key, sso_secret):
         raise CommunicationError('got an OK result, but with unknown content')
 
     return data
+    # return data['roles']
 
 
 def sso_get_roles_django():
     """
+    Same as .sso_get_roles(), but uses Django settings file for the URL base
+    and encryption keys.
     """
     from django.conf import settings
 
@@ -519,44 +524,10 @@ def sso_get_organisations_django():
         settings.SSO_SECRET
     )
 
-
-# def sso_get_organisation_roles(sso_server_private_url, sso_key, sso_secret):
-#     """
-#     """
-#     try:
-#         data = _do_post(
-#             sso_server_private_url,
-#             'api/organisation_roles',
-#             sso_key,
-#             sso_secret
-#             )
-#     except Exception as ex:
-#         logger.exception("Exception occurred in _do_post: {}".format(ex))
-#         raise CommunicationError(ex)
-
-#     # validate response a bit
-#     if not 'success' in data:
-#         raise CommunicationError('got an OK result, but with unknown content')
-
-#     return data
-
-
-# def sso_get_organisation_roles_django():
-#     """
-#     """
-#     # import here so this module can easily be reused outside of Django
-#     from django.conf import settings
-
-#     # call with django setting for SSO url
-#     return sso_get_organisation_roles(
-#         settings.SSO_SERVER_PRIVATE_URL,
-#         settings.SSO_KEY,
-#         settings.SSO_SECRET
-#     )
-
-
 def sso_get_user_organisation_roles_django(wanted_username):
     """
+    Retrieve the serielized OrgansationRole data from the SSO server, given
+    (i) the current portal and (ii) the wanted_username.
     """
     from django.conf import settings
 
@@ -639,15 +610,8 @@ def get_billable_organisation(user):
     }
     call_command('sso_sync_user_organisation_roles', username)
     try:
-        uors = models.UserOrganisationRole.objects.filter(
-            role__name=billing_role, user=user)
-        if len(uors) == 0:
-            raise Exception(txt['no_billing_role'] % (billing_role, username))
-        elif len(uors) > 1:
-            raise Exception(txt['too_much_billing_roles'])
-        else:
-            uor = uors[0]
-        billable_org = uor.organisation
+        billable_org = \
+            models.get_organisation_with_role(user, billing_role)
         print(txt['found_bo'] % (billable_org.name, username))
     except Exception as err:
         raise Exception(txt['unexpected_err'] % str(err))
