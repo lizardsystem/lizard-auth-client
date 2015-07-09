@@ -5,6 +5,7 @@ import requests
 import json
 import sys
 
+from django.db.utils import IntegrityError
 from django.core.management import call_command
 from django.conf import settings
 from lizard_auth_client import signals
@@ -526,8 +527,8 @@ def sso_get_organisations_django():
 
 def sso_get_user_organisation_roles_django(user):
     """
-    Retrieve the serielized OrgansationRole data from the SSO server, given
-    (i) the current portal and (ii) the wanted_username.
+    Retrieve the serialized OrgansationRole data from the SSO server, given
+    (i) the current portal and (ii) the wanted user.
     """
     from django.conf import settings
 
@@ -548,6 +549,27 @@ def sso_get_user_organisation_roles_django(user):
         raise CommunicationError('got an OK result, but with unknown content')
 
     return data['user_organisation_roles_data']
+
+
+def sso_sync_user_organisation_roles(user):
+    """
+    Synchronize the serialized OrgansationRole data from the SSO server, given
+    (i) the current portal and (ii) the wanted user.
+    """
+    for role_data in sso_get_roles_django():
+        try:
+            role = models.Role(**role_data)
+            role.save()
+        except IntegrityError:
+            # Catch exception for duplicate key/attr errors:
+            # This happens when a role is already present, and
+            # therefore there's no reason to build/save the a new
+            # Role instance for it.
+            pass
+    # Delete existing UserOrganisationRoles for the curent user
+    models.UserOrganisationRole.objects.filter(user=user).delete()
+    uor_data = sso_get_user_organisation_roles_django(user)
+    models.UserOrganisationRole.create_from_list_of_dicts(user, uor_data)
 
 
 def synchronize_organisations():
