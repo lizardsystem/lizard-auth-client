@@ -34,8 +34,8 @@ class UserNotFound(Exception):
     pass
 
 
-def _do_post( \
-    sso_server_private_url, sso_server_path, sso_key, sso_secret, **params):
+def _do_post(
+        sso_server_private_url, sso_server_path, sso_key, sso_secret, **params):
     '''
     Post the specified username and password combination to the
     authentication API listening on sso_server_private_url.
@@ -79,8 +79,8 @@ def _do_post( \
     r.raise_for_status()
 
 
-def _do_post_unsigned( \
-    sso_server_private_url, sso_server_path, sso_key, **params):
+def _do_post_unsigned(
+        sso_server_private_url, sso_server_path, sso_key, **params):
     '''
     Post the specified username and password combination to the
     authentication API listening on sso_server_private_url.
@@ -118,8 +118,8 @@ def _do_post_unsigned( \
         r.raise_for_status()
 
 
-def sso_authenticate_unsigned( \
-    sso_server_private_url, sso_key, username, password):
+def sso_authenticate_unsigned(
+        sso_server_private_url, sso_key, username, password):
     '''
     Return a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
@@ -168,8 +168,8 @@ def sso_authenticate_unsigned_django(username, password):
     )
 
 
-def sso_authenticate( \
-    sso_server_private_url, sso_key, sso_secret, username, password):
+def sso_authenticate(
+        sso_server_private_url, sso_key, sso_secret, username, password):
     '''
     Return a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
