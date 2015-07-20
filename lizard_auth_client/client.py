@@ -421,10 +421,6 @@ def synchronize_roles(user, received_role_data):
             role.save()
         roles[role.unique_id] = role
 
-
-    # Delete existing organisation roles
-    models.UserOrganisationRole.objects.filter(user=user).delete()
-
     # Renew them
     userorganisationroles = [
         models.UserOrganisationRole(
@@ -555,18 +551,6 @@ def sso_sync_user_organisation_roles(user):
     Synchronize the serialized OrgansationRole data from the SSO server, given
     (i) the current portal and (ii) the wanted user.
     """
-    for role_data in sso_get_roles_django():
-        try:
-            role = models.Role(**role_data)
-            role.save()
-        except IntegrityError:
-            # Catch exception for duplicate key/attr errors:
-            # This happens when a role is already present, and
-            # therefore there's no reason to build/save the a new
-            # Role instance for it.
-            pass
-    # Delete existing UserOrganisationRoles for the curent user
-    models.UserOrganisationRole.objects.filter(user=user).delete()
     uor_data = sso_get_user_organisation_roles_django(user)
     models.UserOrganisationRole.create_from_list_of_dicts(user, uor_data)
 
@@ -639,7 +623,7 @@ def get_billable_org_from_database(user):
         billable_org = \
             models.get_organisation_with_role(user, billing_role)
     except models.Organisation.DoesNotExist:
-        raise Exception(txt['unexpected_err'] % txt['org_not_exists'])
+        return False
     except models.Organisation.MultipleObjectsReturned:
         raise Exception(txt['unexpected_err'] % txt['too_many_orgs'])
     else:
