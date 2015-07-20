@@ -17,6 +17,11 @@ Changelog of lizard-auth-client
   billable organisation for each user, although the SSO server does not
   enforce that yet.
 
+- Add from_dict helper functions to Role, Organisation, OrganisationRole.
+
+- Add helper functions to find out in which organisations a user has a
+  given role.
+
 
 1.4.1 (2015-06-29)
 ------------------
