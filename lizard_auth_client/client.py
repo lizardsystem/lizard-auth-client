@@ -589,42 +589,26 @@ def synchronize_organisations():
     return (new_orgs, updated_orgs)
 
 
-def get_billable_organisation(user):
-    """
-    Retrieve the organisation for which the given user is a "billing" user: this
-    organisation is subsequently this users' 'billable organisation'
-    """
-    billable_org = get_billable_org_from_database(user)
+def get_billable_organisation(user, role_code=models.Role.BILLING_ROLE_CODE):
+    """Retrieve the organisation for which the given user is a "billing"
+    user: this organisation is subsequently this users' 'billable
+    organisation'
 
-    if billable_org:
-        return billable_org
-    else:
-        sso_sync_user_organisation_roles(user)
-        return get_billable_org_from_database(user)
-
-
-def get_billable_org_from_database(user):
+    Raises ValueError in case of
     """
-    Check whether we can simply find the billable organisation for the current
-    user in the local db, i.e. without first doing a call to lizard_auth_server.
-    """
-    billing_role = models.Role.BILLING_ROLE_CODE
-    txt = {
-        'unexpected_err':
-            "[E] There was an unexpected error: \n%s\n" \
-            "[E] Aborting...",
-        'org_not_exists':
-            'The organisation does not exist.',
-        'too_many_orgs':
-            'Too many organisations were returned.'
-    }
+    synced = False
 
-    try:
-        billable_org = \
-            models.get_organisation_with_role(user, billing_role)
-    except models.Organisation.DoesNotExist:
-        return False
-    except models.Organisation.MultipleObjectsReturned:
-        raise Exception(txt['unexpected_err'] % txt['too_many_orgs'])
-    else:
-        return billable_org
+    while True:
+        # Repeat so we can sync one time if things go wrong
+        try:
+            return models.get_organisation_with_role(user, role_code)
+        except (models.Organisation.DoesNotExist,
+                models.Organisation.MultipleObjectsReturned):
+            if synced:
+                # We have already synced and it still goes wrong:
+                raise ValueError(
+                    "Configuration error, can't find single "
+                    "billable organisation")
+            else:
+                sso_sync_user_organisation_roles(user)
+                synced = True
