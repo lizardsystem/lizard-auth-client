@@ -619,13 +619,21 @@ def get_billable_organisation(user):
         'unexpected_err':
             "[E] There was an unexpected error: \n%s\n" \
             "[E] Aborting...",
+        'org_not_exists':
+            'The organisation does not exist.',
+        'too_many_orgs':
+            'Too many organisations were returned.'
     }
     call_command('sso_sync_user_organisation_roles', username)
+
     try:
         billable_org = \
             models.get_organisation_with_role(user, billing_role)
         print(txt['found_bo'] % (billable_org.name, username))
-    except Exception as err:
-        raise Exception(txt['unexpected_err'] % str(err))
+    except models.Organisation.DoesNotExist:
+        raise Exception(txt['unexpected_err'] % txt['org_not_exists'])
+    except models.Organisation.MultipleObjectsReturned:
+        raise Exception(txt['unexpected_err'] % txt['too_many_orgs'])
     else:
         return billable_org
+
