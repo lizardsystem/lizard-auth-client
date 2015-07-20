@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import os
 
-
 SETTINGS_DIR = os.path.dirname(os.path.realpath(__file__))
 BUILDOUT_DIR = os.path.abspath(os.path.join(SETTINGS_DIR, '..'))
 

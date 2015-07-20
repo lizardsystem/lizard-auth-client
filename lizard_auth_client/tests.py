@@ -54,6 +54,7 @@ class TestClient(TestCase):
                 return client.sso_authenticate_django('root', 'wrong_password')
             self.assertRaises(client.AuthenticationFailed, wrong_pw)
 
+    # THIS GET F*CKED IF USING VAGRANT...
     def test_bad_url(self):
         def bad_url():
             return client.sso_authenticate('http://127.0.0.1:34577/', '', '',
@@ -235,3 +236,49 @@ class TestGetOrganisationsWithRole(TestCase):
     def test_call_get_organisation_with_role(self):
         org = models.get_organisation_with_role(self.user, 'billing')
         self.assertEquals(org.name, 'Nelen & Schuurmans')
+
+
+class TestGetBillableOrganisation(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(
+            username='testuser', is_staff=False, is_superuser=False)
+        self.role = models.Role.objects.create(
+            unique_id='A', code=models.Role.BILLING_ROLE_CODE)
+
+    def test_if_sync_is_called_and_valueerror_raised_when_db_empty(self):
+        with mock.patch(
+                'lizard_auth_client.client.'
+                'sso_sync_user_organisation_roles') as patched:
+            self.assertRaises(
+                ValueError,
+                lambda: client.get_billable_organisation(self.user))
+            patched.assert_called()
+
+    def test_raises_value_error_if_two_organisations(self):
+        org1 = models.Organisation.objects.create(unique_id='A')
+        org2 = models.Organisation.objects.create(unique_id='B')
+
+        models.UserOrganisationRole.objects.create(
+            user=self.user, role=self.role, organisation=org1)
+        models.UserOrganisationRole.objects.create(
+            user=self.user, role=self.role, organisation=org2)
+
+        with mock.patch(
+                'lizard_auth_client.client.'
+                'sso_sync_user_organisation_roles') as patched:
+            self.assertRaises(
+                ValueError,
+                lambda: client.get_billable_organisation(self.user))
+            patched.assert_called()
+
+    def test_function_actually_works_and_doesnt_sync(self):
+        org1 = models.Organisation.objects.create(unique_id='A')
+        models.UserOrganisationRole.objects.create(
+            user=self.user, role=self.role, organisation=org1)
+        with mock.patch(
+                'lizard_auth_client.client.'
+                'sso_sync_user_organisation_roles') as patched:
+            org = client.get_billable_organisation(self.user)
+            patched.assert_not_called()
+
+        self.assertEquals(org.pk, org1.pk)

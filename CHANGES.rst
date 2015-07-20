@@ -5,6 +5,18 @@ Changelog of lizard-auth-client
 1.5 (unreleased)
 ----------------
 
+- Added functions to synchronize a particular user's roles and
+  organiations. Previously this was synced when the user logged in,
+  but these functions can be called in toher contexts.
+
+- Added a special 'billing' role code that platforms are encouraged to use
+  to signify which organisations should receive bills.
+
+- A method lizard_auth_client.client.get_billable_organisation(user) returns
+  the billable organisation for that user. There should only be exactly 1
+  billable organisation for each user, although the SSO server does not
+  enforce that yet.
+
 - Add from_dict helper functions to Role, Organisation, OrganisationRole.
 
 - Add helper functions to find out in which organisations a user has a
