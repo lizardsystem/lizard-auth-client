@@ -252,7 +252,7 @@ class TestGetBillableOrganisation(TestCase):
             self.assertRaises(
                 ValueError,
                 lambda: client.get_billable_organisation(self.user))
-            patched.assert_called()
+            self.assertTrue(patched.called)
 
     def test_raises_value_error_if_two_organisations(self):
         org1 = models.Organisation.objects.create(unique_id='A')
@@ -269,7 +269,7 @@ class TestGetBillableOrganisation(TestCase):
             self.assertRaises(
                 ValueError,
                 lambda: client.get_billable_organisation(self.user))
-            patched.assert_called()
+            self.assertTrue(patched.called)
 
     def test_function_actually_works_and_doesnt_sync(self):
         org1 = models.Organisation.objects.create(unique_id='A')
@@ -279,6 +279,6 @@ class TestGetBillableOrganisation(TestCase):
                 'lizard_auth_client.client.'
                 'sso_sync_user_organisation_roles') as patched:
             org = client.get_billable_organisation(self.user)
-            patched.assert_not_called()
+            self.assertFalse(patched.called)
 
         self.assertEquals(org.pk, org1.pk)
