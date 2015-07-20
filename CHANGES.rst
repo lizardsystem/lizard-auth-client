@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-1.5 (unreleased)
+1.5 (2015-07-20)
 ----------------
 
 - Added functions to synchronize a particular user's roles and
