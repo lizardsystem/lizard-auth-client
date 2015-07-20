@@ -6,7 +6,6 @@ import json
 import sys
 
 from django.db.utils import IntegrityError
-from django.core.management import call_command
 from django.conf import settings
 from lizard_auth_client import signals
 
@@ -611,11 +610,22 @@ def get_billable_organisation(user):
     Retrieve the organisation for which the given user is a "billing" user: this
     organisation is subsequently this users' 'billable organisation'
     """
+    billable_org = get_billable_org_from_database(user)
+
+    if billable_org:
+        return billable_org
+    else:
+        sso_sync_user_organisation_roles(user)
+        return get_billable_org_from_database(user)
+
+
+def get_billable_org_from_database(user):
+    """
+    Check whether we can simply find the billable organisation for the current
+    user in the local db, i.e. without first doing a call to lizard_auth_server.
+    """
     billing_role = models.Role.BILLING_ROLE_CODE
-    username = user.username
     txt = {
-        'found_bo':
-            "[+] OK, found billable organisation '%s' for username '%s'.",
         'unexpected_err':
             "[E] There was an unexpected error: \n%s\n" \
             "[E] Aborting...",
@@ -624,16 +634,13 @@ def get_billable_organisation(user):
         'too_many_orgs':
             'Too many organisations were returned.'
     }
-    call_command('sso_sync_user_organisation_roles', username)
 
     try:
         billable_org = \
             models.get_organisation_with_role(user, billing_role)
-        print(txt['found_bo'] % (billable_org.name, username))
     except models.Organisation.DoesNotExist:
         raise Exception(txt['unexpected_err'] % txt['org_not_exists'])
     except models.Organisation.MultipleObjectsReturned:
         raise Exception(txt['unexpected_err'] % txt['too_many_orgs'])
     else:
         return billable_org
-
