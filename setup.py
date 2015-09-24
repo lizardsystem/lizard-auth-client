@@ -12,13 +12,14 @@ install_requires = [
     'Django >= 1.4',
     'django-extensions',
     'django-nose',
-    'requests',
     'itsdangerous',
+    'requests',
 ],
 
 tests_require = [
-    'mock',
     'coverage',
+    'coveralls',
+    'mock',
 ]
 
 setup(

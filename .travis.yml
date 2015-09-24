@@ -15,3 +15,5 @@ install:
   - bin/buildout
 script:
   - bin/test
+ after_success:
+  - bin/coveralls
