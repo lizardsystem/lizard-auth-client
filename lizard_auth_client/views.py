@@ -267,7 +267,6 @@ def get_request_token_and_determine_response():
 
     # construct a (signed) set of GET parameters which are used to
     # redirect the user to the SSO server
-    protocol = getattr(settings, 'PROTOCOL', 'https')
     params = {
         'request_token': request_token,
         'key': settings.SSO_KEY,
