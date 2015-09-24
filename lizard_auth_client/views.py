@@ -72,61 +72,6 @@ class TestProtectedView(View):
         )
 
 
-class LoginApiView(View):
-    '''
-    Login API, which can optionally be included in the urls of the
-    root Django app. This allows a non-webbrowser client, like
-    JavaScripts XmlHttpRequest, to implement HTTP redirects in their
-    own custom way.
-    '''
-    def get(self, request, *args, **kwargs):
-        # Redirect to the webclient after the SSO server dance
-        request.session['sso_after_login_next'] = settings.WEBCLIENT
-
-        # Get the login url with the token
-        wrapped_response = get_request_token_and_determine_response('/')
-
-        # This check could be done by checking if http_response is a
-        # subclass of HttpResponseRedirectBase, but that class is
-        # undocumented and has moved to another module between Django
-        # 1.4 and 1.5, so don't do that.
-        if (issubclass(wrapped_response.http_response, HttpResponseRedirect) or
-                issubclass(wrapped_response.http_response,
-                           HttpResponsePermanentRedirect)):
-            # The response is a redirect (302) to the SSO server.
-            # Wrap it in a normal HttpResponse, and have client-side code
-            # handle the actual redirect.
-            response_class = HttpResponse
-            content_dict = {'login_url': wrapped_response.redirect_url}
-        else:
-            # Response is something else, like an error message.
-            # Use the response class as-is and wrap the message
-            # in JSON.
-            response_class = wrapped_response.http_response
-            content_dict = {'message': wrapped_response.message}
-
-        content = json.dumps(content_dict)
-        return response_class(content=content, content_type='application/json')
-
-
-class LogoutApiView(View):
-    '''
-    Logout API, which can optionally be included in the urls of the
-    root Django app. This allows a non-webbrowser client, like
-    JavaScripts XmlHttpRequest, to implement HTTP redirects in their
-    own custom way.
-    '''
-    def get(self, request, *args, **kwargs):
-        # Redirect to the webclient after the SSO server dance
-        request.session['sso_after_logout_next'] = settings.WEBCLIENT
-
-        # Simple wrap the logout url in a JSON dict
-        logout_url = build_sso_portal_action_url('logout', '/')
-        content_dict = {'logout_url': logout_url}
-        content = json.dumps(content_dict)
-        return HttpResponse(content=content, content_type='application/json')
-
-
 class LoginView(View):
     '''
     View that redirects the user to the SSO server.
@@ -139,7 +84,7 @@ class LoginView(View):
         next = get_next(request)
         request.session['sso_after_login_next'] = next
 
-        wrapped_response = get_request_token_and_determine_response(next)
+        wrapped_response = get_request_token_and_determine_response()
 
         if (issubclass(wrapped_response.http_response, HttpResponseRedirect) or
             issubclass(wrapped_response.http_response,
@@ -190,7 +135,7 @@ class LogoutView(View):
         next = get_next(request)
         request.session['sso_after_logout_next'] = next
 
-        url = build_sso_portal_action_url('logout', next)
+        url = build_sso_portal_action_url('logout')
         # send the redirect response
         return HttpResponseRedirect(url)
 
@@ -301,7 +246,7 @@ def get_next(request):
     return next
 
 
-def get_request_token_and_determine_response(next):
+def get_request_token_and_determine_response():
     '''
     Retrieve a Request token from the SSO server, and determine the proper
     HttpResponse to send to the user.
@@ -322,11 +267,9 @@ def get_request_token_and_determine_response(next):
 
     # construct a (signed) set of GET parameters which are used to
     # redirect the user to the SSO server
-    protocol = getattr(settings, 'PROTOCOL', 'https')
     params = {
         'request_token': request_token,
         'key': settings.SSO_KEY,
-        'next': next
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
@@ -338,7 +281,7 @@ def get_request_token_and_determine_response(next):
     return WrappedResponse(HttpResponseRedirect, 'OK', url)
 
 
-def build_sso_portal_action_url(action, next):
+def build_sso_portal_action_url(action):
     '''
     Constructs and signs a message containing the specified action parameter,
     and returns a URL which can be used to redirect the user.
@@ -349,7 +292,6 @@ def build_sso_portal_action_url(action, next):
     params = {
         'action': action,
         'key': settings.SSO_KEY,
-        'next': next
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
