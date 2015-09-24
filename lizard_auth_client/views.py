@@ -84,7 +84,7 @@ class LoginView(View):
         next = get_next(request)
         request.session['sso_after_login_next'] = next
 
-        wrapped_response = get_request_token_and_determine_response(next)
+        wrapped_response = get_request_token_and_determine_response()
 
         if (issubclass(wrapped_response.http_response, HttpResponseRedirect) or
             issubclass(wrapped_response.http_response,
@@ -135,7 +135,7 @@ class LogoutView(View):
         next = get_next(request)
         request.session['sso_after_logout_next'] = next
 
-        url = build_sso_portal_action_url('logout', next)
+        url = build_sso_portal_action_url('logout')
         # send the redirect response
         return HttpResponseRedirect(url)
 
@@ -246,7 +246,7 @@ def get_next(request):
     return next
 
 
-def get_request_token_and_determine_response(next):
+def get_request_token_and_determine_response():
     '''
     Retrieve a Request token from the SSO server, and determine the proper
     HttpResponse to send to the user.
@@ -271,7 +271,6 @@ def get_request_token_and_determine_response(next):
     params = {
         'request_token': request_token,
         'key': settings.SSO_KEY,
-        'next': next
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
@@ -283,7 +282,7 @@ def get_request_token_and_determine_response(next):
     return WrappedResponse(HttpResponseRedirect, 'OK', url)
 
 
-def build_sso_portal_action_url(action, next):
+def build_sso_portal_action_url(action):
     '''
     Constructs and signs a message containing the specified action parameter,
     and returns a URL which can be used to redirect the user.
@@ -294,7 +293,6 @@ def build_sso_portal_action_url(action, next):
     params = {
         'action': action,
         'key': settings.SSO_KEY,
-        'next': next
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
