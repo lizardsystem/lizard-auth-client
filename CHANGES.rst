@@ -5,7 +5,9 @@ Changelog of lizard-auth-client
 1.6 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Updated test setup. We're now tested on travis-ci.org and our code coverage
+  is measured on coveralls.io.
+  [reinout]
 
 
 1.5 (2015-07-20)
