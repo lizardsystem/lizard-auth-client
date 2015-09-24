@@ -14,10 +14,12 @@ install_requires = [
     'django-nose',
     'requests',
     'itsdangerous',
-    'mock',
 ],
 
-tests_require = []
+tests_require = [
+    'mock',
+    'coverage',
+]
 
 setup(
     name='lizard-auth-client',
