@@ -12,12 +12,15 @@ install_requires = [
     'Django >= 1.4',
     'django-extensions',
     'django-nose',
-    'requests',
     'itsdangerous',
-    'mock',
+    'requests',
 ],
 
-tests_require = []
+tests_require = [
+    'coverage',
+    'coveralls',
+    'mock',
+]
 
 setup(
     name='lizard-auth-client',

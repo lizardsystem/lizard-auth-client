@@ -10,8 +10,16 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 
 from lizard_auth_client import client
-from lizard_auth_client import signals
 from lizard_auth_client import models
+from lizard_auth_client import signals
+
+# Yet untested, but we want them reported by coverage.py, so we import them.
+from lizard_auth_client import admin
+from lizard_auth_client import apps
+from lizard_auth_client import backends
+from lizard_auth_client import middleware
+from lizard_auth_client import utils
+from lizard_auth_client import views
 
 
 logger = logging.getLogger(__name__)
