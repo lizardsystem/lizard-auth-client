@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-1.6 (unreleased)
+1.6 (2015-09-24)
 ----------------
 
 - Updated test setup. We're now tested on travis-ci.org and our code coverage
