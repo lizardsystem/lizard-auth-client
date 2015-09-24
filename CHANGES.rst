@@ -9,6 +9,13 @@ Changelog of lizard-auth-client
   is measured on coveralls.io.
   [reinout]
 
+- Not passing django's ``next`` parameter to the SSO server anymore. That
+  served no purpose and actually resulted in a bug.
+  [reinout]
+
+- Removed two unused Login/LogoutApiView classes.
+  [reinout]
+
 
 1.5 (2015-07-20)
 ----------------
