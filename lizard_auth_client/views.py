@@ -257,7 +257,7 @@ def get_request_token_and_determine_response():
     WrappedResponse = namedtuple(
         'WrappedResponse', 'http_response, message, redirect_url')
 
-    # get a request token, which is used by the SSO server to verify
+    # Get a request token, which is used by the SSO server to verify
     # that the user is allowed to make a login request
     request_token = get_request_token()
     if not request_token:
@@ -265,8 +265,8 @@ def get_request_token_and_determine_response():
         return WrappedResponse(HttpResponseServiceUnavailable,
                                'Unable to obtain token', None)
 
-    # construct a (signed) set of GET parameters which are used to
-    # redirect the user to the SSO server
+    # Construct a (signed) set of GET parameters which are passed in the
+    # redirect URL that goes to the SSO server.
     params = {
         'request_token': request_token,
         'key': settings.SSO_KEY,
@@ -274,7 +274,7 @@ def get_request_token_and_determine_response():
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
                               ('key', settings.SSO_KEY)])
-    # build an absolute URL pointing to the SSO server out of it
+    # Build an absolute URL pointing to the SSO server out of it.
     url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/authorize') + '/'
     url = '%s?%s' % (url, query_string)
 
