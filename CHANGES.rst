@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-1.7 (unreleased)
+1.7 (2015-10-26)
 ----------------
 
 - In 1.6, the ``next`` parameter was removed from the requests to the SSO
