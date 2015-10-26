@@ -83,8 +83,9 @@ class LoginView(View):
         # to the requested page, after SSO login.
         next = get_next(request)
         request.session['sso_after_login_next'] = next
+        domain = request.GET.get('domain', None)
 
-        wrapped_response = get_request_token_and_determine_response()
+        wrapped_response = get_request_token_and_determine_response(domain)
 
         if (issubclass(wrapped_response.http_response, HttpResponseRedirect) or
             issubclass(wrapped_response.http_response,
@@ -134,8 +135,9 @@ class LogoutView(View):
         # redirect the user afterwards
         next = get_next(request)
         request.session['sso_after_logout_next'] = next
+        domain = request.GET.get('domain', None)
 
-        url = build_sso_portal_action_url('logout')
+        url = build_sso_portal_action_url('logout', domain)
         # send the redirect response
         return HttpResponseRedirect(url)
 
@@ -246,7 +248,7 @@ def get_next(request):
     return next
 
 
-def get_request_token_and_determine_response():
+def get_request_token_and_determine_response(domain=None):
     '''
     Retrieve a Request token from the SSO server, and determine the proper
     HttpResponse to send to the user.
@@ -270,6 +272,7 @@ def get_request_token_and_determine_response():
     params = {
         'request_token': request_token,
         'key': settings.SSO_KEY,
+        'domain': domain,
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
@@ -281,7 +284,7 @@ def get_request_token_and_determine_response():
     return WrappedResponse(HttpResponseRedirect, 'OK', url)
 
 
-def build_sso_portal_action_url(action):
+def build_sso_portal_action_url(action, domain=None):
     '''
     Constructs and signs a message containing the specified action parameter,
     and returns a URL which can be used to redirect the user.
@@ -292,6 +295,7 @@ def build_sso_portal_action_url(action):
     params = {
         'action': action,
         'key': settings.SSO_KEY,
+        'domain': domain,
     }
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
