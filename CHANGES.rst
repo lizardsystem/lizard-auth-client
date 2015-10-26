@@ -5,7 +5,11 @@ Changelog of lizard-auth-client
 1.7 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- In 1.6, the ``next`` parameter was removed from the requests to the SSO
+  server as it interfered with django's own ``next`` parameter usage. In its
+  place, a ``domain`` parameter is now passed. You can use this to redirect to
+  a specific domain if your site responds to multiple domains.
+  [reinout]
 
 
 1.6 (2015-09-24)

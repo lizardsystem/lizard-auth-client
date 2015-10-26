@@ -4,10 +4,9 @@ from __future__ import unicode_literals
 import logging
 import pprint
 
-import mock
-
 from django.contrib.auth.models import User
 from django.test import TestCase
+import mock
 
 from lizard_auth_client import client
 from lizard_auth_client import models
@@ -290,3 +289,32 @@ class TestGetBillableOrganisation(TestCase):
             self.assertFalse(patched.called)
 
         self.assertEquals(org.pk, org1.pk)
+
+
+def mock_get_request_token():
+    return 'abcdefg'
+
+
+class TestViews(TestCase):
+
+    @mock.patch('lizard_auth_client.views.get_request_token',
+                mock_get_request_token)
+    def test_get_request_token_and_determine_response1(self):
+        # Smoke test
+        self.assertTrue(views.get_request_token_and_determine_response())
+
+    @mock.patch('lizard_auth_client.views.get_request_token',
+                mock_get_request_token)
+    def test_get_request_token_and_determine_response2(self):
+        # Smoke test
+        self.assertTrue(views.get_request_token_and_determine_response(
+            domain='ab.cd'))
+
+    def test_build_sso_portal_action_url1(self):
+        # Smoke test
+        self.assertTrue(views.build_sso_portal_action_url('something'))
+
+    def test_build_sso_portal_action_url2(self):
+        # Smoke test
+        self.assertTrue(views.build_sso_portal_action_url('something',
+                                                          domain='ab.cd'))
