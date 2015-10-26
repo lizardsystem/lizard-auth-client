@@ -299,6 +299,20 @@ class TestViews(TestCase):
 
     @mock.patch('lizard_auth_client.views.get_request_token',
                 mock_get_request_token)
-    def test_get_request_token_and_determine_response(self):
+    def test_get_request_token_and_determine_response1(self):
         # Smoke test
         self.assertTrue(views.get_request_token_and_determine_response())
+
+    def test_get_request_token_and_determine_response2(self):
+        # Smoke test
+        self.assertTrue(views.get_request_token_and_determine_response(
+            domain='ab.cd'))
+
+    def test_build_sso_portal_action_url1(self):
+        # Smoke test
+        self.assertTrue(views.build_sso_portal_action_url('something'))
+
+    def test_build_sso_portal_action_url2(self):
+        # Smoke test
+        self.assertTrue(views.build_sso_portal_action_url('something',
+                                                          domain='ab.cd'))
