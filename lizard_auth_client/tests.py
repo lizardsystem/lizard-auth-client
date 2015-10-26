@@ -303,6 +303,8 @@ class TestViews(TestCase):
         # Smoke test
         self.assertTrue(views.get_request_token_and_determine_response())
 
+    @mock.patch('lizard_auth_client.views.get_request_token',
+                mock_get_request_token)
     def test_get_request_token_and_determine_response2(self):
         # Smoke test
         self.assertTrue(views.get_request_token_and_determine_response(
