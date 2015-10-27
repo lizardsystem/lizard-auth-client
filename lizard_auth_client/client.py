@@ -1,12 +1,9 @@
 from __future__ import print_function
 
+import json
 import logging
 import requests
-import json
-import sys
 
-from django.db.utils import IntegrityError
-from django.conf import settings
 from lizard_auth_client import signals
 
 logger = logging.getLogger(__name__)
@@ -34,8 +31,8 @@ class UserNotFound(Exception):
     pass
 
 
-def _do_post(
-        sso_server_private_url, sso_server_path, sso_key, sso_secret, **params):
+def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
+             **params):
     '''
     Post the specified username and password combination to the
     authentication API listening on sso_server_private_url.
@@ -430,8 +427,8 @@ def synchronize_roles(user, received_role_data):
         for org_unique_id, role_unique_id
         in received_role_data['organisation_roles']]
 
-    models.UserOrganisationRole.objects.bulk_create(
-        userorganisationroles)
+    models.UserOrganisationRole.objects.filter(user=user).delete()
+    models.UserOrganisationRole.objects.bulk_create(userorganisationroles)
 
     signals.user_synchronized.send(
         sender=synchronize_roles, user=user, organisation_roles=[

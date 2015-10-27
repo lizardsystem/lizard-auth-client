@@ -5,7 +5,9 @@ Changelog of lizard-auth-client
 1.8 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Remove a user from revoked organisation roles.
+
+- Fix duplicate user organisation roles.
 
 
 1.7 (2015-10-26)
