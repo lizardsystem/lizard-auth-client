@@ -427,8 +427,8 @@ def synchronize_roles(user, received_role_data):
         for org_unique_id, role_unique_id
         in received_role_data['organisation_roles']]
 
-    models.UserOrganisationRole.objects.bulk_create(
-        userorganisationroles)
+    models.UserOrganisationRole.objects.filter(user=user).delete()
+    models.UserOrganisationRole.objects.bulk_create(userorganisationroles)
 
     signals.user_synchronized.send(
         sender=synchronize_roles, user=user, organisation_roles=[
