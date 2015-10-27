@@ -13,12 +13,12 @@ from lizard_auth_client import models
 from lizard_auth_client import signals
 
 # Yet untested, but we want them reported by coverage.py, so we import them.
-from lizard_auth_client import admin
-from lizard_auth_client import apps
-from lizard_auth_client import backends
-from lizard_auth_client import middleware
-from lizard_auth_client import utils
-from lizard_auth_client import views
+from lizard_auth_client import admin  # NOQA
+from lizard_auth_client import apps  # NOQA
+from lizard_auth_client import backends  # NOQA
+from lizard_auth_client import middleware  # NOQA
+from lizard_auth_client import utils  # NOQA
+from lizard_auth_client import views  # NOQA
 
 
 logger = logging.getLogger(__name__)
@@ -243,6 +243,54 @@ class TestGetOrganisationsWithRole(TestCase):
     def test_call_get_organisation_with_role(self):
         org = models.get_organisation_with_role(self.user, 'billing')
         self.assertEquals(org.name, 'Nelen & Schuurmans')
+
+
+class TestUserOrganisationRoles(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create(username='test_user')
+        self.role_data = {
+            'organisations': [{
+                'unique_id': 'abc',
+                'name': 'name',
+            }],
+            'roles': [{
+                'unique_id': '123',
+                'code': 'code',
+                'name': 'name',
+                'external_description': 'ext',
+                'internal_description': 'int',
+            }],
+            'organisation_roles': [
+                ['abc', '123'],
+            ]
+        }
+
+    def test_duplicate_userorganisationroles(self):
+        client.synchronize_roles(self.user, self.role_data)
+        client.synchronize_roles(self.user, self.role_data)
+        actual = models.UserOrganisationRole.objects.filter(
+            user=self.user,
+            organisation__unique_id='abc',
+            role__unique_id='123'
+        ).count()
+        expected = 1
+        self.assertEqual(expected, actual)
+
+    def test_revoked_userorganisationroles(self):
+        client.synchronize_roles(self.user, self.role_data)
+        client.synchronize_roles(self.user, {
+            'organisations': [],
+            'roles': [],
+            'organisation_roles': [],
+        })
+        actual = models.UserOrganisationRole.objects.filter(
+            user=self.user,
+            organisation__unique_id='abc',
+            role__unique_id='123'
+        ).count()
+        expected = 0
+        self.assertEqual(expected, actual)
 
 
 class TestGetBillableOrganisation(TestCase):
