@@ -2,8 +2,8 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-1.8 (unreleased)
-----------------
+1.7.1 (2015-10-27)
+------------------
 
 - Remove a user from revoked organisation roles.
 
