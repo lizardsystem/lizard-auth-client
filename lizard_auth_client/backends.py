@@ -74,6 +74,7 @@ class SSOBackend(ModelBackend):
                 # the SSO server to construct a Django User instance.
                 if user_data:
                     user = client.construct_user(user_data)
+                    client.sso_sync_user_organisation_roles(user)
                     return user
         except:
             logger.exception('Error while authenticating user "%s".', username)
