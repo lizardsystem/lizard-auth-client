@@ -71,10 +71,12 @@ class SSOBackend(ModelBackend):
                             (user_data, hashed_password),
                             SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS)
                 # Use either the cached user profile data, or fresh data from
-                # the SSO server to construct a Django User instance.
+                # the SSO server to construct a Django User instance. If
+                # fresh data is used, also synchronize roles.
                 if user_data:
                     user = client.construct_user(user_data)
-                    client.sso_sync_user_organisation_roles(user)
+                    if not cached_credentials:
+                        client.sso_sync_user_organisation_roles(user)
                     return user
         except:
             logger.exception('Error while authenticating user "%s".', username)
