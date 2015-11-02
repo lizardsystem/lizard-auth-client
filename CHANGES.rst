@@ -2,8 +2,8 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-1.7.2 (unreleased)
-------------------
+1.8 (2015-11-02)
+----------------
 
 - Synchronize roles when authenticating via SSOBackend.
 
