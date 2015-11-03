@@ -5,7 +5,8 @@ Changelog of lizard-auth-client
 1.9 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Redirects after login / logout default to '/', this should be
+  settings.LOGIN_REDIRECT_URL if available.
 
 
 1.8 (2015-11-02)
