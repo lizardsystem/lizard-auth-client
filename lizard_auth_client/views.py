@@ -121,7 +121,8 @@ class LocalLoginView(View):
             sso_after_login_next = request.session['sso_after_login_next']
             del request.session['sso_after_login_next']
         else:
-            sso_after_login_next = '/'
+            sso_after_login_next = getattr(
+                settings, 'LOGIN_REDIRECT_URL', '/')
 
         return HttpResponseRedirect(sso_after_login_next)
 
@@ -148,7 +149,9 @@ class LocalLogoutView(View):
     '''
     def get(self, request, *args, **kwargs):
         # get the redirect url
-        next = request.session.get('sso_after_logout_next', '/')
+        next = request.session.get(
+            'sso_after_logout_next',
+            getattr(settings, 'LOGIN_REDIRECT_URL', '/'))
 
         # django_logout also calls session.flush()
         django_logout(request)
@@ -240,12 +243,10 @@ def verify_auth_token(untrusted_message):
 def get_next(request):
     '''
     Given a request, returns the URL where a user should be redirected to
-    after login. Defaults to '/'.
+    after login. Defaults to LOGIN_REDIRECT_URL, or '/' if that is not set.
     '''
-    next = request.GET.get('next', None)
-    if not next:
-        return '/'
-    return next
+    default = getattr(settings, 'LOGIN_REDIRECT_URL', '/')
+    return request.GET.get('next', default)
 
 
 def get_request_token_and_determine_response(domain=None):
