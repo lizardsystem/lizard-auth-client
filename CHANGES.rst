@@ -5,7 +5,13 @@ Changelog of lizard-auth-client
 1.14 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Add a @attempt_auto_login decorator that attempts to auto-login, but
+  doesn't complain (and doesn't try again) if the user is not logged
+  in yet.
+
+  This is to get functionality from @login_required (if the user is already
+  logged in on the SSO server, he is automatically logged in), without
+  making it mandatory to be logged in.
 
 
 1.13 (2016-04-25)

@@ -127,6 +127,18 @@ class LocalLoginView(View):
         return HttpResponseRedirect(sso_after_login_next)
 
 
+class LocalNotLoggedInView(View):
+    """
+    The user has returned from the SSO server without logging in.
+    Return him to his original page, unauthenticated.
+    """
+    def get(self, request, *args, **kwargs):
+        """Redirect the user to the stored "next" url."""
+        sso_after_login_next = request.session.pop(
+            'sso_after_login_next', '/')
+        return HttpResponseRedirect(sso_after_login_next)
+
+
 class LogoutView(View):
     '''
     Redirect user to SSO server, to log out there.
