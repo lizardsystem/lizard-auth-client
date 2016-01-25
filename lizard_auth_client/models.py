@@ -82,9 +82,15 @@ class Organisation(models.Model):
 class UserOrganisationRole(models.Model):
     """Stores which roles in which organisations a user has."""
     user_model = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
-    user = models.ForeignKey(user_model)
-    organisation = models.ForeignKey(Organisation)
-    role = models.ForeignKey(Role)
+    user = models.ForeignKey(
+        user_model,
+        related_name='user_organisation_roles')
+    organisation = models.ForeignKey(
+        Organisation,
+        related_name='user_organisation_roles')
+    role = models.ForeignKey(
+        Role,
+        related_name='user_organisation_roles')
 
     def __str__(self):
         return '%s %s %s' % (
@@ -126,8 +132,8 @@ class UserOrganisationRole(models.Model):
 def get_organisations_with_role(user, rolecode):
     """Return a queryset of organisations in which user has this role."""
     return Organisation.objects.filter(
-        userorganisationrole__user=user,
-        userorganisationrole__role__code=rolecode)
+        user_organisation_roles__user=user,
+        user_organisation_roles__role__code=rolecode)
 
 
 def get_organisation_with_role(user, rolecode):
