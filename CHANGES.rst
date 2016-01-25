@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-1.10 (unreleased)
+1.10 (2016-01-25)
 -----------------
 
 - Made sure the string representation on models also works on python 3 (it
