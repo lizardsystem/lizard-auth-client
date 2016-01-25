@@ -158,6 +158,10 @@ class TestOrganisation(TestCase):
         self.assertEquals(org.unique_id, "NENS")
         self.assertEquals(org.name, "Nelen & Schuurmans")
 
+    def test_prepresentation(self):
+        organisation = models.Organisation(name='Reinout')
+        self.assertTrue(repr(organisation))
+
 
 class TestRole(TestCase):
     def test_create_from_dict(self):
@@ -179,6 +183,10 @@ class TestRole(TestCase):
         self.assertEquals(role.external_description, 'Hooggeachte klant')
         self.assertEquals(role.internal_description, 'Melkkoe')
         self.assertFalse(hasattr(role, 'nog_een_veld'))
+
+    def test_prepresentation(self):
+        role = models.Role(name='Reinout')
+        self.assertTrue(repr(role))
 
 
 class TestUserOrganisationRole(TestCase):
