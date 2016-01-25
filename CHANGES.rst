@@ -5,7 +5,10 @@ Changelog of lizard-auth-client
 1.10 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Made sure the string representation on models also works on python 3 (it
+  also keeps working on python 2, of course). See
+  https://docs.djangoproject.com/en/1.8/ref/utils/#django.utils.encoding.python_2_unicode_compatible
+  [reinout]
 
 
 1.9 (2015-11-03)

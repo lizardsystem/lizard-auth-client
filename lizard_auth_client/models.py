@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.utils.encoding import python_2_unicode_compatible
 from django.conf import settings
 from django.db import models
 
 
+@python_2_unicode_compatible
 class Role(models.Model):
     unique_id = models.CharField(max_length=32, unique=True)
     code = models.CharField(max_length=255, null=False, blank=False)
@@ -14,7 +16,7 @@ class Role(models.Model):
 
     BILLING_ROLE_CODE = 'billing'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @classmethod
@@ -47,6 +49,7 @@ class Role(models.Model):
         return role
 
 
+@python_2_unicode_compatible
 class Organisation(models.Model):
     # Don't make Organisation name unique because data is only
     # synchronized when someone in an organisation logs in -- we can't
@@ -54,7 +57,7 @@ class Organisation(models.Model):
     name = models.CharField(max_length=255, null=False, blank=False)
     unique_id = models.CharField(max_length=32, unique=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @classmethod
@@ -75,6 +78,7 @@ class Organisation(models.Model):
         return org
 
 
+@python_2_unicode_compatible
 class UserOrganisationRole(models.Model):
     """Stores which roles in which organisations a user has."""
     user_model = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
@@ -82,7 +86,7 @@ class UserOrganisationRole(models.Model):
     organisation = models.ForeignKey(Organisation)
     role = models.ForeignKey(Role)
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s %s %s' % (
             str(self.user), str(self.organisation), str(self.role))
 
