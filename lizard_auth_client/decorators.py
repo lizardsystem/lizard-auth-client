@@ -9,6 +9,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import division
 
+import datetime
 from functools import wraps
 from django.contrib.auth.views import redirect_to_login
 from django.conf import settings
@@ -16,7 +17,7 @@ from django.utils.decorators import available_attrs
 from django.utils.encoding import force_str
 from django.utils.six.moves.urllib.parse import urlparse
 
-SESSION_ATTEMPT_MADE = 'LIZARD_AUTH_CLIENT_LOGIN_ATTEMPT_MADE'
+RETRY_AFTER = datetime.timedelta(hours=1)  # Re-attempt autologin after this
 
 
 def attempt_auto_login(view):
@@ -34,11 +35,15 @@ def attempt_auto_login(view):
 
     @wraps(view, assigned=available_attrs(view))
     def wrapped_view(request, *args, **kwargs):
-        if (SESSION_ATTEMPT_MADE in request.session or
-                request.user.is_authenticated()):
+
+        if request.user.is_authenticated():
             return view(request, *args, **kwargs)
 
-        request.session[SESSION_ATTEMPT_MADE] = True
+        now = datetime.datetime.now()
+        if ('AUTO_LOGIN_ATTEMPT' in request.session and
+                request.session['AUTO_LOGIN_ATTEMPT'] >= (now - RETRY_AFTER)):
+            return view(request, *args, **kwargs)
+        request.session['AUTO_LOGIN_ATTEMPT'] = now
 
         path = request.build_absolute_uri()
         resolved_login_url = (
