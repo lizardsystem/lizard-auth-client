@@ -41,7 +41,8 @@ def attempt_auto_login(view):
         request.session[SESSION_ATTEMPT_MADE] = True
 
         path = request.build_absolute_uri()
-        resolved_login_url = force_str(settings.LOGIN_URL)
+        resolved_login_url = (
+            force_str(settings.LOGIN_URL) + '?attempt_login_only=true')
 
         login_scheme, login_netloc = urlparse(resolved_login_url)[:2]
         current_scheme, current_netloc = urlparse(path)[:2]

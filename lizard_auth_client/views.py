@@ -85,7 +85,11 @@ class LoginView(View):
         request.session['sso_after_login_next'] = next
         domain = request.GET.get('domain', None)
 
-        wrapped_response = get_request_token_and_determine_response(domain)
+        # Possibly only attempt to login, don't force it
+        attempt_login_only = request.GET.get('attempt_login_only', False)
+
+        wrapped_response = get_request_token_and_determine_response(
+            domain, attempt_login_only)
 
         if (issubclass(wrapped_response.http_response, HttpResponseRedirect) or
             issubclass(wrapped_response.http_response,
@@ -261,7 +265,8 @@ def get_next(request):
     return request.GET.get('next', default)
 
 
-def get_request_token_and_determine_response(domain=None):
+def get_request_token_and_determine_response(
+        domain=None, attempt_login_only=False):
     '''
     Retrieve a Request token from the SSO server, and determine the proper
     HttpResponse to send to the user.
@@ -287,6 +292,12 @@ def get_request_token_and_determine_response(domain=None):
         'key': settings.SSO_KEY,
         'domain': domain,
     }
+
+    # If this is true, the SSO server does not force a login and only logs
+    # in a user that is already logged in on the SSO server.
+    if attempt_login_only:
+        params['return_unauthenticated'] = True
+
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
                               ('key', settings.SSO_KEY)])
