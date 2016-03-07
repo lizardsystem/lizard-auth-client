@@ -47,7 +47,14 @@ class Role(models.Model):
         return role
 
 
+class OrganisationManager(models.Manager):
+    def get_by_natural_key(self, unique_id):
+        return self.get(unique_id=unique_id)
+
+
 class Organisation(models.Model):
+    objects = OrganisationManager()
+
     # Don't make Organisation name unique because data is only
     # synchronized when someone in an organisation logs in -- we can't
     # guarantee that names will stay unique that way.
@@ -56,6 +63,9 @@ class Organisation(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    def natural_key(self):
+        return (self.unique_id, )
 
     @classmethod
     def create_from_dict(cls, dict_from_server):

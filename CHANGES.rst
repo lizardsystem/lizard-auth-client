@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 1.10 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Added natural key to Organisation model.
 
 
 1.9 (2015-11-03)
