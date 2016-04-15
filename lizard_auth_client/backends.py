@@ -10,7 +10,7 @@ from django.contrib.auth.hashers import check_password, make_password
 try:
     from django.contrib.auth.hashers import UNUSABLE_PASSWORD
 except:
-    #ImproperlyConfigured:
+    # ImproperlyConfigured:
     # Don't know what is wrong
     UNUSABLE_PASSWORD = 'bla'
 
