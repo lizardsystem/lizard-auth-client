@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 1.12 (unreleased)
 -----------------
 
-- Log authentication failures at info level.
+- Log authentication failures at info level (relieving Sentry).
 
 
 1.11 (2016-03-07)
