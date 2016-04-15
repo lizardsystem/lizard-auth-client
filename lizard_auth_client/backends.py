@@ -10,7 +10,7 @@ from django.contrib.auth.hashers import check_password, make_password
 try:
     from django.contrib.auth.hashers import UNUSABLE_PASSWORD
 except:
-    #ImproperlyConfigured:
+    # ImproperlyConfigured:
     # Don't know what is wrong
     UNUSABLE_PASSWORD = 'bla'
 
@@ -78,6 +78,9 @@ class SSOBackend(ModelBackend):
                     if not cached_credentials:
                         client.sso_sync_user_organisation_roles(user)
                     return user
+        except client.AuthenticationFailed as e:
+            logger.info(e)
+            return None
         except:
             logger.exception('Error while authenticating user "%s".', username)
             return None
