@@ -20,6 +20,7 @@ tests_require = [
     'coverage',
     'coveralls',
     'mock',
+    'fake-factory',
 ]
 
 setup(

@@ -6,8 +6,10 @@ import pprint
 
 from django.contrib.auth.models import User
 from django.test import TestCase
+from faker import Faker
 import mock
 
+from lizard_auth_client import backends
 from lizard_auth_client import client
 from lizard_auth_client import models
 from lizard_auth_client import signals
@@ -15,13 +17,12 @@ from lizard_auth_client import signals
 # Yet untested, but we want them reported by coverage.py, so we import them.
 from lizard_auth_client import admin  # NOQA
 from lizard_auth_client import apps  # NOQA
-from lizard_auth_client import backends  # NOQA
 from lizard_auth_client import middleware  # NOQA
 from lizard_auth_client import utils  # NOQA
 from lizard_auth_client import views  # NOQA
 
-
 logger = logging.getLogger(__name__)
+fake = Faker()
 
 
 class TestClient(TestCase):
@@ -61,7 +62,6 @@ class TestClient(TestCase):
                 return client.sso_authenticate_django('root', 'wrong_password')
             self.assertRaises(client.AuthenticationFailed, wrong_pw)
 
-    # THIS GET F*CKED IF USING VAGRANT...
     def test_bad_url(self):
         def bad_url():
             return client.sso_authenticate('http://127.0.0.1:34577/', '', '',
@@ -374,3 +374,47 @@ class TestViews(TestCase):
         # Smoke test
         self.assertTrue(views.build_sso_portal_action_url('something',
                                                           domain='ab.cd'))
+
+
+class TestSSOBackend(TestCase):
+
+    def test_communication_error(self):
+        with mock.patch(
+                'lizard_auth_client.client.sso_authenticate_django',
+                side_effect=client.CommunicationError):
+            backend = backends.SSOBackend()
+            username = fake.user_name()
+            password = fake.password()
+            user = backend.authenticate(username, password)
+            self.assertIsNone(user)
+
+    def test_authentication_failed(self):
+        with mock.patch(
+                'lizard_auth_client.client.sso_authenticate_django',
+                side_effect=client.AuthenticationFailed):
+            backend = backends.SSOBackend()
+            username = fake.user_name()
+            password = fake.password()
+            user = backend.authenticate(username, password)
+            self.assertIsNone(user)
+
+    def test_authenticate(self):
+        username = fake.user_name()
+        password = fake.password()
+        user_dict = dict(
+            first_name=fake.first_name(),
+            last_name=fake.last_name(),
+            username=username,
+            password=password,
+            email=fake.email(),
+            is_active=True,
+        )
+        with mock.patch(
+                'lizard_auth_client.client.sso_authenticate_django',
+                return_value=user_dict), mock.patch(
+                'lizard_auth_client.client.sso_sync_user_organisation_roles',
+                return_value=[]):
+            backend = backends.SSOBackend()
+            user = backend.authenticate(username, password)
+            self.assertTrue(isinstance(user, User))
+            self.assertEqual(username, user.username)

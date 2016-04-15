@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 1.12 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Log authentication failures at info level.
 
 
 1.11 (2016-03-07)
