@@ -5,7 +5,9 @@ Changelog of lizard-auth-client
 1.12 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Log authentication failures at info level (relieving Sentry).
+
+- Add model factories to be used in tests.
 
 
 1.11 (2016-03-07)
