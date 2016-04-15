@@ -19,8 +19,9 @@ install_requires = [
 tests_require = [
     'coverage',
     'coveralls',
-    'mock',
+    'factory-boy',
     'fake-factory',
+    'mock',
 ]
 
 setup(
