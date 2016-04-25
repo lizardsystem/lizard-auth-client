@@ -353,17 +353,16 @@ def construct_user(data):
     # create or get a User instance
     try:
         user = User.objects.get(username=local_username)
+        if user.has_usable_password():
+            user.set_unusable_password()
     except User.DoesNotExist:
         user = User()
+        user.set_unusable_password()
 
     # copy simple properies like email and first name
     for key in ['first_name', 'last_name', 'email', 'is_active']:
         setattr(user, key, data[key])
     user.username = local_username
-
-    # ensure user can't login
-    if user.has_usable_password():
-        user.set_unusable_password()
     user.save()
 
     # Note we don't set any permissions here -- not handled by SSO
