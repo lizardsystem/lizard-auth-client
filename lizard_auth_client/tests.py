@@ -97,7 +97,7 @@ class TestClient(TestCase):
                 return client.sso_populate_user_django('non_existing_username')
             self.assertRaises(client.UserNotFound, unknown_user)
 
-    def test_login_user(self):
+    def test_password_retains_when_login_twice(self):
         with mock.patch('lizard_auth_client.client._do_post', return_value={
                 'success': True,
                 'user': {'username': 'root',
