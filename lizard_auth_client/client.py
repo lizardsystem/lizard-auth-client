@@ -362,7 +362,8 @@ def construct_user(data):
     user.username = local_username
 
     # ensure user can't login
-    user.set_unusable_password()
+    if user.has_usable_password():
+        user.set_unusable_password()
     user.save()
 
     # Note we don't set any permissions here -- not handled by SSO

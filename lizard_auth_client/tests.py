@@ -2,12 +2,12 @@
 from __future__ import unicode_literals
 
 import logging
+import mock
 import pprint
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from faker import Faker
-import mock
 
 from lizard_auth_client import backends
 from lizard_auth_client import client
@@ -96,6 +96,21 @@ class TestClient(TestCase):
             def unknown_user():
                 return client.sso_populate_user_django('non_existing_username')
             self.assertRaises(client.UserNotFound, unknown_user)
+
+    def test_login_user(self):
+        with mock.patch('lizard_auth_client.client._do_post', return_value={
+                'success': True,
+                'user': {'username': 'root',
+                         'first_name': 'Willie',
+                         'last_name': 'Wortel',
+                         'email': 'noreply@example.com',
+                         'is_active': True,
+                         'is_staff': False,
+                         'is_superuser': False}}):
+            user = client.sso_populate_user_django('root')
+            password = user.password
+            user = client.sso_populate_user_django('root')
+            self.assertEqual(user.password, password)
 
 
 class TestSuperuserStaffCallback(TestCase):
