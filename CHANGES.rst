@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-1.13 (unreleased)
+1.13 (2016-04-25)
 -----------------
 
 - Do not set unusable password twice.
