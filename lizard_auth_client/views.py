@@ -110,7 +110,10 @@ class LocalLoginView(View):
     def get(self, request, *args, **kwargs):
         # verify the authentication token and
         # retrieve the User instance from the SSO server
-        user = verify_auth_token(request.GET['message'])
+        message = request.GET.get('message', None)
+        if not message:
+            return HttpResponseBadRequest('No message')
+        user = verify_auth_token(message)
         if not user:
             return HttpResponseBadRequest('Verification failed')
 

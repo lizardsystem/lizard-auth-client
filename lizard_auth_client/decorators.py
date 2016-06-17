@@ -50,6 +50,7 @@ def attempt_auto_login(view):
 
         # datetime needs to be JSON serializable:
         request.session['AUTO_LOGIN_ATTEMPT'] = now.isoformat()
+
         path = request.build_absolute_uri()
         resolved_login_url = (
             force_str(settings.LOGIN_URL) + '?attempt_login_only=true')

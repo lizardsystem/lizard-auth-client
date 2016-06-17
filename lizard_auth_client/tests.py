@@ -404,6 +404,14 @@ class TestViews(TestCase):
         self.assertTrue(views.build_sso_portal_action_url('something',
                                                           domain='ab.cd'))
 
+    def test_login(self):
+        from django.test import Client
+        c = Client()
+        response = c.get('/sso/local_login')
+        # TODO: fix
+        self.assertEqual(response.status_code, 200)
+
+
 class TestSSOBackend(TestCase):
 
     def test_communication_error(self):
