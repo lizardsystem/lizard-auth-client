@@ -139,6 +139,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'lizard_auth_client.middleware.LoginRequiredMiddleware',
+    'lizard_auth_client.middleware.AttemptAutoLoginMiddleware',
     )
 
 INSTALLED_APPS = (
