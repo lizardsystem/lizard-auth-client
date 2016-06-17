@@ -28,14 +28,12 @@ def attempt_auto_login(view):
     but will then simply continue with an unauthenticated user.
 
     This attempt is only made once per session. The session field
-    'LIZARD_AUTH_CLIENT_LOGIN_ATTEMPT_MADE' will be set, and subsequent
-    calls will just continue on to the view with the user as currently
-    set in the session.
+    'AUTO_LOGIN_ATTEMPT' will be set, and subsequent calls will just continue
+    on to the view with the user as currently set in the session.
     """
 
     @wraps(view, assigned=available_attrs(view))
     def wrapped_view(request, *args, **kwargs):
-
         if request.user.is_authenticated():
             return view(request, *args, **kwargs)
 
@@ -43,8 +41,8 @@ def attempt_auto_login(view):
         if ('AUTO_LOGIN_ATTEMPT' in request.session and
                 request.session['AUTO_LOGIN_ATTEMPT'] >= (now - RETRY_AFTER)):
             return view(request, *args, **kwargs)
-        request.session['AUTO_LOGIN_ATTEMPT'] = now
 
+        request.session['AUTO_LOGIN_ATTEMPT'] = now
         path = request.build_absolute_uri()
         resolved_login_url = (
             force_str(settings.LOGIN_URL) + '?attempt_login_only=true')
