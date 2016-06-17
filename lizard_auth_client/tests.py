@@ -381,6 +381,20 @@ class TestViews(TestCase):
         self.assertTrue(views.get_request_token_and_determine_response(
             domain='ab.cd'))
 
+    @mock.patch('lizard_auth_client.views.get_request_token',
+                mock_get_request_token)
+    def test_get_request_token_and_determine_response3(self):
+        # Smoke test
+        self.assertTrue(views.get_request_token_and_determine_response(
+            attempt_login_only=True))
+
+    @mock.patch('lizard_auth_client.views.get_request_token',
+                mock_get_request_token)
+    def test_get_request_token_and_determine_response4(self):
+        # Smoke test
+        self.assertTrue(views.get_request_token_and_determine_response(
+            domain='ab.cd', attempt_login_only=True))
+
     def test_build_sso_portal_action_url1(self):
         # Smoke test
         self.assertTrue(views.build_sso_portal_action_url('something'))
@@ -389,7 +403,6 @@ class TestViews(TestCase):
         # Smoke test
         self.assertTrue(views.build_sso_portal_action_url('something',
                                                           domain='ab.cd'))
-
 
 class TestSSOBackend(TestCase):
 

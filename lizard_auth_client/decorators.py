@@ -20,6 +20,10 @@ from django.utils.six.moves.urllib.parse import urlparse
 RETRY_AFTER = datetime.timedelta(hours=1)  # Re-attempt autologin after this
 
 
+# Note: the actual ISO 8601 is "%Y-%m-%dT%H:%M:%S.%fZ", which Python violates
+ISO_8601_format = "%Y-%m-%dT%H:%M:%S.%f"
+
+
 def attempt_auto_login(view):
     """Attempt to login an unauthenticated user using the SSO server.
 
@@ -38,11 +42,14 @@ def attempt_auto_login(view):
             return view(request, *args, **kwargs)
 
         now = datetime.datetime.now()
-        if ('AUTO_LOGIN_ATTEMPT' in request.session and
-                request.session['AUTO_LOGIN_ATTEMPT'] >= (now - RETRY_AFTER)):
-            return view(request, *args, **kwargs)
+        if 'AUTO_LOGIN_ATTEMPT' in request.session:
+            auto_login_attempt = datetime.datetime.strptime(
+                request.session['AUTO_LOGIN_ATTEMPT'], ISO_8601_format)
+            if auto_login_attempt >= (now - RETRY_AFTER):
+                return view(request, *args, **kwargs)
 
-        request.session['AUTO_LOGIN_ATTEMPT'] = now
+        # datetime needs to be JSON serializable:
+        request.session['AUTO_LOGIN_ATTEMPT'] = now.isoformat()
         path = request.build_absolute_uri()
         resolved_login_url = (
             force_str(settings.LOGIN_URL) + '?attempt_login_only=true')

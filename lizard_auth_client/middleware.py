@@ -67,6 +67,6 @@ class LoginRequiredMiddleware(object):
 class AttemptAutoLoginMiddleware(object):
     """Apply the attempt_auto_login decorator on every view function."""
 
-    def process_view(request, view_func, view_args, view_kwargs):
+    def process_view(self, request, view_func, view_args, view_kwargs):
         auto_login_view_func = attempt_auto_login(view_func)
         return auto_login_view_func(request, *view_args, **view_kwargs)
