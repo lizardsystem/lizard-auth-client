@@ -161,6 +161,10 @@ CACHES = {
     }
 }
 
+# Explicitly set a unique name to avoid cookie collisions when running multiple
+# applications on the same domain. See: http://stackoverflow.com/a/7894760
+SESSION_COOKIE_NAME = 'lizard_auth_client_sessionid'
+
 try:
     # Import local settings that aren't stored in svn/git.
     from lizard_auth_client.local_testsettings import *
