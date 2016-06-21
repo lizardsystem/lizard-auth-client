@@ -75,5 +75,10 @@ class AttemptAutoLoginMiddleware(object):
         If that doesn't work, ensure your TEMPLATE_CONTEXT_PROCESSORS
         setting includes 'django.core.context_processors.auth'.'''
 
-        auto_login_view_func = attempt_auto_login(view_func)
-        return auto_login_view_func(request, *view_args, **view_kwargs)
+        path = request.path_info.strip('/')
+        if string_has_any_prefix(exempt_urls, path):
+            # Exempt urls are accessible to all
+            return
+        else:
+            auto_login_view_func = attempt_auto_login(view_func)
+            return auto_login_view_func(request, *view_args, **view_kwargs)
