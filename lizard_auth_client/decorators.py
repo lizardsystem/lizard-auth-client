@@ -38,6 +38,7 @@ def attempt_auto_login(view):
 
     @wraps(view, assigned=available_attrs(view))
     def wrapped_view(request, *args, **kwargs):
+        #import pdb; pdb.set_trace()
         if request.user.is_authenticated():
             return view(request, *args, **kwargs)
 

@@ -46,7 +46,9 @@ class TestHomeView(View):
         user = request.user
         return HttpResponse(
             '<a href="/">home</a> | <a href="/protected">protected</a>'
-            '| <a href="/accounts/logout">logout</a> | user={} | home @ client'
+            '| <a href="/accounts/logout">logout</a> '
+            '| <a href="/accounts/login">login</a> '
+            '| user={} | home @ client'
             ''.format(user)
         )
 
@@ -67,6 +69,7 @@ class TestProtectedView(View):
         return HttpResponse(
             '<a href="/">home</a> | <a href="/protected">protected</a>'
             '| <a href="/accounts/logout">logout</a> '
+            '| <a href="/accounts/login">login</a>'
             '| user={} | protected @ client'
             ''.format(user)
         )
