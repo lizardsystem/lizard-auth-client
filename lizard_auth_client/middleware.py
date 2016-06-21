@@ -68,5 +68,12 @@ class AttemptAutoLoginMiddleware(object):
     """Apply the attempt_auto_login decorator on every view function."""
 
     def process_view(self, request, view_func, view_args, view_kwargs):
+        assert hasattr(request, 'user'), '''The AttemptAutoLoginMiddleware
+        requires authentication middleware to be installed. Edit your
+        MIDDLEWARE_CLASSES setting to insert
+        'django.contrib.auth.middlware.AuthenticationMiddleware'.
+        If that doesn't work, ensure your TEMPLATE_CONTEXT_PROCESSORS
+        setting includes 'django.core.context_processors.auth'.'''
+
         auto_login_view_func = attempt_auto_login(view_func)
         return auto_login_view_func(request, *view_args, **view_kwargs)
