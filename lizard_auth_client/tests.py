@@ -6,6 +6,7 @@ import mock
 import pprint
 
 from django.contrib.auth.models import User
+from django.test import Client
 from django.test import TestCase
 from faker import Faker
 
@@ -404,12 +405,49 @@ class TestViews(TestCase):
         self.assertTrue(views.build_sso_portal_action_url('something',
                                                           domain='ab.cd'))
 
-    def test_login(self):
-        from django.test import Client
+    def test_attempt_login_middleware(self):
+        """Test that AttemptAutoLoginMiddleware redirects with a parameter"""
         c = Client()
-        response = c.get('/sso/local_login')
-        # TODO: fix
+        response = c.get('/')
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue('attempt_login_only' in response.url)
+
+    def test_attempt_login_middleware_second_request(self):
+        """Test that you'll be logged in unauthenticated as an AnonymousUser
+        with the AttemptAutoLoginMiddleware enabled.
+        """
+        c = Client()
+        response = c.get('/')
+        response = c.get('/')
         self.assertEqual(response.status_code, 200)
+        self.assertTrue('AnonymousUser' in response.content)
+
+    def test_no_attempt_login_middleware(self):
+        """Test that no authentication takes place when
+        AttemptAutoLoginMiddleware isn't enabled"""
+        with self.modify_settings(MIDDLEWARE_CLASSES={
+            'remove':
+                'lizard_auth_client.middleware.AttemptAutoLoginMiddleware',
+                }):
+            c = Client()
+            response = c.get('/')
+            self.assertEqual(response.status_code, 200)
+
+    def test_attempt_login_middleware_with_protected_view(self):
+        """Test that protected view is unaffected by
+        AttemptAutoLoginMiddleware"""
+        c = Client()
+        response = c.get('/protected')
+        self.assertEqual(response.status_code, 301)
+        self.assertTrue('attempt_login_only' not in response.url)
+
+        with self.modify_settings(MIDDLEWARE_CLASSES={
+            'remove':
+                'lizard_auth_client.middleware.AttemptAutoLoginMiddleware',
+                }):
+            c = Client()
+            response = c.get('/protected')
+            self.assertEqual(response.status_code, 301)
 
 
 class TestSSOBackend(TestCase):
