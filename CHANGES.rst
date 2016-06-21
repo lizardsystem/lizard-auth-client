@@ -7,7 +7,7 @@ Changelog of lizard-auth-client
 
 - Put the attemp_auto_login function into a middlware.
 
-- Add a @attempt_auto_login decorator that attempts to auto-login, but
+- Added a @attempt_auto_login decorator that attempts to auto-login, but
   doesn't complain (and doesn't try again) if the user is not logged
   in yet.
 

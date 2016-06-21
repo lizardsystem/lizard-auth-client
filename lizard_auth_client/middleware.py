@@ -72,13 +72,6 @@ class AttemptAutoLoginMiddleware(object):
     """
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        assert hasattr(request, 'user'), '''The AttemptAutoLoginMiddleware
-        requires authentication middleware to be installed. Edit your
-        MIDDLEWARE_CLASSES setting to insert
-        'django.contrib.auth.middlware.AuthenticationMiddleware'.
-        If that doesn't work, ensure your TEMPLATE_CONTEXT_PROCESSORS
-        setting includes 'django.core.context_processors.auth'.'''
-
         path = request.path_info.strip('/')
         if string_has_any_prefix(exempt_urls, path):
             # Exempt urls are accessible to all
