@@ -52,16 +52,16 @@ def attempt_auto_login(view):
         request.session['AUTO_LOGIN_ATTEMPT'] = now.isoformat()
 
         path = request.build_absolute_uri()
-        resolved_login_url = (
+        attempt_only_login_url = (
             force_str(settings.LOGIN_URL) + '?attempt_login_only=true')
 
-        login_scheme, login_netloc = urlparse(resolved_login_url)[:2]
+        login_scheme, login_netloc = urlparse(attempt_only_login_url)[:2]
         current_scheme, current_netloc = urlparse(path)[:2]
 
         if ((not login_scheme or login_scheme == current_scheme) and
                 (not login_netloc or login_netloc == current_netloc)):
             path = request.get_full_path()
 
-        return redirect_to_login(path, resolved_login_url)
+        return redirect_to_login(path, attempt_only_login_url)
 
     return wrapped_view
