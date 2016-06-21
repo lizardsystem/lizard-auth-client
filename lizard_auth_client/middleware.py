@@ -65,7 +65,11 @@ class LoginRequiredMiddleware(object):
 
 
 class AttemptAutoLoginMiddleware(object):
-    """Apply the attempt_auto_login decorator on every view function."""
+    """Apply the attempt_auto_login decorator on every view function.
+
+    Note: this middleware doesn't work together with LoginRequiredMiddleware
+    because it intercepts the requests before they can be handled here.
+    """
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         assert hasattr(request, 'user'), '''The AttemptAutoLoginMiddleware
