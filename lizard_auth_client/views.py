@@ -303,7 +303,7 @@ def get_request_token_and_determine_response(
     # If this is true, the SSO server does not force a login and only logs
     # in a user that is already logged in on the SSO server.
     if attempt_login_only:
-        params['return_unauthenticated'] = True
+        params['force_sso_login'] = False
 
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),

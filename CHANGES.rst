@@ -5,6 +5,8 @@ Changelog of lizard-auth-client
 1.14 (unreleased)
 -----------------
 
+- Renamed 'return_unauthenticated'.
+
 - Put the attemp_auto_login function into a middlware.
 
 - Added a @attempt_auto_login decorator that attempts to auto-login, but
