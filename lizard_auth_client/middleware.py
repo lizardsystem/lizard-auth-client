@@ -1,6 +1,8 @@
 from django.http import HttpResponseRedirect
 from django.conf import settings
 
+from lizard_auth_client.decorators import attempt_auto_login
+
 
 def string_has_any_prefix(prefix_list, some_string):
     '''
@@ -60,3 +62,20 @@ class LoginRequiredMiddleware(object):
             path = request.path_info.strip('/')
             if not string_has_any_prefix(exempt_urls, path):
                 return HttpResponseRedirect(settings.LOGIN_URL)
+
+
+class AttemptAutoLoginMiddleware(object):
+    """Apply the attempt_auto_login decorator on every view function.
+
+    Note: this middleware doesn't work together with LoginRequiredMiddleware
+    because it intercepts the requests before they can be handled here.
+    """
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        path = request.path_info.strip('/')
+        if string_has_any_prefix(exempt_urls, path):
+            # Exempt urls are accessible to all
+            return
+        else:
+            auto_login_view_func = attempt_auto_login(view_func)
+            return auto_login_view_func(request, *view_args, **view_kwargs)

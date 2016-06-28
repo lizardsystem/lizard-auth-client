@@ -46,7 +46,9 @@ class TestHomeView(View):
         user = request.user
         return HttpResponse(
             '<a href="/">home</a> | <a href="/protected">protected</a>'
-            '| <a href="/accounts/logout">logout</a> | user={} | home @ client'
+            '| <a href="/accounts/logout">logout</a> '
+            '| <a href="/accounts/login">login</a> '
+            '| user={} | home @ client'
             ''.format(user)
         )
 
@@ -67,6 +69,7 @@ class TestProtectedView(View):
         return HttpResponse(
             '<a href="/">home</a> | <a href="/protected">protected</a>'
             '| <a href="/accounts/logout">logout</a> '
+            '| <a href="/accounts/login">login</a>'
             '| user={} | protected @ client'
             ''.format(user)
         )
@@ -85,7 +88,11 @@ class LoginView(View):
         request.session['sso_after_login_next'] = next
         domain = request.GET.get('domain', None)
 
-        wrapped_response = get_request_token_and_determine_response(domain)
+        # Possibly only attempt to login, don't force it
+        attempt_login_only = request.GET.get('attempt_login_only', False)
+
+        wrapped_response = get_request_token_and_determine_response(
+            domain, attempt_login_only)
 
         if (issubclass(wrapped_response.http_response, HttpResponseRedirect) or
             issubclass(wrapped_response.http_response,
@@ -106,7 +113,10 @@ class LocalLoginView(View):
     def get(self, request, *args, **kwargs):
         # verify the authentication token and
         # retrieve the User instance from the SSO server
-        user = verify_auth_token(request.GET['message'])
+        message = request.GET.get('message', None)
+        if not message:
+            return HttpResponseBadRequest('No message')
+        user = verify_auth_token(message)
         if not user:
             return HttpResponseBadRequest('Verification failed')
 
@@ -124,6 +134,18 @@ class LocalLoginView(View):
             sso_after_login_next = getattr(
                 settings, 'LOGIN_REDIRECT_URL', '/')
 
+        return HttpResponseRedirect(sso_after_login_next)
+
+
+class LocalNotLoggedInView(View):
+    """
+    The user has returned from the SSO server without logging in.
+    Return him to his original page, unauthenticated.
+    """
+    def get(self, request, *args, **kwargs):
+        """Redirect the user to the stored "next" url."""
+        sso_after_login_next = request.session.pop(
+            'sso_after_login_next', '/')
         return HttpResponseRedirect(sso_after_login_next)
 
 
@@ -249,7 +271,8 @@ def get_next(request):
     return request.GET.get('next', default)
 
 
-def get_request_token_and_determine_response(domain=None):
+def get_request_token_and_determine_response(
+        domain=None, attempt_login_only=False):
     '''
     Retrieve a Request token from the SSO server, and determine the proper
     HttpResponse to send to the user.
@@ -275,6 +298,12 @@ def get_request_token_and_determine_response(domain=None):
         'key': settings.SSO_KEY,
         'domain': domain,
     }
+
+    # If this is true, the SSO server does not force a login and only logs
+    # in a user that is already logged in on the SSO server.
+    if attempt_login_only:
+        params['return_unauthenticated'] = True
+
     message = URLSafeTimedSerializer(settings.SSO_SECRET).dumps(params)
     query_string = urlencode([('message', message),
                               ('key', settings.SSO_KEY)])
