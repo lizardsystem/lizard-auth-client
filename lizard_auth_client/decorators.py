@@ -27,6 +27,13 @@ ISO_8601_format = "%Y-%m-%dT%H:%M:%S.%f"
 def attempt_auto_login(view):
     """Attempt to login an unauthenticated user using the SSO server.
 
+    This decorator does several things:
+
+    1. Attempt to log in a locally unauthenticated user using the SSO server.
+    If this succeeds we are redirected back to the original page due to the
+    way redirects are set up.
+
+    2. If the user is not logged in in the SSO server, this happens:
     Contrary to login_required, this does not give an error or redirect
     to a login page if the user isn't logged in on the SSO server yet,
     but will then simply continue with an unauthenticated user.
@@ -62,6 +69,7 @@ def attempt_auto_login(view):
                 (not login_netloc or login_netloc == current_netloc)):
             path = request.get_full_path()
 
+        # the 'next' param is set with this redirect:
         return redirect_to_login(path, attempt_only_login_url)
 
     return wrapped_view

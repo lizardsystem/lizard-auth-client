@@ -89,7 +89,8 @@ class LoginView(View):
         domain = request.GET.get('domain', None)
 
         # Possibly only attempt to login, don't force it
-        attempt_login_only = request.GET.get('attempt_login_only', False)
+        attempt_login_only = 'true' in request.GET.get(
+            'attempt_login_only', 'false').lower()
 
         wrapped_response = get_request_token_and_determine_response(
             domain, attempt_login_only)
