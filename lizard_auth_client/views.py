@@ -26,6 +26,7 @@ from django.views.generic.base import View
 from django.utils.decorators import method_decorator
 
 from itsdangerous import URLSafeTimedSerializer
+import jwt
 
 from lizard_auth_client import client
 
@@ -75,7 +76,7 @@ class TestProtectedView(View):
         )
 
 
-class LoginView(View):
+class LoginViewV1(View):
     '''
     View that redirects the user to the SSO server.
 
@@ -107,6 +108,38 @@ class LoginView(View):
             )
 
 
+class JWTLoginView(View):
+    """Log in using JWT API (i.e., the V2 SSO API)."""
+    def get(self, request, *args, **kwargs):
+        next = get_next(request)
+        request.session['sso_after_login_next'] = next
+        domain = request.GET.get('domain', None)
+
+        # Possibly only attempt to login, don't force it
+        attempt_login_only = 'true' in request.GET.get(
+            'attempt_login_only', 'false').lower()
+
+        payload = {
+            # Identifier for this site
+            'key': settings.SSO_KEY,
+            'domain': domain,
+            # If this is true, the SSO server does not force a login and only
+            # logs in a user that is already logged in on the SSO server.
+            'force_sso_login': not attempt_login_only,
+            }
+        signed_message = jwt.encode(payload, settings.SSO_SECRET,
+                                    algorithm='HS256')
+        query_string = urlencode({
+            'message': signed_message,
+            'key': settings.SSO_KEY
+            })
+
+        # Build an absolute URL pointing to the SSO server out of it.
+        url = urljoin(settings.SSO_SERVER_PUBLIC_URL_V2, 'authorize/')
+        url_with_params = '%s?%s' % (url, query_string)
+        return HttpResponseRedirect(url_with_params)
+
+
 class LocalLoginView(View):
     '''
     Verifies the user token with the SSO server, and logs the user in.
@@ -115,9 +148,23 @@ class LocalLoginView(View):
         # verify the authentication token and
         # retrieve the User instance from the SSO server
         message = request.GET.get('message', None)
+        api_version = request.GET.get('api_version', 'v1')
+
         if not message:
             return HttpResponseBadRequest('No message')
-        user = verify_auth_token(message)
+
+        if api_version == 'v2':
+            try:
+                payload = jwt.decode(message, settings.SSO_SECRET,
+                                     algorithms=['HS256'])
+            except jwt.exceptions.DecodeError:
+                return HttpResponseBadRequest(
+                    "Failed to decode JWT signature.")
+            user_data = json.loads(payload['user'])
+            user = client.construct_user(user_data)
+        else:
+            user = verify_auth_token(message)
+
         if not user:
             return HttpResponseBadRequest('Verification failed')
 
@@ -150,7 +197,7 @@ class LocalNotLoggedInView(View):
         return HttpResponseRedirect(sso_after_login_next)
 
 
-class LogoutView(View):
+class LogoutViewV1(View):
     '''
     Redirect user to SSO server, to log out there.
     '''
@@ -162,6 +209,36 @@ class LogoutView(View):
         domain = request.GET.get('domain', None)
 
         url = build_sso_portal_action_url('logout', domain)
+        # send the redirect response
+        return HttpResponseRedirect(url)
+
+
+class JWTLogoutView(View):
+    '''
+    Redirect user to SSO server, to log out there.
+    '''
+    def get(self, request, *args, **kwargs):
+        # store the 'next' parameter in the session so we can
+        # redirect the user afterwards
+        next = get_next(request)
+        request.session['sso_after_logout_next'] = next
+        domain = request.GET.get('domain', None)
+
+        payload = {
+            # Identifier for this site
+            'key': settings.SSO_KEY,
+            'domain': domain,
+            }
+        signed_message = jwt.encode(payload, settings.SSO_SECRET,
+                                    algorithm='HS256')
+        query_string = urlencode({
+            'message': signed_message,
+            'key': settings.SSO_KEY
+            })
+
+        url = urljoin(settings.SSO_SERVER_PUBLIC_URL_V2, 'logout/')
+        url = '%s?%s' % (url, query_string)
+
         # send the redirect response
         return HttpResponseRedirect(url)
 
@@ -334,3 +411,8 @@ def build_sso_portal_action_url(action, domain=None):
     url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/portal_action') + '/'
     url = '%s?%s' % (url, query_string)
     return url
+
+
+# Let this setting determine which version of the login/logout to use.
+LoginView = JWTLoginView if settings.SSO_USE_V2_LOGIN else LoginViewV1
+LogoutView = JWTLogoutView if settings.SSO_USE_V2_LOGIN else LogoutViewV1
