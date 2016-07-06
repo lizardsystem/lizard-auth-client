@@ -5,6 +5,8 @@ Changelog of lizard-auth-client
 1.14 (unreleased)
 -----------------
 
+- Added JWT expiration of 15 minutes.
+
 - Added new views + other changes for switching to V2 (JWT) SSO API.
 
 - Renamed 'return_unauthenticated'.

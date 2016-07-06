@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from collections import namedtuple
+import datetime
 import json
 
 import requests
@@ -24,7 +25,6 @@ from django.http import (
 from django.http import HttpResponse
 from django.views.generic.base import View
 from django.utils.decorators import method_decorator
-
 from itsdangerous import URLSafeTimedSerializer
 import jwt
 
@@ -32,6 +32,7 @@ from lizard_auth_client import client
 
 # used so we can login User objects we instantiated ourselves
 BACKEND = ModelBackend()
+JWT_EXPIRATION = datetime.timedelta(minutes=settings.JWT_EXPIRATION_MINUTES)
 
 
 class HttpResponseServiceUnavailable(HttpResponse):
@@ -126,6 +127,8 @@ class JWTLoginView(View):
             # If this is true, the SSO server does not force a login and only
             # logs in a user that is already logged in on the SSO server.
             'force_sso_login': not attempt_login_only,
+            # Set timeout
+            'exp': datetime.datetime.utcnow() + JWT_EXPIRATION,
             }
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
                                     algorithm='HS256')
@@ -158,6 +161,8 @@ class LocalLoginView(View):
             except jwt.exceptions.DecodeError:
                 return HttpResponseBadRequest(
                     "Failed to decode JWT signature.")
+            except jwt.exceptions.ExpiredSignatureError:
+                return HttpResponseBadRequest("JWT has expired.")
             user_data = json.loads(payload['user'])
             user = client.construct_user(user_data)
         else:
@@ -226,6 +231,8 @@ class JWTLogoutView(View):
             # Identifier for this site
             'key': settings.SSO_KEY,
             'domain': domain,
+            # Set timeout
+            'exp': datetime.datetime.utcnow() + JWT_EXPIRATION,
             }
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
                                     algorithm='HS256')
