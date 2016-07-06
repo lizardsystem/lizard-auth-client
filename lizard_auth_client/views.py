@@ -148,12 +148,10 @@ class LocalLoginView(View):
         # verify the authentication token and
         # retrieve the User instance from the SSO server
         message = request.GET.get('message', None)
-        api_version = request.GET.get('api_version', 'v1')
-
         if not message:
             return HttpResponseBadRequest('No message')
 
-        if api_version == 'v2':
+        if settings.SSO_USE_V2_LOGIN:
             try:
                 payload = jwt.decode(message, settings.SSO_SECRET,
                                      algorithms=['HS256'])
