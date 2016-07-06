@@ -111,7 +111,7 @@ SSO_SERVER_PRIVATE_URL = 'http://dev.sso.lizard.net:9874/'
 # Timeout for cached credentials with the SSOBackend Authentication Backend.
 SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS = 60
 # JWT timeout
-JWT_EXPIRATION_MINUTES = 15
+JWT_EXPIRATION_MINUTES = 5
 
 ROOT_URLCONF = 'lizard_auth_client.urls'
 
