@@ -14,6 +14,7 @@ install_requires = [
     'django-nose',
     'itsdangerous',
     'requests',
+    'PyJWT',
 ],
 
 tests_require = [
