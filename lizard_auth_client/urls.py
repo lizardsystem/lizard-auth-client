@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.conf.urls import include
-from django.conf.urls import patterns
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
@@ -54,8 +53,7 @@ def check_settings():
 if sso_enabled:
     check_settings()
 
-    urlpatterns = patterns(
-        '',
+    urlpatterns = [
         # Note: ensure LOGIN_URL isn't defined in the settings
         # URLS the do the SSO redirect for login/logout
         url(r'^accounts/login/$',
@@ -84,18 +82,18 @@ if sso_enabled:
         url(r'^sso/local_logout/$',
             views.LocalLogoutView.as_view(),
             name='lizard_auth_client.sso_local_logout'),
-    )
+    ]
 else:
-    urlpatterns = patterns('')
+    urlpatterns = []
 
 
 if getattr(settings, 'SSO_STANDALONE', False) is True:
     # when running standalone (for testing purposes), add some extra URLS
     admin.autodiscover()
-    urlpatterns += (
+    urlpatterns += [
         url(r'^$',           views.TestHomeView.as_view()),
         url(r'^protected/$', views.TestProtectedView.as_view()),
         url(r'^admin/',      include(admin.site.urls)),
-    )
+    ]
     if settings.DEBUG:
         urlpatterns += staticfiles_urlpatterns()
