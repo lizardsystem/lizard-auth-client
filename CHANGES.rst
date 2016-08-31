@@ -17,9 +17,11 @@ Changelog of lizard-auth-client
   doesn't complain (and doesn't try again) if the user is not logged
   in yet.
 
-  This is to get functionality from @login_required (if the user is already
+- This is to get functionality from @login_required (if the user is already
   logged in on the SSO server, he is automatically logged in), without
   making it mandatory to be logged in.
+
+- Made urls.py compatible with Django 1.10.
 
 
 1.13 (2016-04-25)
