@@ -31,14 +31,14 @@ def set_superuser_staff_callback(user, organisation_roles, **kwargs):
     changed = False
 
     if not user.is_superuser:
-        for rolecode in getattr(settings, 'SSO_CLIENT_SUPERUSER_ROLES', []):
+        for rolecode in settings.SSO_CLIENT_SUPERUSER_ROLES:
             if any(rolecode == role.code
                    for (organisation, role) in organisation_roles):
                 changed = True
                 user.is_superuser = True
 
     if not user.is_staff:
-        for rolecode in getattr(settings, 'SSO_CLIENT_STAFF_ROLES', []):
+        for rolecode in settings.SSO_CLIENT_STAFF_ROLES:
             if any(rolecode == role.code
                    for (organisation, role) in organisation_roles):
                 changed = True
