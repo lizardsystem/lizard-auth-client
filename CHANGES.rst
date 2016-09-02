@@ -5,7 +5,8 @@ Changelog of lizard-auth-client
 2.1 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Added a default (5 minutes) for ``JWT_EXPIRATION_MINUTES`` so you don't need
+  to specify it in your own settings.
 
 
 2.0 (2016-09-02)
