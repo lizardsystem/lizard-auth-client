@@ -1,5 +1,5 @@
 from django.http import HttpResponseRedirect
-from django.conf import settings
+from lizard_auth_client.conf import settings
 
 from lizard_auth_client.decorators import attempt_auto_login
 

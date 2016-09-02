@@ -12,7 +12,7 @@ try:
 except ImportError:
     from urllib.parse import urljoin, urlencode
 
-from django.conf import settings
+from lizard_auth_client.conf import settings
 from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend
@@ -33,7 +33,7 @@ from lizard_auth_client import client
 # used so we can login User objects we instantiated ourselves
 BACKEND = ModelBackend()
 JWT_EXPIRATION = datetime.timedelta(
-    minutes=getattr(settings, 'JWT_EXPIRATION_MINUTES', 5))
+    minutes=settings.SSO_JWT_EXPIRATION_MINUTES)
 
 
 class HttpResponseServiceUnavailable(HttpResponse):

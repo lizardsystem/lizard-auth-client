@@ -14,14 +14,11 @@ except:
     # Don't know what is wrong
     UNUSABLE_PASSWORD = 'bla'
 
-from django.conf import settings
-
+from lizard_auth_client.conf import settings
 from lizard_auth_client import client
 
-logger = logging.getLogger(__name__)
 
-SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS = getattr(
-    settings, 'SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS', 60)
+logger = logging.getLogger(__name__)
 
 
 class SSOBackend(ModelBackend):
@@ -69,7 +66,7 @@ class SSOBackend(ModelBackend):
                         cache.set(
                             cache_key,
                             (user_data, hashed_password),
-                            SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS)
+                            settings.SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS)
                 # Use either the cached user profile data, or fresh data from
                 # the SSO server to construct a Django User instance. If
                 # fresh data is used, also synchronize roles.

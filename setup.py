@@ -20,6 +20,7 @@ install_requires = [
 tests_require = [
     'coverage',
     'coveralls',
+    'django-appconf',
     'factory-boy',
     'fake-factory',
     'mock',

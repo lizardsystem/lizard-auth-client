@@ -1,11 +1,6 @@
 from __future__ import print_function
 
-import os
-import sys
-import shutil
-
 from django.core.management.base import BaseCommand
-from django.conf import settings
 from lizard_auth_client.client import sso_get_user_django, construct_user
 
 VERBOSE = V = True
@@ -47,4 +42,3 @@ class Command(BaseCommand):
                     print("[+] OK, succesfully saved this User instance!")
             except Exception as err:
                 print("[E] err = '%s'" % str(err))
-

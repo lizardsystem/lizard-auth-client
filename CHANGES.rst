@@ -5,7 +5,16 @@ Changelog of lizard-auth-client
 2.1 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Removed unused ``utils.py`` which provided the ``gen_secret_key()``
+  function.
+
+- Added django-appconf for easier settings management. All settings with their
+  defaults are now in ``conf.py``.
+
+- The ``JWT_EXPIRATION_MINUTES`` setting is now called
+  ``SSO_JWT_EXPIRATION_MINUTES`` for consistency.
+
+- Provided a default (False) for ``SSO_USE_V2_LOGIN``.
 
 
 2.0.1 (2016-09-02)

@@ -154,7 +154,7 @@ def sso_authenticate_unsigned_django(username, password):
     to import the URL base and portal key.
     '''
     # import here so this module can easily be reused outside of Django
-    from django.conf import settings
+    from lizard_auth_client.conf import settings
 
     # call with django setting for SSO url
     return sso_authenticate_unsigned(
@@ -206,7 +206,7 @@ def sso_authenticate_django(username, password):
     the URL base and encryption keys.
     '''
     # import here so this module can easily be reused outside of Django
-    from django.conf import settings
+    from lizard_auth_client.conf import settings
 
     # call with django setting for SSO url
     return sso_authenticate(
@@ -288,7 +288,7 @@ def sso_get_user_django(username):
     the URL base and encryption keys.
     '''
     # import here so this module can easily be reused outside of Django
-    from django.conf import settings
+    from lizard_auth_client.conf import settings
 
     # call with django setting for SSO url
     return sso_get_user(
@@ -305,7 +305,7 @@ def sso_get_users_django():
     the URL base and encryption keys.
     '''
     # import here so this module can easily be reused outside of Django
-    from django.conf import settings
+    from lizard_auth_client.conf import settings
 
     # call with django setting for SSO url
     return sso_get_users(
@@ -491,7 +491,7 @@ def sso_get_roles_django():
     Same as .sso_get_roles(), but uses Django settings file for the URL base
     and encryption keys.
     """
-    from django.conf import settings
+    from lizard_auth_client.conf import settings
 
     # call with django setting for SSO url
     return sso_get_roles(
@@ -507,7 +507,7 @@ def sso_get_organisations_django():
     module to import the URL base and encryption keys.
     '''
     # import here so this module can easily be reused outside of Django
-    from django.conf import settings
+    from lizard_auth_client.conf import settings
 
     # call with django setting for SSO url
     return sso_get_organisations(
@@ -522,7 +522,7 @@ def sso_get_user_organisation_roles_django(user):
     Retrieve the serialized OrgansationRole data from the SSO server, given
     (i) the current portal and (ii) the wanted user.
     """
-    from django.conf import settings
+    from lizard_auth_client.conf import settings
 
     try:
         data = _do_post(

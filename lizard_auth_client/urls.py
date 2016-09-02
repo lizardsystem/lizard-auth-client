@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.conf import settings
+from lizard_auth_client.conf import settings
 from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
@@ -11,46 +11,52 @@ from django.core.exceptions import ImproperlyConfigured
 from lizard_auth_client import views
 
 
-sso_enabled = getattr(settings, 'SSO_ENABLED', False)
-
-
 def check_settings():
     '''
     Ensure settings are valid, as this Django app is mostly included by
     other apps / sites.
     '''
-    if not hasattr(settings, 'SSO_KEY'):
+    if not settings.SSO_KEY:
         raise ImproperlyConfigured(
             'Please define a value for SSO_KEY in your settings. '
             'This (random) key is referenced in the model "Client" '
             'on the SSO server, and is used to identify this webserver.'
         )
-    if not hasattr(settings, 'SSO_SECRET'):
+    if not settings.SSO_SECRET:
         raise ImproperlyConfigured(
             'Please define a value for SSO_SECRET in your settings. '
             'This (random) key is shared between SSO server and clients '
             'to sign / encrypt tokens.'
         )
-    if (not hasattr(settings, 'SSO_SERVER_PUBLIC_URL')
-            or not hasattr(settings, 'SSO_SERVER_PRIVATE_URL')):
-        raise ImproperlyConfigured(
-            'Please define values for SSO_SERVER_PUBLIC_URL and '
-            'SSO_SERVER_PRIVATE_URL in your settings. '
-            'These URIs are used to locate the SSO server.'
-        )
+
+    if settings.SSO_USE_V2_LOGIN:
+        if not settings.SSO_SERVER_PUBLIC_URL_V2:
+            raise ImproperlyConfigured(
+                'Please define a value for SSO_SERVER_PUBLIC_URL_V2 '
+                'your settings. This URL is used to locate the SSO server.'
+            )
+    else:
+        if (not settings.SSO_SERVER_PUBLIC_URL or
+            not settings.SSO_SERVER_PRIVATE_URL):
+            raise ImproperlyConfigured(
+                'Please define values for SSO_SERVER_PUBLIC_URL and '
+                'SSO_SERVER_PRIVATE_URL in your settings. '
+                'These URIs are used to locate the SSO server.'
+            )
+
     # Check some old settings we don't want to use anymore.
     if hasattr(settings, 'SSO_SYNCED_USER_KEYS'):
         raise ImproperlyConfigured(
             "Deprecation warning: SSO_SYNCED_USER_KEYS isn't "
             "used anymore, see CHANGES.rst for version 1.0.")
 
-    if "p-web-ws-00-d8" in getattr(settings, 'SSO_SERVER_PRIVATE_URL', ''):
+    if "p-web-ws-00-d8" in settings.SSO_SERVER_PRIVATE_URL:
         raise ImproperlyConfigured(
             "Deprecation warning: outdated SSO_SERVER_PRIVATE_URL, "
             "use 110-sso-c1 instead of p-web-ws-00-d8.")
 
 
-if sso_enabled:
+if settings.SSO_ENABLED:
     check_settings()
 
     urlpatterns = [
@@ -87,7 +93,7 @@ else:
     urlpatterns = []
 
 
-if getattr(settings, 'SSO_STANDALONE', False) is True:
+if settings.SSO_STANDALONE is True:
     # when running standalone (for testing purposes), add some extra URLS
     admin.autodiscover()
     urlpatterns += [
