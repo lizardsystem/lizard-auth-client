@@ -5,7 +5,8 @@ Changelog of lizard-auth-client
 2.2 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Fixed django-appconf dependency: it was in the test dependencies instead of
+  in the regular dependencies...
 
 
 2.1 (2016-09-02)
