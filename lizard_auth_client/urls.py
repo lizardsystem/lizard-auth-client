@@ -28,13 +28,22 @@ def check_settings():
             'This (random) key is shared between SSO server and clients '
             'to sign / encrypt tokens.'
         )
-    if (not settings.SSO_SERVER_PUBLIC_URL or
-        not settings.SSO_SERVER_PRIVATE_URL):
-        raise ImproperlyConfigured(
-            'Please define values for SSO_SERVER_PUBLIC_URL and '
-            'SSO_SERVER_PRIVATE_URL in your settings. '
-            'These URIs are used to locate the SSO server.'
-        )
+
+    if settings.SSO_USE_V2_LOGIN:
+        if not settings.SSO_SERVER_PUBLIC_URL_V2:
+            raise ImproperlyConfigured(
+                'Please define a value for SSO_SERVER_PUBLIC_URL_V2 '
+                'your settings. This URL is used to locate the SSO server.'
+            )
+    else:
+        if (not settings.SSO_SERVER_PUBLIC_URL or
+            not settings.SSO_SERVER_PRIVATE_URL):
+            raise ImproperlyConfigured(
+                'Please define values for SSO_SERVER_PUBLIC_URL and '
+                'SSO_SERVER_PRIVATE_URL in your settings. '
+                'These URIs are used to locate the SSO server.'
+            )
+
     # Check some old settings we don't want to use anymore.
     if hasattr(settings, 'SSO_SYNCED_USER_KEYS'):
         raise ImproperlyConfigured(
