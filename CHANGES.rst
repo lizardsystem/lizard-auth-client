@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.1 (unreleased)
+2.1 (2016-09-02)
 ----------------
 
 - Removed unused ``utils.py`` which provided the ``gen_secret_key()``
