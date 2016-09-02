@@ -12,7 +12,7 @@ try:
 except ImportError:
     from urllib.parse import urljoin, urlencode
 
-from django.conf import settings
+from lizard_auth_client.conf import settings
 from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend

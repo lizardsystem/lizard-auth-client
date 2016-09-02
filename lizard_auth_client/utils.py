@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from random import SystemRandom
-from django.conf import settings
+from lizard_auth_client.conf import settings
 import string
 
 random = SystemRandom()

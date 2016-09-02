@@ -14,8 +14,7 @@ except:
     # Don't know what is wrong
     UNUSABLE_PASSWORD = 'bla'
 
-from django.conf import settings
-
+from lizard_auth_client.conf import settings
 from lizard_auth_client import client
 
 logger = logging.getLogger(__name__)

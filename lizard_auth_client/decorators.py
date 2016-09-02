@@ -12,7 +12,7 @@ from __future__ import division
 import datetime
 from functools import wraps
 from django.contrib.auth.views import redirect_to_login
-from django.conf import settings
+from lizard_auth_client.conf import settings
 from django.utils.decorators import available_attrs
 from django.utils.encoding import force_str
 from django.utils.six.moves.urllib.parse import urlparse
