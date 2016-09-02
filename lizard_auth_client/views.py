@@ -32,7 +32,8 @@ from lizard_auth_client import client
 
 # used so we can login User objects we instantiated ourselves
 BACKEND = ModelBackend()
-JWT_EXPIRATION = datetime.timedelta(minutes=settings.JWT_EXPIRATION_MINUTES)
+JWT_EXPIRATION = datetime.timedelta(
+    minutes=getattr(settings, 'JWT_EXPIRATION_MINUTES', 5))
 
 
 class HttpResponseServiceUnavailable(HttpResponse):
