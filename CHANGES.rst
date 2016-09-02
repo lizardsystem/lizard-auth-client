@@ -11,14 +11,13 @@ Changelog of lizard-auth-client
 
 - Renamed 'return_unauthenticated'.
 
-- Put the attemp_auto_login function into a middlware.
+- Put the attemp_auto_login function into a middleware.
 
-- Added a @attempt_auto_login decorator that attempts to auto-login, but
-  doesn't complain (and doesn't try again) if the user is not logged
-  in yet.
+- Added an ``@attempt_auto_login`` decorator that attempts to auto-login, but
+  doesn't complain (and doesn't try again) if the user is not logged in yet.
 
-- This is to get functionality from @login_required (if the user is already
-  logged in on the SSO server, he is automatically logged in), without
+  This is to get functionality from ``@login_required`` (if the user is
+  already logged in on the SSO server, he is automatically logged in), without
   making it mandatory to be logged in.
 
 - Made urls.py compatible with Django 1.10.
