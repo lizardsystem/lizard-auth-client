@@ -10,6 +10,7 @@ long_description = '\n\n'.join([
 
 install_requires = [
     'Django >= 1.8',
+    'django-appconf',
     'django-extensions',
     'django-nose',
     'itsdangerous',
@@ -20,7 +21,6 @@ install_requires = [
 tests_require = [
     'coverage',
     'coveralls',
-    'django-appconf',
     'factory-boy',
     'fake-factory',
     'mock',
