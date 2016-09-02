@@ -3,6 +3,7 @@
 # Pyc/pyo files.
 *.pyc
 *.pyo
+__pycache__
 
 # Packages
 *.egg
