@@ -6,6 +6,7 @@ import mock
 import pprint
 
 from django.contrib.auth.models import User
+from django.core.exceptions import ImproperlyConfigured
 from django.test import Client
 from django.test import TestCase
 from faker import Faker
@@ -14,6 +15,7 @@ from lizard_auth_client import backends
 from lizard_auth_client import client
 from lizard_auth_client import models
 from lizard_auth_client import signals
+from lizard_auth_client import urls
 
 # Yet untested, but we want them reported by coverage.py, so we import them.
 from lizard_auth_client import admin  # NOQA
@@ -491,3 +493,37 @@ class TestSSOBackend(TestCase):
             user = backend.authenticate(username, password)
             self.assertTrue(isinstance(user, User))
             self.assertEqual(username, user.username)
+
+
+class Test(TestCase):
+
+    def test_sso_key(self):
+        with self.settings(SSO_KEY=None):
+            self.assertRaises(ImproperlyConfigured, urls.check_settings)
+
+    def test_sso_secret(self):
+        with self.settings(SSO_SECRET=None):
+            self.assertRaises(ImproperlyConfigured, urls.check_settings)
+
+    def test_sso_server_public_url_v2(self):
+        with self.settings(SSO_USE_V2_LOGIN=True,
+                           SSO_SERVER_PUBLIC_URL_V2=None):
+            self.assertRaises(ImproperlyConfigured, urls.check_settings)
+
+    def test_sso_server_public_url(self):
+        with self.settings(SSO_USE_V2_LOGIN=False,
+                           SSO_SERVER_PUBLIC_URL=None):
+            self.assertRaises(ImproperlyConfigured, urls.check_settings)
+
+    def test_sso_server_private_url(self):
+        with self.settings(SSO_USE_V2_LOGIN=False,
+                           SSO_SERVER_PRIVATE_URL=None):
+            self.assertRaises(ImproperlyConfigured, urls.check_settings)
+
+    def test_old_unused_setting(self):
+        with self.settings(SSO_SYNCED_USER_KEYS='pietje'):
+            self.assertRaises(ImproperlyConfigured, urls.check_settings)
+
+    def test_old_unused_server(self):
+        with self.settings(SSO_SERVER_PRIVATE_URL='p-web-ws-00-d8.pietje'):
+            self.assertRaises(ImproperlyConfigured, urls.check_settings)
