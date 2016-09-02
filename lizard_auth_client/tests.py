@@ -19,7 +19,6 @@ from lizard_auth_client import signals
 from lizard_auth_client import admin  # NOQA
 from lizard_auth_client import apps  # NOQA
 from lizard_auth_client import middleware  # NOQA
-from lizard_auth_client import utils  # NOQA
 from lizard_auth_client import views  # NOQA
 
 logger = logging.getLogger(__name__)
