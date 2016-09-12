@@ -1,6 +1,8 @@
 from __future__ import print_function
 
+import datetime
 import json
+import jwt
 import logging
 import requests
 
@@ -11,8 +13,10 @@ logger = logging.getLogger(__name__)
 
 try:
     from urlparse import urljoin
+    from urllib import urlencode
 except ImportError:
     from urllib.parse import urljoin
+    from urllib.parse import urlencode
 
 from itsdangerous import URLSafeTimedSerializer
 
@@ -200,7 +204,7 @@ def sso_authenticate(
     raise AuthenticationFailed(data['error'])
 
 
-def sso_authenticate_django(username, password):
+def sso_authenticate_django_v1(username, password):
     '''
     Same as sso_authenticate(), but uses the Django settings module to import
     the URL base and encryption keys.
@@ -216,6 +220,43 @@ def sso_authenticate_django(username, password):
         username,
         password
     )
+
+
+def sso_authenticate_django_v2(username, password):
+    """Return a dict containing user data, if authentication succeeds.
+
+    Example keys are 'first_name', 'pk', 'last_name', 'organisation', et
+    cetera.
+
+    """
+    # import here so this module can easily be reused outside of Django
+    from lizard_auth_client.conf import settings
+    try:
+        payload = {
+            # Identifier for this site
+            'key': settings.SSO_KEY,
+            'domain': None,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(
+                minutes=settings.SSO_JWT_EXPIRATION_MINUTES),
+            }
+        signed_message = jwt.encode(payload, settings.SSO_SECRET,
+                                    algorithm='HS256')
+        query_string = urlencode({
+            'message': signed_message,
+            'key': settings.SSO_KEY
+            })
+        url = urljoin(settings.SSO_SERVER_PUBLIC_URL_V2, 'check_credentials/')
+        url = '%s?%s' % (url, query_string)
+
+        r = requests.get(url, timeout=10)
+        if not r.status_code == requests.codes.ok:
+            r.raise_for_status()
+        return r.json()['user']
+
+    except:
+        logger.exception(
+            "Exception occurred while asking SSO to check credentials")
+        raise
 
 
 def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):

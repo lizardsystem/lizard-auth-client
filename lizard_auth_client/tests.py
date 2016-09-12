@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ImproperlyConfigured
 from django.test import Client
 from django.test import TestCase
+from django.test import override_settings
 from faker import Faker
 
 from lizard_auth_client import backends
@@ -27,6 +28,7 @@ logger = logging.getLogger(__name__)
 fake = Faker()
 
 
+@override_settings(SSO_USE_V2_LOGIN=False)
 class TestClient(TestCase):
     def test_authenticate_root(self):
         with mock.patch('lizard_auth_client.client._do_post', return_value={
@@ -38,7 +40,7 @@ class TestClient(TestCase):
                          'is_active': True,
                          'is_staff': False,
                          'is_superuser': False}}):
-            result = client.sso_authenticate_django('root', 'a')
+            result = client.sso_authenticate_django_v1('root', 'a')
             self.assertEqual(result['username'], 'root')
 
     def test_authenticate_unsiged_root(self):
@@ -61,7 +63,7 @@ class TestClient(TestCase):
                 'success': False,
                 'error': 'Wrong password'}):
             def wrong_pw():
-                return client.sso_authenticate_django('root', 'wrong_password')
+                return client.sso_authenticate_django_v1('root', 'wrong_password')
             self.assertRaises(client.AuthenticationFailed, wrong_pw)
 
     def test_bad_url(self):
@@ -115,6 +117,7 @@ class TestClient(TestCase):
             self.assertEqual(user.password, password)
 
 
+@override_settings(SSO_USE_V2_LOGIN=False)
 class TestSuperuserStaffCallback(TestCase):
     def setUp(self):
         self.user = User.objects.create(
@@ -163,6 +166,7 @@ class TestSuperuserStaffCallback(TestCase):
         self.assertTrue(self.user.is_superuser)
 
 
+@override_settings(SSO_USE_V2_LOGIN=False)
 class TestOrganisation(TestCase):
     def test_create_from_dict(self):
         org = models.Organisation.create_from_dict({
@@ -180,6 +184,7 @@ class TestOrganisation(TestCase):
         self.assertTrue(repr(organisation))
 
 
+@override_settings(SSO_USE_V2_LOGIN=False)
 class TestRole(TestCase):
     def test_create_from_dict(self):
         # Also add an irrelevant field
@@ -206,6 +211,7 @@ class TestRole(TestCase):
         self.assertTrue(repr(role))
 
 
+@override_settings(SSO_USE_V2_LOGIN=False)
 class TestUserOrganisationRole(TestCase):
     def setUp(self):
         self.user = User.objects.create(
@@ -239,6 +245,7 @@ class TestUserOrganisationRole(TestCase):
             role__code='klant'))
 
 
+@override_settings(SSO_USE_V2_LOGIN=False)
 class TestGetOrganisationsWithRole(TestCase):
     def setUp(self):
         self.user = User.objects.create(
@@ -270,6 +277,7 @@ class TestGetOrganisationsWithRole(TestCase):
         self.assertEquals(org.name, 'Nelen & Schuurmans')
 
 
+@override_settings(SSO_USE_V2_LOGIN=False)
 class TestUserOrganisationRoles(TestCase):
 
     def setUp(self):
@@ -318,6 +326,7 @@ class TestUserOrganisationRoles(TestCase):
         self.assertEqual(expected, actual)
 
 
+@override_settings(SSO_USE_V2_LOGIN=False)
 class TestGetBillableOrganisation(TestCase):
     def setUp(self):
         self.user = User.objects.create(
@@ -451,11 +460,12 @@ class TestViews(TestCase):
             self.assertEqual(response.status_code, 301)
 
 
-class TestSSOBackend(TestCase):
+@override_settings(SSO_USE_V2_LOGIN=False)
+class TestSSOBackendV1(TestCase):
 
     def test_communication_error(self):
         with mock.patch(
-                'lizard_auth_client.client.sso_authenticate_django',
+                'lizard_auth_client.client.sso_authenticate_django_v1',
                 side_effect=client.CommunicationError):
             backend = backends.SSOBackend()
             username = fake.user_name()
@@ -465,7 +475,7 @@ class TestSSOBackend(TestCase):
 
     def test_authentication_failed(self):
         with mock.patch(
-                'lizard_auth_client.client.sso_authenticate_django',
+                'lizard_auth_client.client.sso_authenticate_django_v1',
                 side_effect=client.AuthenticationFailed):
             backend = backends.SSOBackend()
             username = fake.user_name()
@@ -485,7 +495,7 @@ class TestSSOBackend(TestCase):
             is_active=True,
         )
         with mock.patch(
-                'lizard_auth_client.client.sso_authenticate_django',
+                'lizard_auth_client.client.sso_authenticate_django_v1',
                 return_value=user_dict), mock.patch(
                 'lizard_auth_client.client.sso_sync_user_organisation_roles',
                 return_value=[]):
