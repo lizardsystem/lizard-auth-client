@@ -129,7 +129,7 @@ class JWTLoginView(View):
             # logs in a user that is already logged in on the SSO server.
             'force_sso_login': not attempt_login_only,
             # Set timeout
-            'exp': datetime.datetime.utcnow() + JWT_EXPIRATION,
+            'exp': datetime.datetime.utcnow() + JWT_EXPIRATION_MINUTES,
             }
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
                                     algorithm='HS256')
@@ -233,7 +233,7 @@ class JWTLogoutView(View):
             'key': settings.SSO_KEY,
             'domain': domain,
             # Set timeout
-            'exp': datetime.datetime.utcnow() + JWT_EXPIRATION,
+            'exp': datetime.datetime.utcnow() + JWT_EXPIRATION_MINUTES,
             }
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
                                     algorithm='HS256')
