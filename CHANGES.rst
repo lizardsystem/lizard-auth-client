@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 2.2 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Fixed authentication backend: it now also supports the v2 API.
 
 
 2.1.1 (2016-09-02)
