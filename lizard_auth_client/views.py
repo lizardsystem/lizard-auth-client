@@ -139,7 +139,7 @@ class JWTLoginView(View):
             })
 
         # Build an absolute URL pointing to the SSO server out of it.
-        url = urljoin(settings.SSO_SERVER_PUBLIC_URL_V2, 'authorize/')
+        url = urljoin(settings.SSO_SERVER_PUBLIC_URL_V2, 'authenticate/')
         url_with_params = '%s?%s' % (url, query_string)
         return HttpResponseRedirect(url_with_params)
 
