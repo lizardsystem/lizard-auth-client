@@ -171,7 +171,7 @@ def sso_authenticate(
     Return a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
 
-    Raise :class:`AutheticationFailed`, if the username / password
+    Raise :class:`AuthenticationFailed`, if the username / password
     combination is incorrect.
 
     Raise :class:`HTTPError` or :class:`URLError`
