@@ -115,8 +115,7 @@ JWT_EXPIRATION_MINUTES = 5
 
 ROOT_URLCONF = 'lizard_auth_client.urls'
 
-# yes, this somehow doesn't support unicode strings
-TEST_RUNNER = b'django_nose.NoseTestSuiteRunner'
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
