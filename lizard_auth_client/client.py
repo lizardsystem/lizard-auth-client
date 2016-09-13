@@ -238,7 +238,9 @@ def sso_authenticate_django_v2(username, password):
             'domain': None,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(
                 minutes=settings.SSO_JWT_EXPIRATION_MINUTES),
-            }
+            'username': username,
+            'password': password
+        }
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
                                     algorithm='HS256')
         query_string = urlencode({
