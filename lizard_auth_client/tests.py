@@ -421,7 +421,7 @@ class TestViews(TestCase):
         response = c.get('/')
         response = c.get('/')
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('AnonymousUser' in response.content)
+        self.assertTrue(b'AnonymousUser' in response.content)
 
     def test_no_attempt_login_middleware(self):
         """Test that no authentication takes place when
