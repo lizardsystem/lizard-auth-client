@@ -78,7 +78,8 @@ class SSOBackend(ModelBackend):
                 if user_data:
                     user = client.construct_user(user_data)
                     if not cached_credentials:
-                        client.sso_sync_user_organisation_roles(user)
+                        if not settings.SSO_USE_V2_LOGIN:
+                            client.sso_sync_user_organisation_roles(user)
                     return user
         except client.AuthenticationFailed as e:
             logger.info(e)
