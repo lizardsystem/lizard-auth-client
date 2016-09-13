@@ -235,7 +235,6 @@ def sso_authenticate_django_v2(username, password):
         payload = {
             # Identifier for this site
             'key': settings.SSO_KEY,
-            'domain': None,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(
                 minutes=settings.SSO_JWT_EXPIRATION_MINUTES),
             'username': username,
