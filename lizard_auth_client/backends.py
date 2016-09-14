@@ -56,8 +56,13 @@ class SSOBackend(ModelBackend):
                         'Could not find user "%s" in the credential cache.',
                         username)
                     # Not found in cache, call the SSO server.
-                    user_data = client.sso_authenticate_django(
-                        username, password)
+                    if settings.SSO_USE_V2_LOGIN:
+                        user_data = client.sso_authenticate_django_v2(
+                            username, password)
+                    else:
+                        user_data = client.sso_authenticate_django_v1(
+                            username, password)
+
                     # Store user_data in cache.
                     hashed_password = make_password(password)
                     if hashed_password is UNUSABLE_PASSWORD:
@@ -73,7 +78,8 @@ class SSOBackend(ModelBackend):
                 if user_data:
                     user = client.construct_user(user_data)
                     if not cached_credentials:
-                        client.sso_sync_user_organisation_roles(user)
+                        if not settings.SSO_USE_V2_LOGIN:
+                            client.sso_sync_user_organisation_roles(user)
                     return user
         except client.AuthenticationFailed as e:
             logger.info(e)
