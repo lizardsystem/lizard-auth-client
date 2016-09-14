@@ -242,14 +242,11 @@ def sso_authenticate_django_v2(username, password):
         }
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
                                     algorithm='HS256')
-        query_string = urlencode({
-            'message': signed_message,
-            'key': settings.SSO_KEY
-            })
         url = urljoin(settings.SSO_SERVER_PUBLIC_URL_V2, 'check_credentials/')
-        url = '%s?%s' % (url, query_string)
-
-        r = requests.get(url, timeout=10)
+        r = requests.post(url,
+                          timeout=10,
+                          data={'message': signed_message,
+                                'key': settings.SSO_KEY})
         if not r.status_code == requests.codes.ok:
             r.raise_for_status()
         return r.json()['user']

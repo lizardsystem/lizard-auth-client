@@ -543,10 +543,10 @@ class ClientV2Test(TestCase):
 
     def test_exception(self):
 
-        def mock_get(url, timeout):
+        def mock_post(url, timeout, data):
             raise RuntimeError("na na na")
 
-        with mock.patch('requests.get', mock_get):
+        with mock.patch('requests.post', mock_post):
             self.assertRaises(RuntimeError,
                               client.sso_authenticate_django_v2,
                               'someone',
@@ -554,13 +554,13 @@ class ClientV2Test(TestCase):
 
     def test_auth_ok(self):
 
-        def mock_get(url, timeout):
+        def mock_post(url, timeout, data):
             result = mock.Mock()
             result.status_code = 200
             result.json.return_value = {'user': {'a': 'dict'}}
             return result
 
-        with mock.patch('requests.get', mock_get):
+        with mock.patch('requests.post', mock_post):
             self.assertEquals(
                 {'a': 'dict'},
                 client.sso_authenticate_django_v2('someone', 'pass'))
