@@ -109,10 +109,6 @@ SSO_SERVER_API_START_URL = 'http://dev.sso.lizard.net/api2/'
 # URL used for server-to-server communication
 # Note: needs a trailing slash
 SSO_SERVER_PRIVATE_URL = 'http://dev.sso.lizard.net:9874/'
-# Timeout for cached credentials with the SSOBackend Authentication Backend.
-SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS = 60
-# JWT timeout
-JWT_EXPIRATION_MINUTES = 5
 
 ROOT_URLCONF = 'lizard_auth_client.urls'
 
