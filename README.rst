@@ -51,6 +51,10 @@ Configure the SSO settings as seen in ``testsettings.py``::
     # Note: needs a trailing slash
     SSO_SERVER_PRIVATE_URL = 'http://10.0.0.1:80/'
 
+
+TODO: document v2 API.
+
+
 Only for local testing of this very app do you need this additional setting::
 
     SSO_STANDALONE = True
@@ -62,25 +66,6 @@ import them in the root of your urlpatterns::
         '',
         (r'^', include('lizard_auth_client.urls')),
     )
-
-
-Usage note for django < 1.7
----------------------------
-
-On django versions older than 1.7, you need South 1.0 for the database
-migrations.
-
-In your project's ``setup.py``, add ``lizard-auth-client[south]`` in addition
-to ``lizard-auth-client``::
-
-    install_requires = [
-        ...
-        'lizard-auth-client',
-        'lizard-auth-client[south]',
-        ...
-    ],
-
-This adds the proper south (version) requirement to your project.
 
 
 Custom authentication
