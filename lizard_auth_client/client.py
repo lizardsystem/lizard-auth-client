@@ -222,31 +222,30 @@ def sso_authenticate_django_v1(username, password):
     )
 
 
-def sso_authenticate_django_v2(username, password):
+def sso_authenticate_v2(sso_server_api_start_url, sso_key, sso_secret,
+                        sso_jwt_expiration_minutes, sso_jwt_algorithm,
+                        username, password):
     """Return a dict containing user data, if authentication succeeds.
 
-    Example keys are 'first_name', 'pk', 'last_name', 'organisation', et
-    cetera.
+    Example keys are 'first_name', 'last_name', 'username', 'email'.
 
     """
-    # import here so this module can easily be reused outside of Django
-    from lizard_auth_client.conf import settings
     try:
         payload = {
             # Identifier for this site
-            'iss': settings.SSO_KEY,
+            'iss': sso_key,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(
-                minutes=settings.SSO_JWT_EXPIRATION_MINUTES),
+                minutes=sso_jwt_expiration_minutes),
             'username': username,
             'password': password
         }
-        signed_message = jwt.encode(payload, settings.SSO_SECRET,
-                                    algorithm=settings.SSO_JWT_ALGORITHM)
-        url = urljoin(settings.SSO_SERVER_API_START_URL, 'check_credentials/')
+        signed_message = jwt.encode(payload, sso_secret,
+                                    algorithm=sso_jwt_algorithm)
+        url = urljoin(sso_server_api_start_url, 'check_credentials/')
         r = requests.post(url,
                           timeout=10,
                           data={'message': signed_message,
-                                'key': settings.SSO_KEY})
+                                'key': sso_key})
         if not r.status_code == requests.codes.ok:
             r.raise_for_status()
         return r.json()['user']
@@ -255,6 +254,21 @@ def sso_authenticate_django_v2(username, password):
         logger.exception(
             "Exception occurred while asking SSO to check credentials")
         raise
+
+
+def sso_authenticate_django_v2(username, password):
+    """Return a dict containing user data, if authentication succeeds.
+
+    Same as :meth:`.sso_authenticate_v2`, but it uses the django settings.
+
+    """
+    # import here so this module can easily be reused outside of Django
+    from lizard_auth_client.conf import settings
+    return sso_authenticate_v2(
+        settings.SSO_SERVER_API_START_URL,
+        settings.SSO_KEY, settings.SSO_SECRET,
+        settings.SSO_JWT_EXPIRATION_MINUTES, settings.SSO_JWT_ALGORITHM,
+        username, password)
 
 
 def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
