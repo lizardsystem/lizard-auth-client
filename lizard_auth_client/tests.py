@@ -17,6 +17,7 @@ from lizard_auth_client import signals
 from lizard_auth_client import urls
 from lizard_auth_client import views  # NOQA
 
+import jwt
 import logging
 import mock
 import pprint
@@ -562,3 +563,21 @@ class ClientV2Test(TestCase):
             self.assertEquals(
                 {'a': 'dict'},
                 client.sso_authenticate_django_v2('someone', 'pass'))
+
+    def test_correct_jwt_message(self):
+
+        def mock_post(url, timeout, data):
+            result = mock.Mock()
+            self.data = data
+            result.status_code = 200
+            result.json.return_value = {'user': {'a': 'dict'}}
+            return result
+
+        with mock.patch('requests.post', mock_post):
+            with self.settings(SSO_KEY='pietje', SSO_SECRET='klaasje'):
+                client.sso_authenticate_django_v2('someone', 'pass')
+                key = 'pietje'
+                message = self.data['message']
+                decoded = jwt.decode(message, 'klaasje',
+                                     issuer=key)
+                self.assertEqual('someone', decoded['username'])
