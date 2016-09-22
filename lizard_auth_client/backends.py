@@ -3,16 +3,10 @@ from __future__ import unicode_literals
 
 import logging
 
-from django.core.cache import cache
 from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.hashers import is_password_usable
 from django.contrib.auth.hashers import check_password, make_password
-
-try:
-    from django.contrib.auth.hashers import UNUSABLE_PASSWORD
-except:
-    # ImproperlyConfigured:
-    # Don't know what is wrong
-    UNUSABLE_PASSWORD = 'bla'
+from django.core.cache import cache
 
 from lizard_auth_client.conf import settings
 from lizard_auth_client import client
@@ -65,7 +59,7 @@ class SSOBackend(ModelBackend):
 
                     # Store user_data in cache.
                     hashed_password = make_password(password)
-                    if hashed_password is UNUSABLE_PASSWORD:
+                    if not is_password_usable(hashed_password):
                         return None
                     else:
                         cache.set(
