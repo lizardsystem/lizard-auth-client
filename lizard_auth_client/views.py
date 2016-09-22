@@ -114,7 +114,6 @@ class JWTLoginView(View):
     def get(self, request, *args, **kwargs):
         next = get_next(request)
         request.session['sso_after_login_next'] = next
-        domain = request.GET.get('domain', None)
 
         # Possibly only attempt to login, don't force it
         attempt_login_only = 'true' in request.GET.get(
@@ -122,8 +121,7 @@ class JWTLoginView(View):
 
         payload = {
             # Identifier for this site
-            'key': settings.SSO_KEY,
-            'domain': domain,
+            'iss': settings.SSO_KEY,
             # If this is true, the SSO server does not force a login and only
             # logs in a user that is already logged in on the SSO server.
             'force_sso_login': not attempt_login_only,
@@ -156,7 +154,8 @@ class LocalLoginView(View):
 
         if settings.SSO_USE_V2_LOGIN:
             try:
-                payload = jwt.decode(message, settings.SSO_SECRET)
+                payload = jwt.decode(message, settings.SSO_SECRET,
+                                     audience=settings.SSO_KEY)
             except jwt.exceptions.DecodeError:
                 return HttpResponseBadRequest(
                     "Failed to decode JWT signature.")
@@ -224,12 +223,10 @@ class JWTLogoutView(View):
         # redirect the user afterwards
         next = get_next(request)
         request.session['sso_after_logout_next'] = next
-        domain = request.GET.get('domain', None)
 
         payload = {
             # Identifier for this site
-            'key': settings.SSO_KEY,
-            'domain': domain,
+            'iss': settings.SSO_KEY,
             # Set timeout
             'exp': datetime.datetime.utcnow() + JWT_EXPIRATION
             }
