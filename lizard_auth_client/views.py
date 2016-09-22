@@ -5,6 +5,7 @@ from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponsePermanentRedirect
@@ -28,8 +29,7 @@ except ImportError:
     from urllib.parse import urljoin, urlencode
 
 
-
-# used so we can login User objects we instantiated ourselves
+# Used so we can login User objects we instantiated ourselves
 BACKEND = ModelBackend()
 JWT_EXPIRATION = datetime.timedelta(
     minutes=settings.SSO_JWT_EXPIRATION_MINUTES)
@@ -109,8 +109,36 @@ class LoginViewV1(View):
             )
 
 
+def sso_server_url(name):
+    """Return url of endpoint on the SSO server
+
+    The v2 API has a starting point that lists the available endpoints. We
+    wrap that url and cache it.
+
+    Args:
+        name: name of the endpoint. Currently it can be ``check-credentials``,
+            ``login``, ``logout``.
+
+    Returns:
+        full URL of the requested endpoint.
+
+    Raises:
+        KeyError: if the name isn't a known endpoint of the SSO server.
+
+    """
+    cache_key = 'cached_sso_server_urls'
+    sso_server_urls = cache.get(cache_key)
+    if sso_server_urls is None:
+        # First time, grab it from the server.
+        response = requests.get(settings.SSO_SERVER_API_START_URL, timeout=10)
+        sso_server_urls = response.json()
+        cache.set(cache_key, sso_server_urls)
+    return sso_server_urls[name]
+
+
 class JWTLoginView(View):
     """Log in using JWT API (i.e., the V2 SSO API)."""
+
     def get(self, request, *args, **kwargs):
         next = get_next(request)
         request.session['sso_after_login_next'] = next
@@ -136,7 +164,7 @@ class JWTLoginView(View):
             })
 
         # Build an absolute URL pointing to the SSO server out of it.
-        url = urljoin(settings.SSO_SERVER_API_START_URL, 'authenticate/')
+        url = sso_server_url('login')
         url_with_params = '%s?%s' % (url, query_string)
         return HttpResponseRedirect(url_with_params)
 
@@ -160,7 +188,8 @@ class LocalLoginView(View):
                 return HttpResponseBadRequest(
                     "Failed to decode JWT signature.")
             except jwt.exceptions.ExpiredSignatureError:
-                return HttpResponseBadRequest("JWT has expired.")
+                return HttpResponseBadRequest(
+                    "JWT recieved from the SSO has expired.")
             user_data = json.loads(payload['user'])
             user = client.construct_user(user_data)
         else:
@@ -237,7 +266,7 @@ class JWTLogoutView(View):
             'key': settings.SSO_KEY
             })
 
-        url = urljoin(settings.SSO_SERVER_API_START_URL, 'logout/')
+        url = sso_server_url('logout')
         url = '%s?%s' % (url, query_string)
 
         # send the redirect response
