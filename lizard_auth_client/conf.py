@@ -24,7 +24,7 @@ class SSOAppConf(AppConf):
     KEY = ''
     SECRET = ''
 
-    # Required settings for the v2 API. Should include ``/api/v2/``.
+    # Required settings for the v2 API. Should include ``/api2/``.
     SERVER_API_START_URL = ''
 
     # Role syncing from signals.py. V1 API only
