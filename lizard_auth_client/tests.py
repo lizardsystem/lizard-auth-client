@@ -581,3 +581,26 @@ class ClientV2Test(TestCase):
                 decoded = jwt.decode(message, 'klaasje',
                                      issuer=key)
                 self.assertEqual('someone', decoded['username'])
+
+
+class V2ViewsTest(TestCase):
+
+    def setUp(self):
+        self.server_urls = {
+            'check-credentials': 'https://some.where/api2/check_credentials/',
+            'login': 'https://some.where/api2/login/',
+            'logout': 'https://some.where/api2/logout/'}
+
+        def mock_get(url, timeout):
+            result = mock.Mock()
+            result.status_code = 200
+            result.json.return_value = self.server_urls
+            return result
+
+        with mock.patch('requests.get', mock_get):
+            # Fill the cache
+            views.sso_server_url('login')
+
+    def test_sso_server_url(self):
+        self.assertEqual('https://some.where/api2/logout/',
+                         views.sso_server_url('logout'))
