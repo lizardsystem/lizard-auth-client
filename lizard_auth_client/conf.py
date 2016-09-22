@@ -13,9 +13,10 @@ class SSOAppConf(AppConf):
     STANDALONE = False
     USE_V2_LOGIN = False
 
-    # Timing defaults. No need to adjust them.
+    # Defaults. Normally no need to adjust them.
     CREDENTIAL_CACHE_TIMEOUT_SECONDS = 60
     JWT_EXPIRATION_MINUTES = 5
+    JWT_ALGORITHM = 'HS256'
 
     # Required settings for the v1 API.
     SERVER_PRIVATE_URL = ''

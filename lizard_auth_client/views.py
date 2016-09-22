@@ -131,7 +131,7 @@ class JWTLoginView(View):
             'exp': datetime.datetime.utcnow() + JWT_EXPIRATION,
             }
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
-                                    algorithm='HS256')
+                                    algorithm=settings.SSO_JWT_ALGORITHM)
         query_string = urlencode({
             'message': signed_message,
             'key': settings.SSO_KEY
@@ -156,8 +156,7 @@ class LocalLoginView(View):
 
         if settings.SSO_USE_V2_LOGIN:
             try:
-                payload = jwt.decode(message, settings.SSO_SECRET,
-                                     algorithms=['HS256'])
+                payload = jwt.decode(message, settings.SSO_SECRET)
             except jwt.exceptions.DecodeError:
                 return HttpResponseBadRequest(
                     "Failed to decode JWT signature.")
@@ -235,7 +234,7 @@ class JWTLogoutView(View):
             'exp': datetime.datetime.utcnow() + JWT_EXPIRATION
             }
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
-                                    algorithm='HS256')
+                                    algorithm=settings.SSO_JWT_ALGORITHM)
         query_string = urlencode({
             'message': signed_message,
             'key': settings.SSO_KEY
