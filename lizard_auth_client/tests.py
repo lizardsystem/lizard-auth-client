@@ -4,8 +4,9 @@ from __future__ import unicode_literals
 from django.contrib.auth.models import User
 from django.core.exceptions import ImproperlyConfigured
 from django.test import Client
-from django.test import override_settings
+from django.test import RequestFactory
 from django.test import TestCase
+from django.test import override_settings
 from faker import Faker
 from lizard_auth_client import admin  # NOQA
 from lizard_auth_client import apps  # NOQA
@@ -601,6 +602,16 @@ class V2ViewsTest(TestCase):
             # Fill the cache
             views.sso_server_url('login')
 
+        self.request_factory = RequestFactory()
+
     def test_sso_server_url(self):
         self.assertEqual('https://some.where/api2/logout/',
                          views.sso_server_url('logout'))
+
+
+    def test_jwt_login_view(self):
+        request = self.request_factory.get('/sso/login/')
+        request.session = {}
+        response = views.JWTLoginView.as_view()(request)
+        self.assertEqual(302, response.status_code)
+        # TODO: check more, like the payload
