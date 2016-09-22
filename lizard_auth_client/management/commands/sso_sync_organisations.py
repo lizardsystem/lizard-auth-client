@@ -1,5 +1,4 @@
 from django.core.management.base import BaseCommand
-
 from lizard_auth_client import client
 
 

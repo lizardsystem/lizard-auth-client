@@ -1,28 +1,26 @@
 # -*- coding: utf-8 -*-
+# Yet untested, but we want them reported by coverage.py, so we import them.
 from __future__ import unicode_literals
+from django.contrib.auth.models import User
+from django.core.exceptions import ImproperlyConfigured
+from django.test import Client
+from django.test import override_settings
+from django.test import TestCase
+from faker import Faker
+from lizard_auth_client import admin  # NOQA
+from lizard_auth_client import apps  # NOQA
+from lizard_auth_client import backends
+from lizard_auth_client import client
+from lizard_auth_client import middleware  # NOQA
+from lizard_auth_client import models
+from lizard_auth_client import signals
+from lizard_auth_client import urls
+from lizard_auth_client import views  # NOQA
 
 import logging
 import mock
 import pprint
 
-from django.contrib.auth.models import User
-from django.core.exceptions import ImproperlyConfigured
-from django.test import Client
-from django.test import TestCase
-from django.test import override_settings
-from faker import Faker
-
-from lizard_auth_client import backends
-from lizard_auth_client import client
-from lizard_auth_client import models
-from lizard_auth_client import signals
-from lizard_auth_client import urls
-
-# Yet untested, but we want them reported by coverage.py, so we import them.
-from lizard_auth_client import admin  # NOQA
-from lizard_auth_client import apps  # NOQA
-from lizard_auth_client import middleware  # NOQA
-from lizard_auth_client import views  # NOQA
 
 logger = logging.getLogger(__name__)
 fake = Faker()

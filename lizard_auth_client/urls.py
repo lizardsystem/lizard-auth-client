@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
-from lizard_auth_client.conf import settings
 from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.core.exceptions import ImproperlyConfigured
-
 from lizard_auth_client import views
+from lizard_auth_client.conf import settings
 
 
 def check_settings():

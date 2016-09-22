@@ -1,9 +1,10 @@
-from __future__ import print_function
-
 # import sys
-from django.core.management.base import BaseCommand, CommandError
+from __future__ import print_function
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
+from django.core.management.base import CommandError
 from lizard_auth_client import client
+
 
 class Command(BaseCommand):
     """

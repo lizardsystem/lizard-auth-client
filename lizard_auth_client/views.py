@@ -1,34 +1,33 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
 from collections import namedtuple
+from django.contrib.auth import login as django_login
+from django.contrib.auth import logout as django_logout
+from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.http import HttpResponseBadRequest
+from django.http import HttpResponsePermanentRedirect
+from django.http import HttpResponseRedirect
+from django.utils.decorators import method_decorator
+from django.views.generic.base import View
+from itsdangerous import URLSafeTimedSerializer
+from lizard_auth_client import client
+from lizard_auth_client.conf import settings
+
 import datetime
 import json
-
+import jwt
 import requests
+
+
 try:
     from urlparse import urljoin
     from urllib import urlencode
 except ImportError:
     from urllib.parse import urljoin, urlencode
 
-from lizard_auth_client.conf import settings
-from django.contrib.auth import login as django_login
-from django.contrib.auth import logout as django_logout
-from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth.decorators import login_required
-from django.http import (
-    HttpResponseBadRequest,
-    HttpResponseRedirect,
-    HttpResponsePermanentRedirect,
-)
-from django.http import HttpResponse
-from django.views.generic.base import View
-from django.utils.decorators import method_decorator
-from itsdangerous import URLSafeTimedSerializer
-import jwt
 
-from lizard_auth_client import client
 
 # used so we can login User objects we instantiated ourselves
 BACKEND = ModelBackend()

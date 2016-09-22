@@ -1,15 +1,14 @@
 # (c) Nelen & Schuurmans.  MIT licensed, see LICENSE.rst.
 from __future__ import unicode_literals
+from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import is_password_usable
+from django.contrib.auth.hashers import make_password
+from django.core.cache import cache
+from lizard_auth_client import client
+from lizard_auth_client.conf import settings
 
 import logging
-
-from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth.hashers import is_password_usable
-from django.contrib.auth.hashers import check_password, make_password
-from django.core.cache import cache
-
-from lizard_auth_client.conf import settings
-from lizard_auth_client import client
 
 
 logger = logging.getLogger(__name__)

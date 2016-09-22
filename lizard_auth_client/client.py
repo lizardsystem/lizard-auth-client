@@ -1,4 +1,7 @@
 from __future__ import print_function
+from itsdangerous import URLSafeTimedSerializer
+from lizard_auth_client import models
+from lizard_auth_client import signals
 
 import datetime
 import json
@@ -6,7 +9,6 @@ import jwt
 import logging
 import requests
 
-from lizard_auth_client import signals
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +20,7 @@ except ImportError:
     from urllib.parse import urljoin
     from urllib.parse import urlencode
 
-from itsdangerous import URLSafeTimedSerializer
 
-from lizard_auth_client import models
 
 
 class AuthenticationFailed(Exception):
