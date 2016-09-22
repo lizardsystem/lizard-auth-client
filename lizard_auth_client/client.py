@@ -242,7 +242,7 @@ def sso_authenticate_django_v2(username, password):
         }
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
                                     algorithm='HS256')
-        url = urljoin(settings.SSO_SERVER_PUBLIC_URL_V2, 'check_credentials/')
+        url = urljoin(settings.SSO_SERVER_API_START_URL, 'check_credentials/')
         r = requests.post(url,
                           timeout=10,
                           data={'message': signed_message,

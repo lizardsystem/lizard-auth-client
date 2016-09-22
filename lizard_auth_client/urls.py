@@ -30,9 +30,9 @@ def check_settings():
         )
 
     if settings.SSO_USE_V2_LOGIN:
-        if not settings.SSO_SERVER_PUBLIC_URL_V2:
+        if not settings.SSO_SERVER_API_START_URL:
             raise ImproperlyConfigured(
-                'Please define a value for SSO_SERVER_PUBLIC_URL_V2 '
+                'Please define a value for SSO_SERVER_API_START_URL '
                 'your settings. This URL is used to locate the SSO server.'
             )
     else:

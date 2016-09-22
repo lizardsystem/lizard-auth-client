@@ -515,9 +515,9 @@ class Test(TestCase):
         with self.settings(SSO_SECRET=None):
             self.assertRaises(ImproperlyConfigured, urls.check_settings)
 
-    def test_sso_server_public_url_v2(self):
+    def test_sso_server_api_start_url(self):
         with self.settings(SSO_USE_V2_LOGIN=True,
-                           SSO_SERVER_PUBLIC_URL_V2=None):
+                           SSO_SERVER_API_START_URL=None):
             self.assertRaises(ImproperlyConfigured, urls.check_settings)
 
     def test_sso_server_public_url(self):
