@@ -643,3 +643,22 @@ class V2ViewsTest(TestCase):
                              issuer=settings.SSO_KEY)
         self.assertIn('login_success_url', payload.keys())
         self.assertIn('unauthenticated_is_ok_url', payload.keys())
+
+    def test_jwt_logout_view_redirect(self):
+        request = self.request_factory.get('/sso/logout/')
+        request.session = {}
+        response = views.JWTLogoutView.as_view()(request)
+        self.assertEqual(302, response.status_code)
+
+    def test_jwt_logout_view_url_and_payload(self):
+        request = self.request_factory.get('/sso/logout/')
+        request.session = {}
+        response = views.JWTLogoutView.as_view()(request)
+        actual_url, argument_string = response.url.split('?')
+        self.assertEqual('https://some.where/api2/logout/',
+                         actual_url)
+        message = str(argument_string.split('message=')[-1])
+        payload = jwt.decode(message,
+                             settings.SSO_SECRET,
+                             issuer=settings.SSO_KEY)
+        self.assertIn('logout_url', payload.keys())

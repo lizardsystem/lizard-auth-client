@@ -255,11 +255,13 @@ class JWTLogoutView(View):
         request.session['sso_after_logout_next'] = next
 
         payload = {
-            # Identifier for this site
+            # JWT standard items.
             'iss': settings.SSO_KEY,
-            # Set timeout
-            'exp': datetime.datetime.utcnow() + JWT_EXPIRATION
-            }
+            'exp': datetime.datetime.utcnow() + JWT_EXPIRATION,
+            # Our items.
+            'logout_url': reverse('lizard_auth_client.sso_local_logout'),
+        }
+
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
                                     algorithm=settings.SSO_JWT_ALGORITHM)
         query_string = urlencode({
