@@ -414,7 +414,9 @@ def construct_user(data):
 
     # copy simple properies like email and first name
     for key in ['first_name', 'last_name', 'email', 'is_active']:
-        setattr(user, key, data[key])
+        if key in data:
+            # The v2 api doesn't return 'is_active' anymore, for instance.
+            setattr(user, key, data[key])
     user.username = local_username
     user.save()
 
