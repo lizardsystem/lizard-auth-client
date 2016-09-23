@@ -17,6 +17,7 @@ from lizard_auth_client import models
 from lizard_auth_client import signals
 from lizard_auth_client import urls
 from lizard_auth_client import views  # NOQA
+from lizard_auth_client.conf import settings
 
 import jwt
 import logging
@@ -609,9 +610,36 @@ class V2ViewsTest(TestCase):
                          views.sso_server_url('logout'))
 
 
-    def test_jwt_login_view(self):
+    def test_jwt_login_view_redirect(self):
         request = self.request_factory.get('/sso/login/')
         request.session = {}
         response = views.JWTLoginView.as_view()(request)
         self.assertEqual(302, response.status_code)
-        # TODO: check more, like the payload
+
+    def test_jwt_login_view_url_and_payload(self):
+        request = self.request_factory.get('/sso/login/')
+        request.session = {}
+        response = views.JWTLoginView.as_view()(request)
+        actual_url, argument_string = response.url.split('?')
+        self.assertEqual('https://some.where/api2/login/',
+                         actual_url)
+        message = str(argument_string.split('message=')[-1])
+        payload = jwt.decode(message,
+                             settings.SSO_SECRET,
+                             issuer=settings.SSO_KEY)
+        self.assertIn('login_success_url', payload.keys())
+
+    def test_jwt_login_view_attempt_login_only(self):
+        request = self.request_factory.get(
+            '/sso/login/?attempt_login_only=true')
+        request.session = {}
+        response = views.JWTLoginView.as_view()(request)
+        actual_url, argument_string = response.url.split('?')
+        self.assertEqual('https://some.where/api2/login/',
+                         actual_url)
+        message = str(argument_string.split('message=')[-1])
+        payload = jwt.decode(message,
+                             settings.SSO_SECRET,
+                             issuer=settings.SSO_KEY)
+        self.assertIn('login_success_url', payload.keys())
+        self.assertIn('unauthenticated_is_ok_url', payload.keys())

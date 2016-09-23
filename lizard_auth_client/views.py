@@ -6,6 +6,7 @@ from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponsePermanentRedirect
@@ -143,19 +144,19 @@ class JWTLoginView(View):
         next = get_next(request)
         request.session['sso_after_login_next'] = next
 
-        # Possibly only attempt to login, don't force it
-        attempt_login_only = 'true' in request.GET.get(
-            'attempt_login_only', 'false').lower()
-
         payload = {
-            # Identifier for this site
+            # JWT standard items.
             'iss': settings.SSO_KEY,
-            # If this is true, the SSO server does not force a login and only
-            # logs in a user that is already logged in on the SSO server.
-            'force_sso_login': not attempt_login_only,
-            # Set timeout
             'exp': datetime.datetime.utcnow() + JWT_EXPIRATION,
+            # Our items.
+            'login_success_url': reverse('lizard_auth_client.sso_local_login'),
             }
+        if request.GET.get('attempt_login_only', 'false').lower() == 'true':
+            # We don't force the user to log in. To signal that, we pass our
+            # 'the user is not logged in' url, too.
+            payload['unauthenticated_is_ok_url'] = reverse(
+                'lizard_auth_client.sso_local_not_logged_in')
+
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
                                     algorithm=settings.SSO_JWT_ALGORITHM)
         query_string = urlencode({
