@@ -5,7 +5,14 @@ Changelog of lizard-auth-client
 2.3 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- API v2 2.0..... Lots of changes to correspond to the lizard-auth-server
+  changes.
+
+- ``SSO_SERVER_PUBLIC_URL_V2`` has been renamed to ``SERVER_API_START_URL``,
+  which better matches the meaning. This start url returns the available SSO
+  endpoints, which means most of the hardcoded URLs have been removed.
+
+- Adjusted the JWT payloads for the new API.
 
 
 2.2 (2016-09-14)

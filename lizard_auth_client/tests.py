@@ -1,28 +1,29 @@
 # -*- coding: utf-8 -*-
+# Yet untested, but we want them reported by coverage.py, so we import them.
 from __future__ import unicode_literals
+from django.contrib.auth.models import User
+from django.core.exceptions import ImproperlyConfigured
+from django.test import Client
+from django.test import RequestFactory
+from django.test import TestCase
+from django.test import override_settings
+from faker import Faker
+from lizard_auth_client import admin  # NOQA
+from lizard_auth_client import apps  # NOQA
+from lizard_auth_client import backends
+from lizard_auth_client import client
+from lizard_auth_client import middleware  # NOQA
+from lizard_auth_client import models
+from lizard_auth_client import signals
+from lizard_auth_client import urls
+from lizard_auth_client import views  # NOQA
+from lizard_auth_client.conf import settings
 
+import jwt
 import logging
 import mock
 import pprint
 
-from django.contrib.auth.models import User
-from django.core.exceptions import ImproperlyConfigured
-from django.test import Client
-from django.test import TestCase
-from django.test import override_settings
-from faker import Faker
-
-from lizard_auth_client import backends
-from lizard_auth_client import client
-from lizard_auth_client import models
-from lizard_auth_client import signals
-from lizard_auth_client import urls
-
-# Yet untested, but we want them reported by coverage.py, so we import them.
-from lizard_auth_client import admin  # NOQA
-from lizard_auth_client import apps  # NOQA
-from lizard_auth_client import middleware  # NOQA
-from lizard_auth_client import views  # NOQA
 
 logger = logging.getLogger(__name__)
 fake = Faker()
@@ -515,9 +516,9 @@ class Test(TestCase):
         with self.settings(SSO_SECRET=None):
             self.assertRaises(ImproperlyConfigured, urls.check_settings)
 
-    def test_sso_server_public_url_v2(self):
+    def test_sso_server_api_start_url(self):
         with self.settings(SSO_USE_V2_LOGIN=True,
-                           SSO_SERVER_PUBLIC_URL_V2=None):
+                           SSO_SERVER_API_START_URL=None):
             self.assertRaises(ImproperlyConfigured, urls.check_settings)
 
     def test_sso_server_public_url(self):
@@ -564,3 +565,100 @@ class ClientV2Test(TestCase):
             self.assertEquals(
                 {'a': 'dict'},
                 client.sso_authenticate_django_v2('someone', 'pass'))
+
+    def test_correct_jwt_message(self):
+
+        def mock_post(url, timeout, data):
+            result = mock.Mock()
+            self.data = data
+            result.status_code = 200
+            result.json.return_value = {'user': {'a': 'dict'}}
+            return result
+
+        with mock.patch('requests.post', mock_post):
+            with self.settings(SSO_KEY='pietje', SSO_SECRET='klaasje'):
+                client.sso_authenticate_django_v2('someone', 'pass')
+                key = 'pietje'
+                message = self.data['message']
+                decoded = jwt.decode(message, 'klaasje',
+                                     issuer=key)
+                self.assertEqual('someone', decoded['username'])
+
+
+class V2ViewsTest(TestCase):
+
+    def setUp(self):
+        self.server_urls = {
+            'check-credentials': 'https://some.where/api2/check_credentials/',
+            'login': 'https://some.where/api2/login/',
+            'logout': 'https://some.where/api2/logout/'}
+
+        def mock_get(url, timeout):
+            result = mock.Mock()
+            result.status_code = 200
+            result.json.return_value = self.server_urls
+            return result
+
+        with mock.patch('requests.get', mock_get):
+            # Fill the cache
+            views.sso_server_url('login')
+
+        self.request_factory = RequestFactory()
+
+    def test_sso_server_url(self):
+        self.assertEqual('https://some.where/api2/logout/',
+                         views.sso_server_url('logout'))
+
+
+    def test_jwt_login_view_redirect(self):
+        request = self.request_factory.get('/sso/login/')
+        request.session = {}
+        response = views.JWTLoginView.as_view()(request)
+        self.assertEqual(302, response.status_code)
+
+    def test_jwt_login_view_url_and_payload(self):
+        request = self.request_factory.get('/sso/login/')
+        request.session = {}
+        response = views.JWTLoginView.as_view()(request)
+        actual_url, argument_string = response.url.split('?')
+        self.assertEqual('https://some.where/api2/login/',
+                         actual_url)
+        message = str(argument_string.split('message=')[-1])
+        payload = jwt.decode(message,
+                             settings.SSO_SECRET,
+                             issuer=settings.SSO_KEY)
+        self.assertIn('login_success_url', payload.keys())
+
+    def test_jwt_login_view_attempt_login_only(self):
+        request = self.request_factory.get(
+            '/sso/login/?attempt_login_only=true')
+        request.session = {}
+        response = views.JWTLoginView.as_view()(request)
+        actual_url, argument_string = response.url.split('?')
+        self.assertEqual('https://some.where/api2/login/',
+                         actual_url)
+        message = str(argument_string.split('message=')[-1])
+        payload = jwt.decode(message,
+                             settings.SSO_SECRET,
+                             issuer=settings.SSO_KEY)
+        self.assertIn('login_success_url', payload.keys())
+        self.assertIn('unauthenticated_is_ok_url', payload.keys())
+
+    def test_jwt_logout_view_redirect(self):
+        request = self.request_factory.get('/sso/logout/')
+        request.session = {}
+        response = views.JWTLogoutView.as_view()(request)
+        self.assertEqual(302, response.status_code)
+
+    def test_jwt_logout_view_url_and_payload(self):
+        request = self.request_factory.get('/sso/logout/')
+        request.session = {}
+        response = views.JWTLogoutView.as_view()(request)
+        actual_url, argument_string = response.url.split('?')
+        self.assertEqual('https://some.where/api2/logout/',
+                         actual_url)
+        message = str(argument_string.split('message=')[-1])
+        payload = jwt.decode(message,
+                             settings.SSO_SECRET,
+                             issuer=settings.SSO_KEY)
+        self.assertIn('logout_url', payload.keys())

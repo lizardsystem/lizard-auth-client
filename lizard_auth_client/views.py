@@ -1,36 +1,36 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
 from collections import namedtuple
+from django.contrib.auth import login as django_login
+from django.contrib.auth import logout as django_logout
+from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse
+from django.http import HttpResponseBadRequest
+from django.http import HttpResponsePermanentRedirect
+from django.http import HttpResponseRedirect
+from django.utils.decorators import method_decorator
+from django.views.generic.base import View
+from itsdangerous import URLSafeTimedSerializer
+from lizard_auth_client import client
+from lizard_auth_client.conf import settings
+
 import datetime
 import json
-
+import jwt
 import requests
+
+
 try:
     from urlparse import urljoin
     from urllib import urlencode
 except ImportError:
     from urllib.parse import urljoin, urlencode
 
-from lizard_auth_client.conf import settings
-from django.contrib.auth import login as django_login
-from django.contrib.auth import logout as django_logout
-from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth.decorators import login_required
-from django.http import (
-    HttpResponseBadRequest,
-    HttpResponseRedirect,
-    HttpResponsePermanentRedirect,
-)
-from django.http import HttpResponse
-from django.views.generic.base import View
-from django.utils.decorators import method_decorator
-from itsdangerous import URLSafeTimedSerializer
-import jwt
 
-from lizard_auth_client import client
-
-# used so we can login User objects we instantiated ourselves
+# Used so we can login User objects we instantiated ourselves
 BACKEND = ModelBackend()
 JWT_EXPIRATION = datetime.timedelta(
     minutes=settings.SSO_JWT_EXPIRATION_MINUTES)
@@ -110,36 +110,69 @@ class LoginViewV1(View):
             )
 
 
+def sso_server_url(name):
+    """Return url of endpoint on the SSO server
+
+    The v2 API has a starting point that lists the available endpoints. We
+    wrap that url and cache it.
+
+    Args:
+        name: name of the endpoint. Currently it can be ``check-credentials``,
+            ``login``, ``logout``.
+
+    Returns:
+        full URL of the requested endpoint.
+
+    Raises:
+        KeyError: if the name isn't a known endpoint of the SSO server.
+
+    """
+    cache_key = 'cached_sso_server_urls'
+    sso_server_urls = cache.get(cache_key)
+    if sso_server_urls is None:
+        # First time, grab it from the server.
+        response = requests.get(settings.SSO_SERVER_API_START_URL, timeout=10)
+        sso_server_urls = response.json()
+        cache.set(cache_key, sso_server_urls)
+    return sso_server_urls[name]
+
+
+def abs_reverse(request, url_name):
+    """Return absolute url including domain name"""
+    return request.build_absolute_uri(reverse(url_name))
+
+
 class JWTLoginView(View):
     """Log in using JWT API (i.e., the V2 SSO API)."""
+
     def get(self, request, *args, **kwargs):
         next = get_next(request)
         request.session['sso_after_login_next'] = next
-        domain = request.GET.get('domain', None)
-
-        # Possibly only attempt to login, don't force it
-        attempt_login_only = 'true' in request.GET.get(
-            'attempt_login_only', 'false').lower()
 
         payload = {
-            # Identifier for this site
-            'key': settings.SSO_KEY,
-            'domain': domain,
-            # If this is true, the SSO server does not force a login and only
-            # logs in a user that is already logged in on the SSO server.
-            'force_sso_login': not attempt_login_only,
-            # Set timeout
+            # JWT standard items.
+            'iss': settings.SSO_KEY,
             'exp': datetime.datetime.utcnow() + JWT_EXPIRATION,
+            # Our items.
+            'login_success_url': abs_reverse(
+                request, 'lizard_auth_client.sso_local_login'),
             }
+        if request.GET.get('attempt_login_only', 'false').lower() == 'true':
+            # We don't force the user to log in. To signal that, we pass our
+            # 'the user is not logged in' url, too.
+            payload['unauthenticated_is_ok_url'] = abs_reverse(
+                request,
+                'lizard_auth_client.sso_local_not_logged_in')
+
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
-                                    algorithm='HS256')
+                                    algorithm=settings.SSO_JWT_ALGORITHM)
         query_string = urlencode({
             'message': signed_message,
             'key': settings.SSO_KEY
             })
 
         # Build an absolute URL pointing to the SSO server out of it.
-        url = urljoin(settings.SSO_SERVER_PUBLIC_URL_V2, 'authenticate/')
+        url = sso_server_url('login')
         url_with_params = '%s?%s' % (url, query_string)
         return HttpResponseRedirect(url_with_params)
 
@@ -158,12 +191,13 @@ class LocalLoginView(View):
         if settings.SSO_USE_V2_LOGIN:
             try:
                 payload = jwt.decode(message, settings.SSO_SECRET,
-                                     algorithms=['HS256'])
+                                     audience=settings.SSO_KEY)
             except jwt.exceptions.DecodeError:
                 return HttpResponseBadRequest(
                     "Failed to decode JWT signature.")
             except jwt.exceptions.ExpiredSignatureError:
-                return HttpResponseBadRequest("JWT has expired.")
+                return HttpResponseBadRequest(
+                    "JWT recieved from the SSO has expired.")
             user_data = json.loads(payload['user'])
             user = client.construct_user(user_data)
         else:
@@ -226,23 +260,24 @@ class JWTLogoutView(View):
         # redirect the user afterwards
         next = get_next(request)
         request.session['sso_after_logout_next'] = next
-        domain = request.GET.get('domain', None)
 
         payload = {
-            # Identifier for this site
-            'key': settings.SSO_KEY,
-            'domain': domain,
-            # Set timeout
-            'exp': datetime.datetime.utcnow() + JWT_EXPIRATION
-            }
+            # JWT standard items.
+            'iss': settings.SSO_KEY,
+            'exp': datetime.datetime.utcnow() + JWT_EXPIRATION,
+            # Our items.
+            'logout_url': abs_reverse(
+                request, 'lizard_auth_client.sso_local_logout'),
+        }
+
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
-                                    algorithm='HS256')
+                                    algorithm=settings.SSO_JWT_ALGORITHM)
         query_string = urlencode({
             'message': signed_message,
             'key': settings.SSO_KEY
             })
 
-        url = urljoin(settings.SSO_SERVER_PUBLIC_URL_V2, 'logout/')
+        url = sso_server_url('logout')
         url = '%s?%s' % (url, query_string)
 
         # send the redirect response

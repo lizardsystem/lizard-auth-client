@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
-from lizard_auth_client.conf import settings
 from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.core.exceptions import ImproperlyConfigured
-
 from lizard_auth_client import views
+from lizard_auth_client.conf import settings
 
 
 def check_settings():
@@ -30,9 +28,9 @@ def check_settings():
         )
 
     if settings.SSO_USE_V2_LOGIN:
-        if not settings.SSO_SERVER_PUBLIC_URL_V2:
+        if not settings.SSO_SERVER_API_START_URL:
             raise ImproperlyConfigured(
-                'Please define a value for SSO_SERVER_PUBLIC_URL_V2 '
+                'Please define a value for SSO_SERVER_API_START_URL '
                 'your settings. This URL is used to locate the SSO server.'
             )
     else:

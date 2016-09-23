@@ -9,14 +9,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-
 from django.contrib.auth.models import User
 from django.utils.text import slugify
-import factory
-
 from lizard_auth_client.models import Organisation
 from lizard_auth_client.models import Role
 from lizard_auth_client.models import UserOrganisationRole
+
+import factory
 
 
 class UserFactory(factory.DjangoModelFactory):

@@ -1,19 +1,18 @@
 from __future__ import print_function
+from django.contrib.auth import get_user_model
+from django.core.management import call_command
+from django.core.management.base import BaseCommand
+from django.core.management.base import CommandError
+from django.db.utils import IntegrityError
+from lizard_auth_client.client import sso_get_roles_django
+from lizard_auth_client.client import sso_get_user_organisation_roles_django
+from lizard_auth_client.client import sso_sync_user_organisation_roles
+from lizard_auth_client.models import Organisation
+from lizard_auth_client.models import Role
+from lizard_auth_client.models import UserOrganisationRole
 
 import sys
 
-from django.core.management.base import BaseCommand, CommandError
-from django.core.management import call_command
-from django.contrib.auth import get_user_model
-from django.db.utils import IntegrityError
-
-from lizard_auth_client.client import sso_get_roles_django, \
-                                      sso_get_user_organisation_roles_django, \
-                                      sso_sync_user_organisation_roles
-
-from lizard_auth_client.models import Role, \
-                                      Organisation, \
-                                      UserOrganisationRole
 
 txt = {
     'provide_username':
@@ -48,4 +47,3 @@ class Command(BaseCommand):
             print(txt['winrar'] %
                 (UserOrganisationRole.objects.filter(user=wanted_user).count(),
                  wanted_user.username))
-
