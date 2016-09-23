@@ -137,6 +137,11 @@ def sso_server_url(name):
     return sso_server_urls[name]
 
 
+def abs_reverse(request, url_name):
+    """Return absolute url including domain name"""
+    return request.build_absolute_uri(reverse(url_name))
+
+
 class JWTLoginView(View):
     """Log in using JWT API (i.e., the V2 SSO API)."""
 
@@ -149,12 +154,14 @@ class JWTLoginView(View):
             'iss': settings.SSO_KEY,
             'exp': datetime.datetime.utcnow() + JWT_EXPIRATION,
             # Our items.
-            'login_success_url': reverse('lizard_auth_client.sso_local_login'),
+            'login_success_url': abs_reverse(
+                request, 'lizard_auth_client.sso_local_login'),
             }
         if request.GET.get('attempt_login_only', 'false').lower() == 'true':
             # We don't force the user to log in. To signal that, we pass our
             # 'the user is not logged in' url, too.
-            payload['unauthenticated_is_ok_url'] = reverse(
+            payload['unauthenticated_is_ok_url'] = abs_reverse(
+                request,
                 'lizard_auth_client.sso_local_not_logged_in')
 
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
@@ -259,7 +266,8 @@ class JWTLogoutView(View):
             'iss': settings.SSO_KEY,
             'exp': datetime.datetime.utcnow() + JWT_EXPIRATION,
             # Our items.
-            'logout_url': reverse('lizard_auth_client.sso_local_logout'),
+            'logout_url': abs_reverse(
+                request, 'lizard_auth_client.sso_local_logout'),
         }
 
         signed_message = jwt.encode(payload, settings.SSO_SECRET,
