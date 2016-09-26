@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.3 (unreleased)
+2.3 (2016-09-26)
 ----------------
 
 - API v2 2.0..... Lots of changes to correspond to the lizard-auth-server
