@@ -12,6 +12,8 @@ class SSOAppConf(AppConf):
     ENABLED = False
     STANDALONE = False
     USE_V2_LOGIN = False
+    KEY = ''
+    SECRET = ''
 
     # Defaults. Normally no need to adjust them.
     CREDENTIAL_CACHE_TIMEOUT_SECONDS = 60
@@ -21,8 +23,6 @@ class SSOAppConf(AppConf):
     # Required settings for the v1 API.
     SERVER_PRIVATE_URL = ''
     SERVER_PUBLIC_URL = ''
-    KEY = ''
-    SECRET = ''
 
     # Required settings for the v2 API. Should include ``/api2/``.
     SERVER_API_START_URL = ''
