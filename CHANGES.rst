@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 2.4 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Fixed UserFactory: it now creates a syntactically valid email address.
 
 
 2.3 (2016-09-26)
