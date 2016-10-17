@@ -519,7 +519,8 @@ def sso_get_organisations_v2(sso_server_api_start_url, sso_key, sso_secret,
                              sso_jwt_expiration_minutes, sso_jwt_algorithm):
     '''
     Return a list of dicts containing organisation data.
-    Keys are 'unique_id' and 'name'.
+
+    Keys are `unique_id` and `name`.
     '''
     payload = {
         'iss': sso_key,
