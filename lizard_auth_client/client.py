@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+from django.core.cache import cache
 from itsdangerous import URLSafeTimedSerializer
 from lizard_auth_client import models
 from lizard_auth_client import signals
@@ -529,7 +530,6 @@ def sso_get_organisations_v2(sso_server_api_start_url, sso_key, sso_secret,
     }
     signed_message = jwt.encode(payload, sso_secret,
                                 algorithm=sso_jwt_algorithm)
-    from lizard_auth_client.views import sso_server_url
     url = sso_server_url('organisations')
     params = {
         'message': signed_message,
@@ -712,3 +712,32 @@ def get_billable_organisation(user, role_code=models.Role.BILLING_ROLE_CODE):
             else:
                 sso_sync_user_organisation_roles(user)
                 synced = True
+
+
+def sso_server_url(name):
+    """Return url of endpoint on the SSO server
+
+    The v2 API has a starting point that lists the available endpoints. We
+    wrap that url and cache it.
+
+    Args:
+        name: name of the endpoint. Currently it can be ``check-credentials``,
+            ``login``, ``logout``.
+
+    Returns:
+        full URL of the requested endpoint.
+
+    Raises:
+        KeyError: if the name isn't a known endpoint of the SSO server.
+
+    """
+    cache_key = 'cached_sso_server_urls'
+    sso_server_urls = cache.get(cache_key)
+    if sso_server_urls is None:
+        # import here so this module can easily be reused outside of Django
+        from lizard_auth_client.conf import settings
+        # First time, grab it from the server.
+        response = requests.get(settings.SSO_SERVER_API_START_URL, timeout=10)
+        sso_server_urls = response.json()
+        cache.set(cache_key, sso_server_urls)
+    return sso_server_urls[name]

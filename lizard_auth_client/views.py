@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+
 from __future__ import unicode_literals
+
 from collections import namedtuple
 from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
-from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
@@ -15,6 +16,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic.base import View
 from itsdangerous import URLSafeTimedSerializer
 from lizard_auth_client import client
+from lizard_auth_client.client import sso_server_url
 from lizard_auth_client.conf import settings
 
 import datetime
@@ -108,33 +110,6 @@ class LoginViewV1(View):
             return wrapped_response.http_response(
                 wrapped_response.message
             )
-
-
-def sso_server_url(name):
-    """Return url of endpoint on the SSO server
-
-    The v2 API has a starting point that lists the available endpoints. We
-    wrap that url and cache it.
-
-    Args:
-        name: name of the endpoint. Currently it can be ``check-credentials``,
-            ``login``, ``logout``.
-
-    Returns:
-        full URL of the requested endpoint.
-
-    Raises:
-        KeyError: if the name isn't a known endpoint of the SSO server.
-
-    """
-    cache_key = 'cached_sso_server_urls'
-    sso_server_urls = cache.get(cache_key)
-    if sso_server_urls is None:
-        # First time, grab it from the server.
-        response = requests.get(settings.SSO_SERVER_API_START_URL, timeout=10)
-        sso_server_urls = response.json()
-        cache.set(cache_key, sso_server_urls)
-    return sso_server_urls[name]
 
 
 def abs_reverse(request, url_name):
