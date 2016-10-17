@@ -1,4 +1,5 @@
 from __future__ import print_function
+
 from itsdangerous import URLSafeTimedSerializer
 from lizard_auth_client import models
 from lizard_auth_client import signals
@@ -15,12 +16,8 @@ logger = logging.getLogger(__name__)
 
 try:
     from urlparse import urljoin
-    from urllib import urlencode
 except ImportError:
     from urllib.parse import urljoin
-    from urllib.parse import urlencode
-
-
 
 
 class AuthenticationFailed(Exception):
@@ -143,7 +140,7 @@ def sso_authenticate_unsigned(
         raise CommunicationError(ex)
 
     # validate response a bit
-    if not 'success' in data:
+    if 'success' not in data:
         raise CommunicationError('got an OK result, but with unknown content')
 
     # either return the user instance as dict, or raise an authentication error
@@ -195,7 +192,7 @@ def sso_authenticate(
         raise CommunicationError(ex)
 
     # validate response a bit
-    if not 'success' in data:
+    if 'success' not in data:
         raise CommunicationError('got an OK result, but with unknown content')
 
     # either return the user instance as dict, or raise an authentication error
@@ -295,7 +292,7 @@ def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
         raise CommunicationError(ex)
 
     # validate response a bit
-    if not 'success' in data:
+    if 'success' not in data:
         raise CommunicationError('got an OK result, but with unknown content')
 
     # either return the user instance as dict, or raise an UserNotFound
@@ -325,7 +322,7 @@ def sso_get_users(sso_server_private_url, sso_key, sso_secret):
         raise CommunicationError(ex)
 
     # validate response a bit
-    if not 'success' in data:
+    if 'success' not in data:
         raise CommunicationError('got an OK result, but with unknown content')
 
     # either return the users as a list of dicts,
@@ -397,7 +394,7 @@ def construct_user(data):
     # disabled for now
     # use the Primary Key of the User on the SSO server to
     # generate a new username
-    #local_username = 'sso-user-{}'.format(data['pk'])
+#   local_username = 'sso-user-{}'.format(data['pk'])
     # /disabled for now
 
     # just copy the username from the sso server for now
@@ -491,7 +488,7 @@ def synchronize_roles(user, received_role_data):
             for uor in userorganisationroles])
 
 
-def sso_get_organisations(sso_server_private_url, sso_key, sso_secret):
+def sso_get_organisations_v1(sso_server_private_url, sso_key, sso_secret):
     '''
     Return a list of dicts containing organisation data for
     the portal in question.
@@ -512,10 +509,38 @@ def sso_get_organisations(sso_server_private_url, sso_key, sso_secret):
         raise CommunicationError(ex)
 
     # validate response a bit
-    if not 'success' in data:
+    if 'success' not in data:
         raise CommunicationError('got an OK result, but with unknown content')
 
     return data['organisations']
+
+
+def sso_get_organisations_v2(sso_server_api_start_url, sso_key, sso_secret,
+                             sso_jwt_expiration_minutes, sso_jwt_algorithm):
+    '''
+    Return a list of dicts containing organisation data.
+    Keys are 'unique_id' and 'name'.
+    '''
+    payload = {
+        'iss': sso_key,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(
+            minutes=sso_jwt_expiration_minutes),
+    }
+    signed_message = jwt.encode(payload, sso_secret,
+                                algorithm=sso_jwt_algorithm)
+    from lizard_auth_client.views import sso_server_url
+    url = sso_server_url('organisations')
+    params = {
+        'message': signed_message,
+        'key': sso_key,
+        'timeout': 10,
+    }
+    r = requests.get(url, params=params)
+    r.raise_for_status()
+    return [
+        {'unique_id': unique_id, 'name': name}
+        for (unique_id, name) in r.json().items()
+    ]
 
 
 def sso_get_roles(sso_server_private_url, sso_key, sso_secret):
@@ -535,7 +560,7 @@ def sso_get_roles(sso_server_private_url, sso_key, sso_secret):
         raise CommunicationError(ex)
 
     # validate response a bit
-    if not 'success' in data:
+    if 'success' not in data:
         raise CommunicationError('got an OK result, but with unknown content')
 
     return data['roles']
@@ -557,6 +582,14 @@ def sso_get_roles_django():
 
 
 def sso_get_organisations_django():
+    from lizard_auth_client.conf import settings
+    if settings.SSO_USE_V2_LOGIN:
+        return sso_get_organisations_django_v2()
+    else:
+        return sso_get_organisations_django_v1()
+
+
+def sso_get_organisations_django_v1():
     '''
     Same as sso_get_organisations(), but uses the Django settings
     module to import the URL base and encryption keys.
@@ -565,11 +598,25 @@ def sso_get_organisations_django():
     from lizard_auth_client.conf import settings
 
     # call with django setting for SSO url
-    return sso_get_organisations(
+    return sso_get_organisations_v1(
         settings.SSO_SERVER_PRIVATE_URL,
         settings.SSO_KEY,
         settings.SSO_SECRET
     )
+
+
+def sso_get_organisations_django_v2():
+    '''
+    Same as sso_get_organisations_v2(), but uses the Django settings
+    module to import the URL base and encryption keys.
+    '''
+    # import here so this module can easily be reused outside of Django
+    from lizard_auth_client.conf import settings
+
+    return sso_get_organisations_v2(
+        settings.SSO_SERVER_API_START_URL,
+        settings.SSO_KEY, settings.SSO_SECRET,
+        settings.SSO_JWT_EXPIRATION_MINUTES, settings.SSO_JWT_ALGORITHM)
 
 
 def sso_get_user_organisation_roles_django(user):
@@ -592,7 +639,7 @@ def sso_get_user_organisation_roles_django(user):
         raise CommunicationError(ex)
 
     # validate response a bit
-    if not 'success' in data:
+    if 'success' not in data:
         raise CommunicationError('got an OK result, but with unknown content')
 
     return data['user_organisation_roles_data']
