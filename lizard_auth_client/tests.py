@@ -64,7 +64,8 @@ class TestClient(TestCase):
                 'success': False,
                 'error': 'Wrong password'}):
             def wrong_pw():
-                return client.sso_authenticate_django_v1('root', 'wrong_password')
+                return client.sso_authenticate_django_v1(
+                    'root', 'wrong_password')
             self.assertRaises(client.AuthenticationFailed, wrong_pw)
 
     def test_bad_url(self):
@@ -609,7 +610,6 @@ class V2ViewsTest(TestCase):
         self.assertEqual('https://some.where/api2/logout/',
                          views.sso_server_url('logout'))
 
-
     def test_jwt_login_view_redirect(self):
         request = self.request_factory.get('/sso/login/')
         request.session = {}
@@ -623,7 +623,7 @@ class V2ViewsTest(TestCase):
         actual_url, argument_string = response.url.split('?')
         self.assertEqual('https://some.where/api2/login/',
                          actual_url)
-        message = str(argument_string.split('message=')[-1])
+        message = argument_string.split('message=')[-1].split('&')[0]
         payload = jwt.decode(message,
                              settings.SSO_SECRET,
                              issuer=settings.SSO_KEY)
@@ -637,7 +637,7 @@ class V2ViewsTest(TestCase):
         actual_url, argument_string = response.url.split('?')
         self.assertEqual('https://some.where/api2/login/',
                          actual_url)
-        message = str(argument_string.split('message=')[-1])
+        message = argument_string.split('message=')[-1].split('&')[0]
         payload = jwt.decode(message,
                              settings.SSO_SECRET,
                              issuer=settings.SSO_KEY)
@@ -657,7 +657,7 @@ class V2ViewsTest(TestCase):
         actual_url, argument_string = response.url.split('?')
         self.assertEqual('https://some.where/api2/logout/',
                          actual_url)
-        message = str(argument_string.split('message=')[-1])
+        message = argument_string.split('message=')[-1].split('&')[0]
         payload = jwt.decode(message,
                              settings.SSO_SECRET,
                              issuer=settings.SSO_KEY)
