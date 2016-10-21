@@ -7,6 +7,8 @@ Changelog of lizard-auth-client
 
 - Fixed UserFactory: it now creates a syntactically valid email address.
 
+- Added V2 support for `sso_sync_organisations` management command.
+
 
 2.3 (2016-09-26)
 ----------------
