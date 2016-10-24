@@ -25,7 +25,7 @@ class UserFactory(factory.DjangoModelFactory):
         lambda x: '{}.{}'.format(slugify(x.first_name), slugify(x.last_name)))
     password = factory.Faker('password')
     email = factory.LazyAttribute(
-        lambda x: '{}@gmail'.format(x.username))
+        lambda x: '{}@gmail.com'.format(x.username))
     is_superuser = False
     is_staff = False
     is_active = True

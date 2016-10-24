@@ -2,10 +2,18 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.4 (unreleased)
+2.5 (unreleased)
 ----------------
 
 - Added missing (textual) db migration step.
+
+
+2.4 (2016-10-21)
+----------------
+
+- Fixed UserFactory: it now creates a syntactically valid email address.
+
+- Added V2 support for `sso_sync_organisations` management command.
 
 
 2.3 (2016-09-26)
