@@ -35,7 +35,7 @@ class UserNotFound(Exception):
 
 def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
              **params):
-    '''
+    """
     Post the specified username and password combination to the
     authentication API listening on sso_server_private_url.
 
@@ -43,7 +43,7 @@ def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
 
     Raises :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
-    '''
+    """
     # ensure nobody passes param 'key', because that's reserved
     # for the encryption method
     if 'key' in params:
@@ -80,7 +80,7 @@ def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
 
 def _do_post_unsigned(
         sso_server_private_url, sso_server_path, sso_key, **params):
-    '''
+    """
     Post the specified username and password combination to the
     authentication API listening on sso_server_private_url.
 
@@ -88,7 +88,7 @@ def _do_post_unsigned(
 
     Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
-    '''
+    """
 
     # determine POST data
     post_data = {
@@ -119,7 +119,7 @@ def _do_post_unsigned(
 
 def sso_authenticate_unsigned(
         sso_server_private_url, sso_key, username, password):
-    '''
+    """
     Return a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
 
@@ -128,7 +128,7 @@ def sso_authenticate_unsigned(
 
     Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
-    '''
+    """
     try:
         data = _do_post_unsigned(
             sso_server_private_url,
@@ -151,10 +151,10 @@ def sso_authenticate_unsigned(
 
 
 def sso_authenticate_unsigned_django(username, password):
-    '''
+    """
     Same as sso_authenticate_unsigned(), but uses the Django settings module
     to import the URL base and portal key.
-    '''
+    """
     # import here so this module can easily be reused outside of Django
     from lizard_auth_client.conf import settings
 
@@ -169,7 +169,7 @@ def sso_authenticate_unsigned_django(username, password):
 
 def sso_authenticate(
         sso_server_private_url, sso_key, sso_secret, username, password):
-    '''
+    """
     Return a dict containing user data, if authentication succeeds. Example
     keys are 'first_name', 'pk', 'last_name', 'organisation', et cetera.
 
@@ -178,7 +178,7 @@ def sso_authenticate(
 
     Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
-    '''
+    """
     try:
         data = _do_post(
             sso_server_private_url,
@@ -203,10 +203,10 @@ def sso_authenticate(
 
 
 def sso_authenticate_django_v1(username, password):
-    '''
+    """
     Same as sso_authenticate(), but uses the Django settings module to import
     the URL base and encryption keys.
-    '''
+    """
     # import here so this module can easily be reused outside of Django
     from lizard_auth_client.conf import settings
 
@@ -270,7 +270,7 @@ def sso_authenticate_django_v2(username, password):
 
 
 def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
-    '''
+    """
     Return a dict containing user data, if the username is found on the
     SSO server. Example keys are 'first_name', 'pk', 'last_name',
     'organisation', et cetera.
@@ -279,7 +279,7 @@ def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
 
     Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
-    '''
+    """
     try:
         data = _do_post(
             sso_server_private_url,
@@ -304,13 +304,13 @@ def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
 
 
 def sso_get_users(sso_server_private_url, sso_key, sso_secret):
-    '''
+    """
     Return a list of dicts containing user data for the portal in question.
     Example keys are 'first_name', 'pk', 'last_name', 'organisation', etc.
 
     Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
-    '''
+    """
     try:
         data = _do_post(
             sso_server_private_url,
@@ -334,10 +334,10 @@ def sso_get_users(sso_server_private_url, sso_key, sso_secret):
 
 
 def sso_get_user_django(username):
-    '''
+    """
     Same as sso_get_user(), but uses the Django settings module to import
     the URL base and encryption keys.
-    '''
+    """
     # import here so this module can easily be reused outside of Django
     from lizard_auth_client.conf import settings
 
@@ -351,10 +351,10 @@ def sso_get_user_django(username):
 
 
 def sso_get_users_django():
-    '''
+    """
     Same as sso_get_users(), but uses the Django settings module to import
     the URL base and encryption keys.
-    '''
+    """
     # import here so this module can easily be reused outside of Django
     from lizard_auth_client.conf import settings
 
@@ -367,7 +367,7 @@ def sso_get_users_django():
 
 
 def sso_populate_user_django(username):
-    '''
+    """
     Return an populated Django User instance with data fetched
     from the SSO server.
 
@@ -375,15 +375,15 @@ def sso_populate_user_django(username):
 
     Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
-    '''
+    """
     return construct_user(sso_get_user_django(username))
 
 
 def construct_user(data):
-    '''
+    """
     Given a dict container user data, return a populated and saved
     Django User instance.
-    '''
+    """
     # import here so this module can easily be reused outside of Django
     try:
         from django.contrib.auth import get_user_model
@@ -490,14 +490,14 @@ def synchronize_roles(user, received_role_data):
 
 
 def sso_get_organisations_v1(sso_server_private_url, sso_key, sso_secret):
-    '''
+    """
     Return a list of dicts containing organisation data for
     the portal in question.
     Keys are 'unique_id' and 'name'.
 
     Raise :class:`HTTPError` or :class:`URLError`
     or :class:`CommunicationError`, if one occurred.
-    '''
+    """
     try:
         data = _do_post(
             sso_server_private_url,
@@ -518,11 +518,11 @@ def sso_get_organisations_v1(sso_server_private_url, sso_key, sso_secret):
 
 def sso_get_organisations_v2(sso_server_api_start_url, sso_key, sso_secret,
                              sso_jwt_expiration_minutes, sso_jwt_algorithm):
-    '''
+    """
     Return a list of dicts containing organisation data.
 
     Keys are `unique_id` and `name`.
-    '''
+    """
     payload = {
         'iss': sso_key,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(
@@ -591,10 +591,10 @@ def sso_get_organisations_django():
 
 
 def sso_get_organisations_django_v1():
-    '''
+    """
     Same as sso_get_organisations(), but uses the Django settings
     module to import the URL base and encryption keys.
-    '''
+    """
     # import here so this module can easily be reused outside of Django
     from lizard_auth_client.conf import settings
 
@@ -607,10 +607,10 @@ def sso_get_organisations_django_v1():
 
 
 def sso_get_organisations_django_v2():
-    '''
+    """
     Same as sso_get_organisations_v2(), but uses the Django settings
     module to import the URL base and encryption keys.
-    '''
+    """
     # import here so this module can easily be reused outside of Django
     from lizard_auth_client.conf import settings
 
@@ -656,14 +656,14 @@ def sso_sync_user_organisation_roles(user):
 
 
 def synchronize_organisations():
-    '''Call sso_get_organisations_django() and sync the organisation
+    """Call sso_get_organisations_django() and sync the organisation
     data based on the result.
 
     Do nothing in case of CommunicationError.
 
     Return a two-tuple with the numbers of new and updated
     organisations.
-    '''
+    """
 
     try:
         organisations = sso_get_organisations_django()
