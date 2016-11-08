@@ -150,7 +150,17 @@ decorator::
 
 
 
-Tests
------
+Tests and local development
+---------------------------
 
-To run the tests a running lizard-auth-server is needed.
+To run the tests, docker is used::
+
+    $ docker-compose build
+    $ docker-compose run web bin/test
+
+For a test in your browser, you'll need to also start a local
+lizard-auth-server. Or test against the staging SSO. For the V2 API, you can
+use any of the development portals, as the new V2 API sends through full URLS
+for the requests coming back to your development laptop, it won't look at the
+portal's configuration regarding "redirect url" and "allowed domains". So any
+portal is good, actually.
