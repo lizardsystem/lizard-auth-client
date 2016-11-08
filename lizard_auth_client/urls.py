@@ -10,10 +10,10 @@ from lizard_auth_client.conf import settings
 
 
 def check_settings():
-    '''
+    """
     Ensure settings are valid, as this Django app is mostly included by
     other apps / sites.
-    '''
+    """
     if not settings.SSO_KEY:
         raise ImproperlyConfigured(
             'Please define a value for SSO_KEY in your settings. '
