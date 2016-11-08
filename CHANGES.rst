@@ -7,6 +7,12 @@ Changelog of lizard-auth-client
 
 - Added missing (textual) db migration step.
 
+- Removed south migrations: none of the sites that use lizard-auth-client are
+  old enough anymore.
+
+- Improved README with V2 API instructions and attempt-login-only middleware
+  and decorator documentation.
+
 
 2.4 (2016-10-21)
 ----------------
