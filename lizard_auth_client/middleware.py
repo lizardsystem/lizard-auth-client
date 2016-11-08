@@ -4,9 +4,9 @@ from lizard_auth_client.decorators import attempt_auto_login
 
 
 def string_has_any_prefix(prefix_list, some_string):
-    '''
+    """
     Note: needs to be optimized for something better than O(N) efficiency.
-    '''
+    """
     return any(some_string.startswith(p) for p in prefix_list)
 
 # url prefixes which shouldn't result in a redirect
@@ -50,12 +50,12 @@ class LoginRequiredMiddleware(object):
     loaded. You'll get an error if they aren't.
     """
     def process_request(self, request):
-        assert hasattr(request, 'user'), '''The Login Required middleware
+        assert hasattr(request, 'user'), """The Login Required middleware
         requires authentication middleware to be installed. Edit your
         MIDDLEWARE_CLASSES setting to insert
         'django.contrib.auth.middlware.AuthenticationMiddleware'.
         If that doesn't work, ensure your TEMPLATE_CONTEXT_PROCESSORS
-        setting includes 'django.core.context_processors.auth'.'''
+        setting includes 'django.core.context_processors.auth'."""
 
         if not request.user.is_authenticated():
             path = request.path_info.strip('/')
