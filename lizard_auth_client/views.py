@@ -43,10 +43,10 @@ class HttpResponseServiceUnavailable(HttpResponse):
 
 
 class TestHomeView(View):
-    '''
+    """
     Test view, only used in standalone mode.
     Display a minimal HTML page with some URLS.
-    '''
+    """
     def get(self, request, *args, **kwargs):
         user = request.user
         return HttpResponse(
@@ -59,11 +59,11 @@ class TestHomeView(View):
 
 
 class TestProtectedView(View):
-    '''
+    """
     Test view, only used in standalone mode.
     Display a minimal HTML page with some URLS, but is "protected" by
     a login_required decorator.
-    '''
+    """
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         return super(TestProtectedView, self).dispatch(
@@ -81,11 +81,11 @@ class TestProtectedView(View):
 
 
 class LoginViewV1(View):
-    '''
+    """
     View that redirects the user to the SSO server.
 
     Requests a Request Token and then redirects the User to the the SSO Server.
-    '''
+    """
     def get(self, request, *args, **kwargs):
         # store the GET parameter named 'next', so we can redirect the user
         # to the requested page, after SSO login.
@@ -153,9 +153,9 @@ class JWTLoginView(View):
 
 
 class LocalLoginView(View):
-    '''
+    """
     Verifies the user token with the SSO server, and logs the user in.
-    '''
+    """
     def get(self, request, *args, **kwargs):
         # verify the authentication token and
         # retrieve the User instance from the SSO server
@@ -211,9 +211,9 @@ class LocalNotLoggedInView(View):
 
 
 class LogoutViewV1(View):
-    '''
+    """
     Redirect user to SSO server, to log out there.
-    '''
+    """
     def get(self, request, *args, **kwargs):
         # store the 'next' parameter in the session so we can
         # redirect the user afterwards
@@ -227,9 +227,9 @@ class LogoutViewV1(View):
 
 
 class JWTLogoutView(View):
-    '''
+    """
     Redirect user to SSO server, to log out there.
-    '''
+    """
     def get(self, request, *args, **kwargs):
         # store the 'next' parameter in the session so we can
         # redirect the user afterwards
@@ -260,9 +260,9 @@ class JWTLogoutView(View):
 
 
 class LocalLogoutView(View):
-    '''
+    """
     Log out locally. Mostly the user is redirected here by the SSO server.
-    '''
+    """
     def get(self, request, *args, **kwargs):
         # get the redirect url
         next = request.session.get(
@@ -276,10 +276,10 @@ class LocalLogoutView(View):
 
 
 def get_request_token():
-    '''
+    """
     Requests a Request Token from the SSO Server. Returns False if the request
     failed.
-    '''
+    """
     # construct a signed message containing the portal key
     params = {
         'key': settings.SSO_KEY
@@ -308,10 +308,10 @@ def get_request_token():
 
 
 def verify_auth_token(untrusted_message):
-    '''
+    """
     Verifies a Auth Token. Returns a
     django.contrib.auth.models.User instance if successful or False.
-    '''
+    """
     # decrypt the message
     untrusted = URLSafeTimedSerializer(settings.SSO_SECRET).loads(
         untrusted_message, max_age=300)
@@ -357,23 +357,23 @@ def verify_auth_token(untrusted_message):
 
 
 def get_next(request):
-    '''
+    """
     Given a request, returns the URL where a user should be redirected to
     after login. Defaults to LOGIN_REDIRECT_URL, or '/' if that is not set.
-    '''
+    """
     default = getattr(settings, 'LOGIN_REDIRECT_URL', '/')
     return request.GET.get('next', default)
 
 
 def get_request_token_and_determine_response(
         domain=None, attempt_login_only=False):
-    '''
+    """
     Retrieve a Request token from the SSO server, and determine the proper
     HttpResponse to send to the user.
 
     When logging using via the REST API, the response is wrapped in JSON,
     because the redirection takes place in a client-side script.
-    '''
+    """
     WrappedResponse = namedtuple(
         'WrappedResponse', 'http_response, message, redirect_url')
 
@@ -409,13 +409,13 @@ def get_request_token_and_determine_response(
 
 
 def build_sso_portal_action_url(action, domain=None):
-    '''
+    """
     Constructs and signs a message containing the specified action parameter,
     and returns a URL which can be used to redirect the user.
 
     For example, with action='logout', this can be used to logout the user
     on the SSO server.
-    '''
+    """
     params = {
         'action': action,
         'key': settings.SSO_KEY,
