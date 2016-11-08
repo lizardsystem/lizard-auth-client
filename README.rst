@@ -31,6 +31,18 @@ And add it to ``INSTALLED_APPS`` in your django settings::
         'lizard_auth_client',
         ...)
 
+Add the proper URLS to your urls.py. Because the app needs to override the login/logout URLS,
+import them in the root of your urlpatterns::
+
+    urlpatterns = patterns(
+        '',
+        (r'^', include('lizard_auth_client.urls')),
+    )
+
+
+Settings for the original V1 API
+--------------------------------
+
 Configure the SSO settings as seen in ``testsettings.py``::
 
     # SSO *can* be disabled for development with local accounts.
@@ -51,21 +63,25 @@ Configure the SSO settings as seen in ``testsettings.py``::
     # Note: needs a trailing slash
     SSO_SERVER_PRIVATE_URL = 'http://10.0.0.1:80/'
 
-
-TODO: document v2 API.
-
-
 Only for local testing of this very app do you need this additional setting::
 
     SSO_STANDALONE = True
 
-Add the proper URLS to your urls.py. Because the app needs to override the login/logout URLS,
-import them in the root of your urlpatterns::
 
-    urlpatterns = patterns(
-        '',
-        (r'^', include('lizard_auth_client.urls')),
-    )
+Settings for the V2 API
+-----------------------
+
+The easiest way is to go to the SSO, create a portal in the admin and copy/paste
+the settings directly from the portal's edit page in the admin. There's a
+read-only field "settings for the V2 API" there. The result will be something
+like this::
+
+    SSO_ENABLED = True
+    SSO_USE_V2_login = True
+    SSO_SERVER_API_START_URL = 'https://sso.lizard.net/api2/'
+    SSO_KEY = 'sdfkljlkasdflkasfdlkasfdlk;asdflkjlaksdfjlkas'
+    SSO_SECRET = 'jklsdfjlksdfjklasdfkljasdfjlkasjkd;fasdf'
+
 
 
 Custom authentication
@@ -88,11 +104,14 @@ It should be usable without Django settings as well::
     user_data = auth_client.sso_authenticate('http://url.tld', 'key', 'secret' 'username', 'password')
 
 
-Middleware
-----------
+Middleware: required login and attempted login
+----------------------------------------------
 
-The middleware automaticaly logs in users when they are known at the
-server. And forces users to login at the server if they are not known.
+Lizard-auth-client has two middleware classes.
+
+The **first** middleware forces a login. If the user is already logged in to the
+SSO, they are automatically logged in on our site. If not, they are forced to
+login on the SSO first.
 
 To enable it, add this to your settings' ``MIDDLEWARE_CLASSES``::
 
@@ -100,8 +119,34 @@ To enable it, add this to your settings' ``MIDDLEWARE_CLASSES``::
     'lizard_auth_client.middleware.LoginRequiredMiddleware',
     ...
 
+The **second** middleware only attempts a login, it doesn't force it. If the
+user is already logged in to the SSO, they are automatically logged in on our
+site. If not, they are not forced to log in on the SSO and simply remain
+anonymous.
+
+This can be very handy if you point from one site to another and would prefer
+the user to be logged in, but want to allow anonymous access, too.
+
+To enable it, add this to your settings' ``MIDDLEWARE_CLASSES``::
+
+    ...
+    'lizard_auth_client.middleware.AttemptAutoLoginMiddleware',
+    ...
+
 Note: ``django.contrib.auth.middleware.AuthenticationMiddleware``, enabled by
-default, should be *above* the LoginRequiredMiddleware.
+default, should be *above* our middleware classes.
+
+
+Decorators
+----------
+
+The first middleware's behaviour can be achieved by Django's standard
+``@login_required`` decorator.
+
+For the second middleware's behaviour we have our own ``@attempt_auto_login``
+decorator::
+
+    from lizard_auth_client.decorators import attempt_auto_login
 
 
 
