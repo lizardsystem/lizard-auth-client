@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
-
 from collections import namedtuple
 from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout

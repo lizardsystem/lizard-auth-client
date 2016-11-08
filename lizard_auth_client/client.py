@@ -1,5 +1,4 @@
 from __future__ import print_function
-
 from django.core.cache import cache
 from itsdangerous import URLSafeTimedSerializer
 from lizard_auth_client import models
