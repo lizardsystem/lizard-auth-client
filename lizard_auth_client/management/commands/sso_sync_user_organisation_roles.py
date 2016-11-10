@@ -27,18 +27,19 @@ class Command(BaseCommand):
     Comamnd to retrieve all user_organisation_roles (serialized) from
     the SSO server.
     """
-    args = '<username>'
+    help = 'Please provide a username'
 
-    def __init__(self):
-        super(Command, self).__init__()
-        self.arg_help_msg = 'Please provide a username'
-        help = (self.arg_help_msg)
+    def add_arguments(self, parser):
+        parser.add_argument('sso_user', type=str)
 
-    def handle(self, *args, **kwargs):
-        if len(args) != 1:
+
+    def handle(self, *args, **options):
+
+        wanted_username = options.get('sso_user')
+
+        if not wanted_username:
             raise Exception(txt['provide_username'])
         else:
-            wanted_username = args[0]
             user_model = get_user_model()
             wanted_user = user_model.objects.get(username=wanted_username)
             call_command('sso_sync_organisations')
