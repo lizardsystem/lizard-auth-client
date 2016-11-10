@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.5 (unreleased)
+2.5 (2016-11-10)
 ----------------
 
 - Added missing (textual) db migration step.
