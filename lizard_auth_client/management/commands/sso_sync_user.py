@@ -11,35 +11,32 @@ class Command(BaseCommand):
     Comamnd to retrieve a single user's (serialized) data from
     the SSO server
     """
-    args = '<username>'
+    help = 'Please provide a username'
 
-    def __init__(self):
-        super(Command, self).__init__()
-        self.arg_help_msg = 'Please provide a username'
-        help = (self.arg_help_msg)
+    def add_arguments(self, parser):
+        parser.add_argument('sso_user', type=str)
 
-    def handle(self, *args, **kwargs):
+    def handle(self, *args, **options):
         """
         """
-        if len(args) != 1:
+        sso_user = options.get('sso_user')
+        if not sso_user:
             msg = '[E] Please provide the username for the user you are trying'\
                    ' to sync.'
             raise Exception(msg)
-        else:
-            username = args[0]
+        if V:
+            print("[*] About to SSO-sync data for a User with username " \
+                   "'%s'..." % sso_user)
+        try:
+            user_data = sso_get_user_django(sso_user)
             if V:
-                print("[*] About to SSO-sync data for a User with username " \
-                       "'%s'..." % username)
-            try:
-                user_data = sso_get_user_django(username)
-                if V:
-                    print("[+] Received serialized User object: %s"
-                          % str(user_data))
-                user = construct_user(user_data)
-                if V:
-                    print("[+] OK, build User instance: %s" % str(user))
-                user.save()
-                if V:
-                    print("[+] OK, succesfully saved this User instance!")
-            except Exception as err:
-                print("[E] err = '%s'" % str(err))
+                print("[+] Received serialized User object: %s"
+                      % str(user_data))
+            user = construct_user(user_data)
+            if V:
+                print("[+] OK, build User instance: %s" % str(user))
+            user.save()
+            if V:
+                print("[+] OK, succesfully saved this User instance!")
+        except Exception as err:
+            print("[E] err = '%s'" % str(err))
