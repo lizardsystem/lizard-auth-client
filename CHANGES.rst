@@ -6,7 +6,7 @@ Changelog of lizard-auth-client
 ----------------
 
 - From django 1.8 the ``optparse`` module is deprecated. The management
-  command are now adopted to the ``argparse`` style. That is, using the
+  commands are now adopted to the ``argparse`` style. That is, using the
   method ``add_arguments()``.
 
 - Added missing (textual) db migration step.
