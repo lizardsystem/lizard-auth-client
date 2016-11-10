@@ -19,7 +19,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """
         """
-        sso_user = options['sso_user']
+        sso_user = options.get('sso_user')
         if not sso_user:
             msg = '[E] Please provide the username for the user you are trying'\
                    ' to sync.'
