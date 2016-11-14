@@ -104,11 +104,12 @@ SSO_KEY = 'random_generated_key_to_identify_the_portal'
 SSO_SECRET = 'random_generated_secret_key_to_sign_exchanged_messages'
 # URL used to redirect the user to the SSO server
 # Note: needs a trailing slash
-SSO_SERVER_PUBLIC_URL = 'http://dev.sso.lizard.net/'
-SSO_SERVER_API_START_URL = 'http://dev.sso.lizard.net/api2/'
+SSO_SERVER_PUBLIC_URL = 'http://sso.staging.lizard.net/'
 # URL used for server-to-server communication
 # Note: needs a trailing slash
-SSO_SERVER_PRIVATE_URL = 'http://dev.sso.lizard.net:9874/'
+SSO_SERVER_PRIVATE_URL = 'http://sso.staging.lizard.net:9874/'
+# V2 start point
+SSO_SERVER_API_START_URL = 'http://sso.staging.lizard.net/api2/'
 
 ROOT_URLCONF = 'lizard_auth_client.urls'
 

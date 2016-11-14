@@ -63,10 +63,6 @@ Configure the SSO settings as seen in ``testsettings.py``::
     # Note: needs a trailing slash
     SSO_SERVER_PRIVATE_URL = 'http://10.0.0.1:80/'
 
-Only for local testing of this very app do you need this additional setting::
-
-    SSO_STANDALONE = True
-
 
 Settings for the V2 API
 -----------------------
@@ -81,11 +77,24 @@ like this::
     SSO_SERVER_API_START_URL = 'https://sso.lizard.net/api2/'
     SSO_KEY = 'sdfkljlkasdflkasfdlkasfdlk;asdflkjlaksdfjlkas'
     SSO_SECRET = 'jklsdfjlksdfjklasdfkljasdfjlkasjkd;fasdf'
+    SSO_ALLOW_ANYONE = False
 
 
+Restricting access
+------------------
 
-Custom authentication
----------------------
+In the V1 API, access to sites is handled in the SSO. In the V2 API, this is
+considered authorization and thus it is not handled. Which means everyone can
+theoretically log in to any site.
+
+To prevent this, ``SSO_ALLOW_ANYONE`` is set to False by default. Only people
+that already have a local user object are allowed to log in. (TODO)
+
+To create user objects locally, a view (TODO) has been added.
+
+
+Custom authentication (normally not needed)
+-------------------------------------------
 
 In a Django context, simple configure the app as above, and do::
 
@@ -149,7 +158,6 @@ decorator::
     from lizard_auth_client.decorators import attempt_auto_login
 
 
-
 Tests and local development
 ---------------------------
 
@@ -158,9 +166,22 @@ To run the tests, docker is used::
     $ docker-compose build
     $ docker-compose run web bin/test
 
+To not conflict with an optional local lizard-auth-server (running on port
+5000, normally), we run on port **5050**.
+
 For a test in your browser, you'll need to also start a local
 lizard-auth-server. Or test against the staging SSO. For the V2 API, you can
 use any of the development portals, as the new V2 API sends through full URLS
 for the requests coming back to your development laptop, it won't look at the
 portal's configuration regarding "redirect url" and "allowed domains". So any
-portal is good, actually.
+portal is good, actually. Add the key and secret to
+``lizard_auth_client/local_testsettings.py``::
+
+    SSO_KEY = 'kljsdfljkdsfjlkdsf'
+    SSO_SECRET = 'dfjkladjklsjklsdflkjf'
+
+For local testing of this very app do you need this additional setting::
+
+    SSO_STANDALONE = True
+
+This setting is already there in the ``testsettings.py``.
