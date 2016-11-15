@@ -2,13 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.6 (unreleased)
-----------------
-
-- Nothing changed yet.
-
-
-2.5 (2016-11-10)
+2.5 (unreleased)
 ----------------
 
 - From django 1.8 the ``optparse`` module is deprecated. The management
