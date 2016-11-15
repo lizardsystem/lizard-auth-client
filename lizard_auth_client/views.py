@@ -8,7 +8,9 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse_lazy
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponsePermanentRedirect
@@ -16,10 +18,12 @@ from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.views.generic.base import TemplateView
 from django.views.generic.base import View
+from django.views.generic.edit import FormView
 from itsdangerous import URLSafeTimedSerializer
 from lizard_auth_client import client
 from lizard_auth_client.client import sso_server_url
 from lizard_auth_client.conf import settings
+from lizard_auth_client.forms import SearchEmailForm
 
 import datetime
 import json
@@ -450,6 +454,24 @@ class UserOverviewView(TemplateView):
     def inactive_users(self):
         return User.objects.filter(is_active=False)
 
+
+class SearchNewUserView(FormView):
+    template_name = 'lizard_auth_client/form.html'
+    form_class = SearchEmailForm
+    success_url = reverse_lazy('lizard_auth_client.user_overview')
+    title = "Search new user by email"
+
+    def xxxxxxxx(self, form):
+        """Search and add user if found"""
+        try:
+            user_dict = client.sso_search_user_by_email(
+                form.cleaned_data['email'])
+        except Exception as e:
+            raise ValidationError(e)
+        user = client.create_user(user_dict)
+        print("Created user %s" % user)
+
+        return super(SearchNewUserView, self).clean(form)
 
 
 # Let this setting determine which version of the login/logout to use.

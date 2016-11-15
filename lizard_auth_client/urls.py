@@ -92,6 +92,9 @@ if settings.SSO_ENABLED:
         url(r'^sso/user_overview/$',
             views.UserOverviewView.as_view(),
             name='lizard_auth_client.user_overview'),
+        url(r'^sso/search_new_user/$',
+            views.SearchNewUserView.as_view(),
+            name='lizard_auth_client.search_new_user'),
     ]
 else:
     urlpatterns = []

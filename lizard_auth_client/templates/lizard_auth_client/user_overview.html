@@ -3,6 +3,12 @@
 {% block content %}
   <h1>{{ view.title }}</h1>
 
+  <div>
+    <a href="{% url 'lizard_auth_client.search_new_user' %}">
+      Search new user by email
+    </a>
+  </div>
+
   <h2>Active users</h2>
   <ul>
     {% for user in view.active_users %}

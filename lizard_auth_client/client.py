@@ -740,3 +740,28 @@ def sso_server_url(name):
         sso_server_urls = response.json()
         cache.set(cache_key, sso_server_urls)
     return sso_server_urls[name]
+
+
+def sso_search_user_by_email(email):
+    """
+    Return a user dict, if found.
+    """
+    from lizard_auth_client.conf import settings
+
+    payload = {
+        'iss': settings.SSO_KEY,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(
+            minutes=settings.SSO_JWT_EXPIRATION_MINUTES),
+        'email': email,
+    }
+    signed_message = jwt.encode(payload, settings.SSO_SECRET,
+                                algorithm=settings.SSO_JWT_ALGORITHM)
+    url = sso_server_url('find-user')
+    params = {
+        'message': signed_message,
+        'key': settings.SSO_KEY,
+        'timeout': 10,
+    }
+    r = requests.get(url, params=params)
+    r.raise_for_status()
+    return r.json()
