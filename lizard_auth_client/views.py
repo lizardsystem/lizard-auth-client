@@ -6,6 +6,7 @@ from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import permission_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
@@ -13,6 +14,7 @@ from django.http import HttpResponsePermanentRedirect
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.views.generic.base import View
+from django.views.generic.base import TemplateView
 from itsdangerous import URLSafeTimedSerializer
 from lizard_auth_client import client
 from lizard_auth_client.client import sso_server_url
@@ -426,6 +428,27 @@ def build_sso_portal_action_url(action, domain=None):
     url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/portal_action') + '/'
     url = '%s?%s' % (url, query_string)
     return url
+
+
+class UserOverviewView(TemplateView):
+    """
+    Overview of users with/without access
+    """
+
+    @method_decorator(permission_required('auth.manage_users'))
+    def dispatch(self, request, *args, **kwargs):
+        return super(UserOverviewView, self).dispatch(
+            request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        return HttpResponse(
+            '<a href="/">home</a> | <a href="/protected">protected</a>'
+            '| <a href="/accounts/logout">logout</a> '
+            '| <a href="/accounts/login">login</a>'
+            '| user={} | protected @ client'
+            ''.format(user)
+        )
 
 
 # Let this setting determine which version of the login/logout to use.

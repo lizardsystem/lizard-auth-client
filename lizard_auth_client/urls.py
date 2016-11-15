@@ -75,6 +75,7 @@ if settings.SSO_ENABLED:
         url(r'^accounts/logout/$',
             views.LogoutView.as_view(),
             name='logout'),
+
         # URLS that perform the local login/logout
         # these are used by the SSO server to redirect the user back again
         url(r'^sso/local_login/$',
@@ -86,6 +87,11 @@ if settings.SSO_ENABLED:
         url(r'^sso/local_logout/$',
             views.LocalLogoutView.as_view(),
             name='lizard_auth_client.sso_local_logout'),
+
+        # User management views
+        url(r'^sso/user_overview/$',
+            views.UserOverviewView.as_view(),
+            name='lizard_auth_client.user_overview'),
     ]
 else:
     urlpatterns = []
