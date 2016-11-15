@@ -1,0 +1,24 @@
+{% extends 'lizard_auth_client/base.html' %}
+
+{% block content %}
+  <h1>{{ view.title }}</h1>
+
+  <h2>Active users</h2>
+  <ul>
+    {% for user in view.active_users %}
+      <li>
+        {{ user.email }} ({{ user.first_name }} {{ user.last_name }})
+      </li>
+    {% endfor %}
+  </ul>
+
+  <h2>Inactive users</h2>
+  <ul>
+    {% for user in view.inactive_users %}
+      <li>
+        {{ user.email }} ({{ user.first_name }} {{ user.last_name }})
+      </li>
+    {% endfor %}
+  </ul>
+
+{% endblock content %}
