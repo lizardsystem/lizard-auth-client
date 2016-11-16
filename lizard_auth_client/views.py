@@ -28,6 +28,7 @@ from lizard_auth_client.forms import SearchEmailForm
 import datetime
 import json
 import jwt
+import logging
 import requests
 
 
@@ -36,6 +37,9 @@ try:
     from urllib import urlencode
 except ImportError:
     from urllib.parse import urljoin, urlencode
+
+
+logger = logging.getLogger(__name__)
 
 
 # Used so we can login User objects we instantiated ourselves
@@ -180,6 +184,16 @@ class LocalLoginView(View):
                 return HttpResponseBadRequest(
                     "JWT recieved from the SSO has expired.")
             user_data = json.loads(payload['user'])
+            if settings.SSO_ALLOW_ONLY_KNOWN_USERS:
+                # First check if the user is known.
+                if not User.objects.filter(username=user_data['username'],
+                                           is_active=True).exists():
+                    logger.debug(
+                        "Username %s isn't known/active locally",
+                        user_data['username'])
+                    # TODO: friendlier explanation page
+                    return HttpResponseBadRequest('Verification failed')
+
             user = client.construct_user(user_data)
         else:
             user = verify_auth_token(message)

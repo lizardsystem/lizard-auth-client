@@ -4,6 +4,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.hashers import is_password_usable
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
 from django.core.cache import cache
 from lizard_auth_client import client
 from lizard_auth_client.conf import settings
@@ -45,6 +46,14 @@ class SSOBackend(ModelBackend):
                             'Failed cached password check for user "%s".',
                             username)
                 else:
+                    if SSO_ALLOW_ONLY_KNOWN_USERS:
+                        # First check if the user is known.
+                        if not User.objects.filter(username=username,
+                                                   is_active=True).exists():
+                            logger.debug(
+                                "Username %s isn't known/active locally",
+                                username)
+                            return None
                     logger.debug(
                         'Could not find user "%s" in the credential cache.',
                         username)
