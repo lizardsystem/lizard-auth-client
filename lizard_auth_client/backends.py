@@ -46,19 +46,20 @@ class SSOBackend(ModelBackend):
                             'Failed cached password check for user "%s".',
                             username)
                 else:
-                    if SSO_ALLOW_ONLY_KNOWN_USERS:
-                        # First check if the user is known.
-                        if not User.objects.filter(username=username,
-                                                   is_active=True).exists():
-                            logger.debug(
-                                "Username %s isn't known/active locally",
-                                username)
-                            return None
                     logger.debug(
                         'Could not find user "%s" in the credential cache.',
                         username)
                     # Not found in cache, call the SSO server.
                     if settings.SSO_USE_V2_LOGIN:
+                        if settings.SSO_ALLOW_ONLY_KNOWN_USERS:
+                            # First check if the user is known.
+                            if not User.objects.filter(username=username,
+                                                       is_active=True).exists():
+                                logger.debug(
+                                    "Username %s isn't known/active locally",
+                                    username)
+                                return None
+
                         user_data = client.sso_authenticate_django_v2(
                             username, password)
                     else:
