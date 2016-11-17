@@ -95,6 +95,9 @@ if settings.SSO_ENABLED:
         url(r'^sso/search_new_user/$',
             views.SearchNewUserView.as_view(),
             name='lizard_auth_client.search_new_user'),
+        url(r'^sso/disallowed_user/$',
+            views.DisallowedUserView.as_view(),
+            name='lizard_auth_client.disallowed_user'),
     ]
 else:
     urlpatterns = []

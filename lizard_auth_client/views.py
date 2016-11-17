@@ -8,7 +8,6 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
 from django.http import HttpResponse
@@ -188,11 +187,11 @@ class LocalLoginView(View):
                 # First check if the user is known.
                 if not User.objects.filter(username=user_data['username'],
                                            is_active=True).exists():
-                    logger.debug(
+                    logger.info(
                         "Username %s isn't known/active locally",
                         user_data['username'])
-                    # TODO: friendlier explanation page
-                    return HttpResponseBadRequest('Verification failed')
+                    return HttpResponseRedirect(
+                        reverse('lizard_auth_client.disallowed_user'))
 
             user = client.construct_user(user_data)
         else:
@@ -475,17 +474,10 @@ class SearchNewUserView(FormView):
     success_url = reverse_lazy('lizard_auth_client.user_overview')
     title = "Search new user by email"
 
-    def xxxxxxxx(self, form):
-        """Search and add user if found"""
-        try:
-            user_dict = client.sso_search_user_by_email(
-                form.cleaned_data['email'])
-        except Exception as e:
-            raise ValidationError(e)
-        user = client.create_user(user_dict)
-        print("Created user %s" % user)
 
-        return super(SearchNewUserView, self).clean(form)
+class DisallowedUserView(TemplateView):
+    template_name = 'lizard_auth_client/disallowed-user.html'
+    title = "Not allowed"
 
 
 # Let this setting determine which version of the login/logout to use.
