@@ -1,0 +1,28 @@
+{% extends "lizard_auth_client/management/base.html" %}
+{% load i18n %}
+
+{% block body %}
+<div class="container">
+    {% if organisations %}
+        <h2>Which organisation do you want to manage?</h2>
+        <select>
+        {% for organisation in organisations %}
+        <option>{{ organisation.name }}</option>
+        {% endfor %}
+        </select>
+        <h2>Which user do you want to manage?</h2>
+        <select>
+            <br/>
+        <br/>
+        {% for user in users %}
+        <option>{{ user.username }}</option>
+        {% endfor %}
+        </select>
+        <br/>
+        <br/>
+        <button type="button" class="btn btn-primary">Add user</button>
+    {% else %}
+        <p>No organisations found.</p>
+    {% endif %}
+</div>
+{% endblock %}

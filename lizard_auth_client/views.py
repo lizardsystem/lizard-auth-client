@@ -1,28 +1,35 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+
 from collections import namedtuple
+import datetime
+import json
+
+from django.contrib.auth import get_user_model
 from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import AccessMixin
+from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponsePermanentRedirect
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
-from django.views.generic.base import View
+from django.views.generic.base import TemplateView, View
+
 from itsdangerous import URLSafeTimedSerializer
+import jwt
+import requests
+import six
+
 from lizard_auth_client import client
 from lizard_auth_client.client import sso_server_url
 from lizard_auth_client.conf import settings
-
-import datetime
-import json
-import jwt
-import requests
-
+from lizard_auth_client.models import Organisation, UserOrganisationRole
 
 try:
     from urlparse import urljoin
@@ -431,3 +438,94 @@ def build_sso_portal_action_url(action, domain=None):
 # Let this setting determine which version of the login/logout to use.
 LoginView = JWTLoginView if settings.SSO_USE_V2_LOGIN else LoginViewV1
 LogoutView = JWTLogoutView if settings.SSO_USE_V2_LOGIN else LogoutViewV1
+
+### management views ###
+
+class RoleRequiredMixin(AccessMixin):
+    """
+    CBV mixin which verifies that the current user one of the specified
+    roles.
+
+    """
+    role_required = None  # can be a string or a list of strings
+
+    def get_role_required(self):
+        """
+        Override this method to override the role attribute.
+        Must return an iterable.
+        """
+        if not self.role_required is None:
+            raise ImproperlyConfigured(
+                '{0} is missing the role attribute. Define {0}.role, or '
+                'override {0}.get_role_required().'.format(
+                    self.__class__.__name__)
+            )
+        if isinstance(self.role_required, six.string_types):
+            roles = (self.role_required,)
+        else:
+            roles = self.role_required
+        return roles
+
+    def has_role(self):
+        """
+        Override this method to customize the way permissions are checked.
+        """
+        user = self.request.user
+        # superusers have all roles implicitly
+        if user.is_superuser:
+            return True
+
+        roles = self.get_role_required()
+        nr_of_user_organisation_roles = UserOrganisationRole.objects.filter(
+            user=user, role__code__in=roles).count()
+        if nr_of_user_organisation_roles > 0:
+            return True
+        else:
+            return False
+
+    def dispatch(self, request, *args, **kwargs):
+        if not self.has_role():
+            return self.handle_no_permission()
+        return super(RoleRequiredMixin, self).dispatch(
+            request, *args, **kwargs)
+
+
+class ManageUserIndexView(RoleRequiredMixin, TemplateView):
+    """Index view for managing user permissions."""
+
+    template_name = 'lizard_auth_client/management/users/index.html'
+
+    role_required = settings.SSO_MANAGER_ROLES
+
+    def get_managed_objects(self, model_class):
+        """
+        Get the managed objects (organisation or users) for the request user.
+
+        Superusers are allowed to manage all objects.
+
+        :param model_class - should be either Organisation or User
+
+        :return - managed object instance of the requested model_class type
+
+        """
+        if self.request.user.is_superuser:
+            return model_class.objects.all()
+
+        # fetch the managed objects based on the UserOrganisationRole instances
+        # of the request user
+        user_organisation_roles = UserOrganisationRole.objects.filter(
+            user=self.request.user, role__code__in=settings.SSO_MANAGER_ROLES)
+        return model_class.objects.distinct().filter(
+            user_organisation_roles__in=user_organisation_roles)
+
+    def get_context_data(self, **kwargs):
+        """Add managed organisations and users to the context."""
+        context = super(ManageUserIndexView, self).get_context_data(**kwargs)
+
+        # put the managed organisations in the context
+        organisations = self.get_managed_objects(Organisation)
+        context['organisations'] = organisations
+        # put the managed users in the context
+        users = self.get_managed_objects(get_user_model())
+        context['users'] = users
+        return context

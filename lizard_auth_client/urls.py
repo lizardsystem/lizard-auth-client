@@ -86,6 +86,11 @@ if settings.SSO_ENABLED:
         url(r'^sso/local_logout/$',
             views.LocalLogoutView.as_view(),
             name='lizard_auth_client.sso_local_logout'),
+        # management URLS
+        # TODO: put these in if-block (if settings.SSO_USE_V2_LOGIN)
+        url(r'^management/users/$',
+            views.ManageUserIndexView.as_view(),
+            name='lizard_auth_client.management_users_index'),
     ]
 else:
     urlpatterns = []

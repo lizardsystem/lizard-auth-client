@@ -31,5 +31,11 @@ class SSOAppConf(AppConf):
     CLIENT_SUPERUSER_ROLES = []
     CLIENT_STAFF_ROLES = []
 
+    # Management roles
+    # manager is used by lizard-nxt and superman is used by 3di
+    # 3di is about to adopt a more permission-based role naming, therefore
+    # the can_manage role/permission
+    MANAGER_ROLES = ['manager', 'superman', 'can_manage']
+
     class Meta:
         prefix = 'sso'
