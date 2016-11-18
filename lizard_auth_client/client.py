@@ -760,8 +760,36 @@ def sso_search_user_by_email(email):
     params = {
         'message': signed_message,
         'key': settings.SSO_KEY,
-        'timeout': 10,
     }
-    r = requests.get(url, params=params)
+    r = requests.get(url, params=params, timeout=10)
     r.raise_for_status()
-    return r.json()
+    return r.json()['user']
+
+
+def sso_create_user(first_name, last_name, email, username):
+    """
+    Return a user dict, if successful.
+    """
+    from lizard_auth_client.conf import settings
+
+    payload = {
+        'iss': settings.SSO_KEY,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(
+            minutes=settings.SSO_JWT_EXPIRATION_MINUTES),
+        'first_name': first_name,
+        'last_name': last_name,
+        'email': email,
+        'username': username,
+        'language': settings.SSO_INVITATION_LANGUAGE,
+    }
+    signed_message = jwt.encode(payload, settings.SSO_SECRET,
+                                algorithm=settings.SSO_JWT_ALGORITHM)
+    url = sso_server_url('new-user')
+    data = {
+        'message': signed_message,
+        'key': settings.SSO_KEY,
+    }
+    r = requests.post(url, data=data, timeout=10
+)
+    r.raise_for_status()
+    return r.json()['user']

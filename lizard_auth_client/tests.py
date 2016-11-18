@@ -585,6 +585,42 @@ class ClientV2Test(TestCase):
                                      issuer=key)
                 self.assertEqual('someone', decoded['username'])
 
+    def test_search_user(self):
+
+        def mock_get(url, params, timeout):
+            result = mock.Mock()
+            result.json.return_value = {'user': {'a': 'dict'}}
+            return result
+
+        def mock_server_url(what):
+            return 'http:/some/where/'
+
+        with mock.patch('requests.get', mock_get):
+            with mock.patch('lizard_auth_client.client.sso_server_url',
+                            mock_server_url):
+                self.assertEquals(
+                    {'a': 'dict'},
+                    client.sso_search_user_by_email('some@example.org'))
+
+    def test_create_user(self):
+
+        def mock_post(url, data, timeout):
+            result = mock.Mock()
+            result.json.return_value = {'user': {'a': 'dict'}}
+            return result
+
+        def mock_server_url(what):
+            return 'http:/some/where/'
+
+        with mock.patch('requests.post', mock_post):
+            with mock.patch('lizard_auth_client.client.sso_server_url',
+                            mock_server_url):
+                self.assertEquals(
+                    {'a': 'dict'},
+                    client.sso_create_user('some', 'name',
+                                            'some@example.org',
+                                            'somename'))
+
 
 class V2ViewsTest(TestCase):
 
