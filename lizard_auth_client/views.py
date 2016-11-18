@@ -461,11 +461,33 @@ class UserOverviewView(TemplateView):
         return super(UserOverviewView, self).dispatch(
             request, *args, **kwargs)
 
+    @property
     def active_users(self):
         return User.objects.filter(is_active=True)
 
+    @property
     def inactive_users(self):
         return User.objects.filter(is_active=False)
+
+    def post(self, request, *args, **kwargs):
+        """React on users being made active/inactive"""
+        to_disable = request.POST.getlist('to_disable')
+        to_disable = [int(id) for id in to_disable]
+        users_to_disable = [user for user in self.active_users
+                            if user.id in to_disable]
+        for user in users_to_disable:
+            user.is_active = False
+            user.save()
+        to_enable = request.POST.getlist('to_enable')
+        to_enable = [int(id) for id in to_enable]
+        users_to_enable = [user for user in self.inactive_users
+                           if user.id in to_enable]
+        for user in users_to_enable:
+            user.is_active = True
+            user.save()
+
+        return HttpResponseRedirect(
+            reverse_lazy('lizard_auth_client.user_overview'))
 
 
 class SearchNewUserView(FormView):

@@ -10,21 +10,69 @@
   </div>
 
   <h2>Active users</h2>
-  <ul>
-    {% for user in view.active_users %}
-      <li>
-        {{ user.email }} ({{ user.first_name }} {{ user.last_name }})
-      </li>
-    {% endfor %}
-  </ul>
 
-  <h2>Inactive users</h2>
-  <ul>
-    {% for user in view.inactive_users %}
-      <li>
-        {{ user.email }} ({{ user.first_name }} {{ user.last_name }})
-      </li>
-    {% endfor %}
-  </ul>
+  <form action="" method="post">
+    {% csrf_token %}
+
+    <table class="table">
+      <tbody>
+        {% for user in view.active_users %}
+          <tr>
+            <td>
+              <input type="checkbox"
+                     name="to_disable"
+                     value="{{ user.id }}">
+            </td>
+            <td>
+              {{ user.email }}
+            </td>
+            <td>
+              {{ user.first_name }} {{ user.last_name }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+
+      <tfoot>
+        <tr>
+          <td colspan="3">
+            <input type="submit" value="Deactivate" />
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+
+    <h2>Inactive users</h2>
+    <table class="table">
+      <tbody>
+        {% for user in view.inactive_users %}
+          <tr>
+            <td>
+              <input type="checkbox"
+                     name="to_enable"
+                     value="{{ user.id }}">
+            </td>
+            <td>
+              {{ user.email }}
+            </td>
+            <td>
+              {{ user.first_name }} {{ user.last_name }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+
+      <tfoot>
+        <tr>
+          <td colspan="3">
+            <input type="submit" value="Activate" />
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+  </form>
+
 
 {% endblock content %}
