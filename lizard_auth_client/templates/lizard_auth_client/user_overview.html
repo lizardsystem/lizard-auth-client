@@ -23,6 +23,7 @@
                      name="to_disable"
                      {% if user.is_superuser or user = request.user %}
                        disabled="true"
+                       title="You cannot disable yourself or a superuser"
                      {% endif %}
                      value="{{ user.id }}">
             </td>

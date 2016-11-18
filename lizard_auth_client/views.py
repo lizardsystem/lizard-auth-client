@@ -476,6 +476,9 @@ class UserOverviewView(TemplateView):
         users_to_disable = [user for user in self.active_users
                             if user.id in to_disable]
         for user in users_to_disable:
+            if user.is_superuser or user == self.request.user:
+                logger.warn("Not disabling myself or a superuser")
+                continue
             user.is_active = False
             user.save()
         to_enable = request.POST.getlist('to_enable')
