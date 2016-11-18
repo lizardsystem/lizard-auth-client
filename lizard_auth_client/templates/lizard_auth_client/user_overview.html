@@ -21,6 +21,9 @@
             <td>
               <input type="checkbox"
                      name="to_disable"
+                     {% if user.is_superuser or user = request.user %}
+                       disabled="true"
+                     {% endif %}
                      value="{{ user.id }}">
             </td>
             <td>
