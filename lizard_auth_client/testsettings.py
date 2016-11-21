@@ -154,6 +154,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.staticfiles',
     'django_extensions',
+    'crispy_forms',
 )
 
 CACHES = {

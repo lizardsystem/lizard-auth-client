@@ -16,6 +16,7 @@ install_requires = [
     'itsdangerous',
     'requests',
     'PyJWT',
+    'django-crispy-forms',
 ],
 
 tests_require = [

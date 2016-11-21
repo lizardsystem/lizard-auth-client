@@ -88,9 +88,18 @@ if settings.SSO_ENABLED:
             name='lizard_auth_client.sso_local_logout'),
         # management URLS
         # TODO: put these in if-block (if settings.SSO_USE_V2_LOGIN)
-        url(r'^management/users/$',
-            views.ManageUserIndexView.as_view(),
+        url(r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/(?P<user_pk>[0-9]+)/$',
+            views.ManageUserOrganisationDetail.as_view(),
+            name='lizard_auth_client.management_user_organisation_detail'),
+        url(r'^management/organisations/(?P<pk>[0-9]+)/users/$',
+            views.ManageOrganisationDetail.as_view(),
+            name='lizard_auth_client.management_organisation_detail'),
+        url(r'^management/organisations/$',
+            views.ManageOrganisationSelector.as_view(),
             name='lizard_auth_client.management_users_index'),
+        # url(r'^management/users/add/$',
+        #     views.ManageUserAddView.as_view(),
+        #     name='lizard_auth_client.management_users_add'),
     ]
 else:
     urlpatterns = []

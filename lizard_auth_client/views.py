@@ -12,13 +12,16 @@ from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import AccessMixin
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from django.core.urlresolvers import reverse
+from django.http import Http404
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
+from django.http import HttpResponseForbidden
 from django.http import HttpResponsePermanentRedirect
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
+from django.views.generic import FormView
 from django.views.generic.base import TemplateView, View
 
 from itsdangerous import URLSafeTimedSerializer
@@ -28,6 +31,7 @@ import six
 
 from lizard_auth_client import client
 from lizard_auth_client.client import sso_server_url
+from lizard_auth_client.forms import UserAddForm, OrganisationSelectorForm
 from lizard_auth_client.conf import settings
 from lizard_auth_client.models import Organisation, UserOrganisationRole
 
@@ -490,12 +494,7 @@ class RoleRequiredMixin(AccessMixin):
             request, *args, **kwargs)
 
 
-class ManageUserIndexView(RoleRequiredMixin, TemplateView):
-    """Index view for managing user permissions."""
-
-    template_name = 'lizard_auth_client/management/users/index.html'
-
-    role_required = settings.SSO_MANAGER_ROLES
+class ManagedObjectsMixin(object):
 
     def get_managed_objects(self, model_class):
         """
@@ -518,14 +517,158 @@ class ManageUserIndexView(RoleRequiredMixin, TemplateView):
         return model_class.objects.distinct().filter(
             user_organisation_roles__in=user_organisation_roles)
 
+    def get_managed_organisations(self):
+        """
+        Get the managed organisations for the current user. And set it as an
+        instance variable.
+        """
+        if hasattr(self, 'managed_organisations'):
+            return self.managed_organisations
+        self.managed_organisations = self.get_managed_objects(Organisation)
+        return self.managed_organisations
+
+    def get_managed_users(self, organisation=None):
+        """
+        Get the managed users for the current user. And set it as an instance
+        variable.
+
+        :param organisation - filter by organisation (optional)
+        """
+        if hasattr(self, 'managed_users'):
+            return self.managed_users
+        user_model = get_user_model()
+        self.managed_users = self.get_managed_objects(user_model)
+
+        # filter on organisation if given
+        if organisation:
+            user_organisation_roles = UserOrganisationRole.objects.filter(
+                user=self.request.user, organisation=organisation,
+                role__code__in=settings.SSO_MANAGER_ROLES)
+            self.managed_users = self.managed_users.distinct().filter(
+                user_organisation_roles__in=user_organisation_roles)
+
+        return self.managed_users
+
+
+class ManageOrganisationSelector(
+    RoleRequiredMixin, ManagedObjectsMixin, FormView):
+    """Index view for managing user permissions."""
+
+    form_class = OrganisationSelectorForm
+    template_name = 'lizard_auth_client/management/users/index.html'
+
+    role_required = settings.SSO_MANAGER_ROLES
+
     def get_context_data(self, **kwargs):
         """Add managed organisations and users to the context."""
-        context = super(ManageUserIndexView, self).get_context_data(**kwargs)
-
+        context = super(ManageOrganisationSelector, self).get_context_data(
+            **kwargs)
         # put the managed organisations in the context
-        organisations = self.get_managed_objects(Organisation)
-        context['organisations'] = organisations
-        # put the managed users in the context
-        users = self.get_managed_objects(get_user_model())
+        context['organisations'] = self.get_managed_organisations()
+        return context
+
+    def get_initial(self):
+        """
+        Add organisations to the initial dict to be used in the form_class.
+        """
+        initial = super(ManageOrganisationSelector, self).get_initial()
+        initial['organisations'] = self.get_managed_organisations()
+        return initial
+
+    def form_valid(self, form):
+        """
+        If the form is valid, redirect to the organisation detail page.
+        """
+        organisation_pk = form.cleaned_data['organisation']
+        success_url = reverse(
+            'lizard_auth_client.management_organisation_detail',
+            kwargs={'pk': organisation_pk})
+        return HttpResponseRedirect(success_url)
+
+    def dispatch(self, request, *args, **kwargs):
+        """Redirect to organisation management page if """
+        # put the managed organisations in the context
+        organisations = self.get_managed_organisations()
+        if not organisations:
+            raise Http404
+        elif len(organisations) == 1:
+            # redirect to organisation detail page
+            organisation = organisations[0]
+            redirect_to = reverse(
+                'lizard_auth_client.management_organisation_detail',
+                kwargs={'pk': organisation.pk})
+            return HttpResponseRedirect(redirect_to=redirect_to)
+        else:
+            return super(ManageOrganisationSelector, self).dispatch(
+                request, *args, **kwargs)
+
+
+class ManageOrganisationDetail(
+    RoleRequiredMixin, ManagedObjectsMixin, TemplateView):
+    """
+    Handle the organisation management page.
+    """
+    # TODO: use a ModelDetailView?
+    template_name = 'lizard_auth_client/management/organisation/index.html'
+
+    role_required = settings.SSO_MANAGER_ROLES
+
+    def get_context_data(self, **kwargs):
+        """Store organisation in the context."""
+        context = super(ManageOrganisationDetail, self).get_context_data(
+            **kwargs)
+        if hasattr(self, 'organisation'):
+            context['organisation'] = self.organisation
+        users = self.get_managed_users(self.organisation)
         context['users'] = users
         return context
+
+    def get(self, request, pk=None, *args, **kwargs):
+        # TODO: add authorisation; can the user view this page for this
+        # organisation
+        try:
+            self.organisation = Organisation.objects.get(pk=pk)
+        except ObjectDoesNotExist:
+            raise Http404
+        # now return
+        return super(ManageOrganisationDetail, self).get(
+            request, *args, **kwargs)
+
+
+class ManageUserOrganisationDetail(
+    RoleRequiredMixin, ManagedObjectsMixin, TemplateView):
+    template_name = 'lizard_auth_client/management/users/detail.html'
+
+    def get_context_data(self, **kwargs):
+        """Add organisation and user to the context."""
+        context = super(ManageUserOrganisationDetail, self).get_context_data(
+            **kwargs)
+        context['organisation'] = self.organisation
+        context['user'] = self.user
+        # TODO: consider making this a form with the roles for this user
+        # organisation combo
+        # TODO: add user organisation roles for this user organisation combo
+        return context
+
+    def get(self, request, organisation_pk=None, user_pk=None, *args,
+            **kwargs):
+        """
+        Fetch requested organisation and user and store it as a class
+        variable, so that they can be used in the context.
+        """
+        # filtering on managed organisations and users makes sure that the
+        # current user has manage rights to for the given organisation and user
+        # combo
+        managed_organisations = self.get_managed_organisations()
+        try:
+            self.organisation = managed_organisations.get(pk=organisation_pk)
+        except ObjectDoesNotExist:
+            return HttpResponseForbidden()
+        managed_users = self.get_managed_users()
+        try:
+            self.user = managed_users.get(pk=user_pk)
+        except ObjectDoesNotExist:
+            return HttpResponseForbidden()
+        return super(ManageUserOrganisationDetail, self).get(
+            request, *args, **kwargs)
+
