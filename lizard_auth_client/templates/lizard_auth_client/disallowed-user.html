@@ -4,8 +4,10 @@
   <h1>{{ view.title }}</h1>
 
   <p>
-    Your account is not configured yet on this site.
-    please contact the maintainer.
+    {% blocktrans %}
+      Your account is not configured yet on this site.
+      please contact the maintainer.
+    {% endblocktrans %}
   </p>
 
 {% endblock content %}

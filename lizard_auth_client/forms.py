@@ -29,8 +29,9 @@ class SearchEmailForm(forms.Form):
             logger.info("Error when searching user on the SSO: %s",
                         e.response.text)
             if e.response.status_code == 404:
+                msg = _("User with email %s not found")
                 raise ValidationError(
-                    {'email': "User with email %s not found" % self.cleaned_data['email']})
+                    {'email': msg % self.cleaned_data['email']})
             raise ValidationError(e)
         user = client.construct_user(user_dict)
         logger.info("Added SSO user %s locally", user)
@@ -40,21 +41,21 @@ class CreateNewUserForm(forms.Form):
 
     first_name = forms.CharField(
         max_length=30,
-        label=_('First name'),
+        label=_('first name'),
         required=True
     )
     last_name = forms.CharField(
         max_length=30,
-        label=_('Last name'),
+        label=_('last name'),
         required=True
     )
     email = forms.EmailField(
         required=True,
-        label=_('Email'),
+        label=_('email'),
     )
     username = forms.CharField(
         max_length=128,
-        label=_('Username'),
+        label=_('username'),
     )
 
     def clean(self):
@@ -72,7 +73,7 @@ class CreateNewUserForm(forms.Form):
                 # According to lizard-auth-server, this normally means a
                 # duplicate username. Assuming we've send a correct message.
                 raise ValidationError(
-                    {'username': ("Username %s already used" %
+                    {'username': (_("Username %s already used") %
                                   self.cleaned_data['username'])}
                 )
             raise ValidationError(e)

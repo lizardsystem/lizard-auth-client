@@ -15,6 +15,7 @@ from django.http import HttpResponseBadRequest
 from django.http import HttpResponsePermanentRedirect
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
+from django.utils.translation import ugettext as _
 from django.views.generic.base import TemplateView
 from django.views.generic.base import View
 from django.views.generic.edit import FormView
@@ -22,8 +23,8 @@ from itsdangerous import URLSafeTimedSerializer
 from lizard_auth_client import client
 from lizard_auth_client.client import sso_server_url
 from lizard_auth_client.conf import settings
-from lizard_auth_client.forms import SearchEmailForm
 from lizard_auth_client.forms import CreateNewUserForm
+from lizard_auth_client.forms import SearchEmailForm
 
 import datetime
 import json
@@ -455,7 +456,7 @@ class UserOverviewView(TemplateView):
     """
 
     template_name = 'lizard_auth_client/user_overview.html'
-    title = "User overview"
+    title = _("User overview")
 
     @method_decorator(permission_required('auth.manage_users'))
     def dispatch(self, request, *args, **kwargs):
@@ -498,7 +499,7 @@ class SearchNewUserView(FormView):
     template_name = 'lizard_auth_client/form.html'
     form_class = SearchEmailForm
     success_url = reverse_lazy('lizard_auth_client.user_overview')
-    title = "Search new user by email"
+    title = _("Search new user by email")
 
     @method_decorator(permission_required('auth.manage_users'))
     def dispatch(self, request, *args, **kwargs):
@@ -510,7 +511,7 @@ class CreateNewUserView(FormView):
     template_name = 'lizard_auth_client/form.html'
     form_class = CreateNewUserForm
     success_url = reverse_lazy('lizard_auth_client.user_overview')
-    title = "Create new user on the SSO"
+    title = _("Create new user on the SSO")
 
     @method_decorator(permission_required('auth.manage_users'))
     def dispatch(self, request, *args, **kwargs):
@@ -520,7 +521,7 @@ class CreateNewUserView(FormView):
 
 class DisallowedUserView(TemplateView):
     template_name = 'lizard_auth_client/disallowed-user.html'
-    title = "Not allowed"
+    title = _("Not allowed")
 
 
 # Let this setting determine which version of the login/logout to use.
