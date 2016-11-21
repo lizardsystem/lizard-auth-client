@@ -107,6 +107,9 @@ The layout is very, very basic. Create a custom
 there's a ``{% block content %}``, this is where the actual template content
 is placed. ``{{ view.title }}`` is available for the ``<title>`` tag.
 
+You'll want to add a link to the ``lizard_auth_client.user_overview`` URL
+somewhere in your site.
+
 
 Custom authentication (normally not needed)
 -------------------------------------------
