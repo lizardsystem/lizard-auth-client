@@ -87,10 +87,25 @@ In the V1 API, access to sites is handled in the SSO. In the V2 API, this is
 considered authorization and thus it is not handled. Which means everyone can
 theoretically log in to any site.
 
-To prevent this, ``SSO_ALLOW_ANYONE`` is set to False by default. Only people
-that already have a local user object are allowed to log in. (TODO)
+To prevent this, ``SSO_ALLOW_ONLY_KNOWN_USERS`` is set to ``True`` by
+default. Only people that already have a local user object are allowed to log
+in.
 
-To create user objects locally, a view (TODO) has been added.
+To create and manage user objects locally, a view (``/sso/user_overview/``)
+exists that shows the known users, enabled and disabled ones. You can
+disable/enable users and there's a link to search users on the SSO by email
+and a link to create a completely new one. Note: you can set
+``SSO_INVITATION_LANGUAGE``, this is the language used in the invitation email
+send by the SSO to the new user.
+
+For these management views, you need the ``auth.manage_users``
+permission. This way you can allow customers without admin acces to manage
+their users anyhow.
+
+The layout is very, very basic. Create a custom
+``templates/lizard_auth_server/base.html`` in your project and make sure
+there's a ``{% block content %}``, this is where the actual template content
+is placed. ``{{ view.title }}`` is available for the ``<title>`` tag.
 
 
 Custom authentication (normally not needed)
