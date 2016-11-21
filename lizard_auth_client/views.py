@@ -503,7 +503,7 @@ class SearchNewUserView(FormView):
 
     @method_decorator(permission_required('auth.manage_users'))
     def dispatch(self, request, *args, **kwargs):
-        return super(UserOverviewView, self).dispatch(
+        return super(SearchNewUserView, self).dispatch(
             request, *args, **kwargs)
 
 
@@ -515,7 +515,7 @@ class CreateNewUserView(FormView):
 
     @method_decorator(permission_required('auth.manage_users'))
     def dispatch(self, request, *args, **kwargs):
-        return super(UserOverviewView, self).dispatch(
+        return super(CreateNewUserView, self).dispatch(
             request, *args, **kwargs)
 
 

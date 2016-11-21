@@ -698,3 +698,33 @@ class V2ViewsTest(TestCase):
                              settings.SSO_SECRET,
                              issuer=settings.SSO_KEY)
         self.assertIn('logout_url', payload.keys())
+
+    def test_user_overview_smoke(self):
+        request = self.request_factory.get('/sso/some_url/')
+        request.session = {}
+        superuser = User.objects.create_superuser('myuser',
+                                                  'myemail@test.com',
+                                                  'mypass')
+        request.user = superuser
+        response = views.UserOverviewView.as_view()(request)
+        self.assertEqual(200, response.status_code)
+
+    def test_search_user_smoke(self):
+        request = self.request_factory.get('/sso/some_url/')
+        request.session = {}
+        superuser = User.objects.create_superuser('myuser',
+                                                  'myemail@test.com',
+                                                  'mypass')
+        request.user = superuser
+        response = views.SearchNewUserView.as_view()(request)
+        self.assertEqual(200, response.status_code)
+
+    def test_create_user_smoke(self):
+        request = self.request_factory.get('/sso/some_url/')
+        request.session = {}
+        superuser = User.objects.create_superuser('myuser',
+                                                  'myemail@test.com',
+                                                  'mypass')
+        request.user = superuser
+        response = views.CreateNewUserView.as_view()(request)
+        self.assertEqual(200, response.status_code)
