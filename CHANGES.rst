@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.6 (unreleased)
+2.6 (2016-11-21)
 ----------------
 
 - Added new ``SSO_ALLOW_ONLY_KNOWN_USERS``, ``True`` by default. If you use
