@@ -27,6 +27,11 @@ class SSOAppConf(AppConf):
     # Required settings for the v2 API. Should include ``/api2/``.
     SERVER_API_START_URL = ''
 
+    # Extra setting for the v2 API. Invitation language is the language used
+    # by the SSO in the email when inviting the new user.
+    ALLOW_ONLY_KNOWN_USERS = True
+    INVITATION_LANGUAGE = 'en'
+
     # Role syncing from signals.py. V1 API only
     CLIENT_SUPERUSER_ROLES = []
     CLIENT_STAFF_ROLES = []

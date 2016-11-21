@@ -17,7 +17,6 @@ RUN apt-get update && apt-get install -y \
     python-dev \
     python-pip \
     gettext \
-&& apt-get clean -y && rm -rf /var/lib/apt/lists/*
+&& rm -rf /var/lib/apt/lists/*
 
-VOLUME /code
 WORKDIR /code

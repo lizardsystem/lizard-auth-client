@@ -1,0 +1,14 @@
+{% extends 'lizard_auth_client/base.html' %}
+{% load i18n %}
+
+{% block content %}
+  <h1>{{ view.title }}</h1>
+
+  <p>
+    {% blocktrans %}
+      Your account is not configured yet on this site.
+      please contact the maintainer.
+    {% endblocktrans %}
+  </p>
+
+{% endblock content %}

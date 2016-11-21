@@ -1,0 +1,88 @@
+{% extends 'lizard_auth_client/base.html' %}
+{% load i18n %}
+
+{% block content %}
+  <h1>{{ view.title }}</h1>
+
+  <div>
+    <a href="{% url 'lizard_auth_client.search_new_user' %}">
+      {% trans "Add new user by searching by email on the SSO." %}
+    </a>
+  </div>
+  <div>
+    <a href="{% url 'lizard_auth_client.create_new_user' %}">
+      {% trans "Create new user on the SSO + add locally." %}
+    </a>
+  </div>
+
+  <h2>Active users</h2>
+
+  <form action="" method="post">
+    {% csrf_token %}
+
+    <table class="table">
+      <tbody>
+        {% for user in view.active_users %}
+          <tr>
+            <td>
+              <input type="checkbox"
+                     name="to_disable"
+                     {% if user.is_superuser or user = request.user %}
+                       disabled="true"
+                       title='{% trans "You cannot disable yourself or a superuser" %}'
+                     {% endif %}
+                     value="{{ user.id }}">
+            </td>
+            <td>
+              {{ user.email }}
+            </td>
+            <td>
+              {{ user.first_name }} {{ user.last_name }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+
+      <tfoot>
+        <tr>
+          <td colspan="3">
+            <input type="submit" value='{% trans "Deactivate" %}' />
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+
+    <h2>Inactive users</h2>
+    <table class="table">
+      <tbody>
+        {% for user in view.inactive_users %}
+          <tr>
+            <td>
+              <input type="checkbox"
+                     name="to_enable"
+                     value="{{ user.id }}">
+            </td>
+            <td>
+              {{ user.email }}
+            </td>
+            <td>
+              {{ user.first_name }} {{ user.last_name }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+
+      <tfoot>
+        <tr>
+          <td colspan="3">
+            <input type="submit" value='{% trans "Activate" %}' />
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+  </form>
+
+
+{% endblock content %}

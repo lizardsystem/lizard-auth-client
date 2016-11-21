@@ -585,6 +585,42 @@ class ClientV2Test(TestCase):
                                      issuer=key)
                 self.assertEqual('someone', decoded['username'])
 
+    def test_search_user(self):
+
+        def mock_get(url, params, timeout):
+            result = mock.Mock()
+            result.json.return_value = {'user': {'a': 'dict'}}
+            return result
+
+        def mock_server_url(what):
+            return 'http:/some/where/'
+
+        with mock.patch('requests.get', mock_get):
+            with mock.patch('lizard_auth_client.client.sso_server_url',
+                            mock_server_url):
+                self.assertEquals(
+                    {'a': 'dict'},
+                    client.sso_search_user_by_email('some@example.org'))
+
+    def test_create_user(self):
+
+        def mock_post(url, data, timeout):
+            result = mock.Mock()
+            result.json.return_value = {'user': {'a': 'dict'}}
+            return result
+
+        def mock_server_url(what):
+            return 'http:/some/where/'
+
+        with mock.patch('requests.post', mock_post):
+            with mock.patch('lizard_auth_client.client.sso_server_url',
+                            mock_server_url):
+                self.assertEquals(
+                    {'a': 'dict'},
+                    client.sso_create_user('some', 'name',
+                                           'some@example.org',
+                                           'somename'))
+
 
 class V2ViewsTest(TestCase):
 
@@ -662,3 +698,53 @@ class V2ViewsTest(TestCase):
                              settings.SSO_SECRET,
                              issuer=settings.SSO_KEY)
         self.assertIn('logout_url', payload.keys())
+
+    def test_user_overview_smoke(self):
+        request = self.request_factory.get('/sso/some_url/')
+        request.session = {}
+        superuser = User.objects.create_superuser('myuser',
+                                                  'myemail@test.com',
+                                                  'mypass')
+        request.user = superuser
+        response = views.UserOverviewView.as_view()(request)
+        self.assertEqual(200, response.status_code)
+
+    def test_user_overview_post(self):
+        superuser = User.objects.create_superuser('myuser',
+                                                  'myemail@test.com',
+                                                  'mypass')
+        user1 = User.objects.create_user('user1',
+                                         'user1@test.com',
+                                         'user1')
+        user2 = User.objects.create_user('user2',
+                                         'user2@test.com',
+                                         'user2')
+        user2.is_active = False
+        user2.save()
+
+        c = Client()
+        c.login(username='myuser', password='mypass')  # Superuser
+        response = c.post('/sso/user_overview/',
+                          {'to_disable': user1.id,
+                           'to_enable': user2.id})
+        self.assertEqual(response.status_code, 302)
+
+    def test_search_user_smoke(self):
+        request = self.request_factory.get('/sso/some_url/')
+        request.session = {}
+        superuser = User.objects.create_superuser('myuser',
+                                                  'myemail@test.com',
+                                                  'mypass')
+        request.user = superuser
+        response = views.SearchNewUserView.as_view()(request)
+        self.assertEqual(200, response.status_code)
+
+    def test_create_user_smoke(self):
+        request = self.request_factory.get('/sso/some_url/')
+        request.session = {}
+        superuser = User.objects.create_superuser('myuser',
+                                                  'myemail@test.com',
+                                                  'mypass')
+        request.user = superuser
+        response = views.CreateNewUserView.as_view()(request)
+        self.assertEqual(200, response.status_code)
