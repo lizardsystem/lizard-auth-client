@@ -61,7 +61,9 @@ class TestHomeView(View):
     def get(self, request, *args, **kwargs):
         user = request.user
         return HttpResponse(
-            '<a href="/">home</a> | <a href="/protected">protected</a>'
+            '<a href="/">home</a> '
+            '| <a href="/protected">protected</a>'
+            '| <a href="/sso/user_overview/">User overview</a>'
             '| <a href="/accounts/logout">logout</a> '
             '| <a href="/accounts/login">login</a> '
             '| user={} | home @ client'
