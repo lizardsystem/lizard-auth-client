@@ -53,8 +53,9 @@ class SSOBackend(ModelBackend):
                     if settings.SSO_USE_V2_LOGIN:
                         if settings.SSO_ALLOW_ONLY_KNOWN_USERS:
                             # First check if the user is known.
-                            if not User.objects.filter(username=username,
-                                                       is_active=True).exists():
+                            if not User.objects.filter(
+                                    username=username,
+                                    is_active=True).exists():
                                 logger.debug(
                                     "Username %s isn't known/active locally",
                                     username)

@@ -30,19 +30,19 @@ LOGGING = {
             'class': 'django.utils.log.NullHandler',
             'level': 'DEBUG'
         }
-   },
-   'loggers': {
-       '': {
-           'handlers': ['console'],
-           'level': 'DEBUG',
-           'propagate': True
-       },
-       'django.db.backends': {
-           'handlers': ['null'],
-           'level': 'DEBUG',
-           'propagate': False
-       }
-   }
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True
+        },
+        'django.db.backends': {
+            'handlers': ['null'],
+            'level': 'DEBUG',
+            'propagate': False
+        }
+    }
 }
 
 DEBUG = True
@@ -98,9 +98,9 @@ SSO_ENABLED = True
 SSO_USE_V2_LOGIN = True
 # A key identifying this client. Can be published.
 SSO_KEY = 'random_generated_key_to_identify_the_portal'
-# A *secret* shared between client and server. Used to sign the messages exchanged between them.
-# Note: as long as the name of this settings contains "SECRET", it is hidden in the Django
-# debug output
+# A *secret* shared between client and server. Used to sign the messages
+# exchanged between them.  Note: as long as the name of this settings contains
+# "SECRET", it is hidden in the Django debug output
 SSO_SECRET = 'random_generated_secret_key_to_sign_exchanged_messages'
 # URL used to redirect the user to the SSO server
 # Note: needs a trailing slash
@@ -141,7 +141,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-#    'lizard_auth_client.middleware.LoginRequiredMiddleware',
+    # 'lizard_auth_client.middleware.LoginRequiredMiddleware',
     'lizard_auth_client.middleware.AttemptAutoLoginMiddleware',
     )
 

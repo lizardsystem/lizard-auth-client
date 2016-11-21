@@ -618,8 +618,8 @@ class ClientV2Test(TestCase):
                 self.assertEquals(
                     {'a': 'dict'},
                     client.sso_create_user('some', 'name',
-                                            'some@example.org',
-                                            'somename'))
+                                           'some@example.org',
+                                           'somename'))
 
 
 class V2ViewsTest(TestCase):

@@ -789,7 +789,6 @@ def sso_create_user(first_name, last_name, email, username):
         'message': signed_message,
         'key': settings.SSO_KEY,
     }
-    r = requests.post(url, data=data, timeout=10
-)
+    r = requests.post(url, data=data, timeout=10)
     r.raise_for_status()
     return r.json()['user']

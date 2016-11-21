@@ -30,7 +30,7 @@ class SSOAppConf(AppConf):
     # Extra setting for the v2 API. Invitation language is the language used
     # by the SSO in the email when inviting the new user.
     ALLOW_ONLY_KNOWN_USERS = True
-    SSO_INVITATION_LANGUAGE = 'en'
+    INVITATION_LANGUAGE = 'en'
 
     # Role syncing from signals.py. V1 API only
     CLIENT_SUPERUSER_ROLES = []

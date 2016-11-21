@@ -500,12 +500,22 @@ class SearchNewUserView(FormView):
     success_url = reverse_lazy('lizard_auth_client.user_overview')
     title = "Search new user by email"
 
+    @method_decorator(permission_required('auth.manage_users'))
+    def dispatch(self, request, *args, **kwargs):
+        return super(UserOverviewView, self).dispatch(
+            request, *args, **kwargs)
+
 
 class CreateNewUserView(FormView):
     template_name = 'lizard_auth_client/form.html'
     form_class = CreateNewUserForm
     success_url = reverse_lazy('lizard_auth_client.user_overview')
     title = "Create new user on the SSO"
+
+    @method_decorator(permission_required('auth.manage_users'))
+    def dispatch(self, request, *args, **kwargs):
+        return super(UserOverviewView, self).dispatch(
+            request, *args, **kwargs)
 
 
 class DisallowedUserView(TemplateView):
