@@ -1,0 +1,93 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-11-19 08:37+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: forms.py:20
+msgid "Email"
+msgstr ""
+
+#: forms.py:32
+#, python-format
+msgid "User with email %s not found"
+msgstr ""
+
+#: forms.py:44
+msgid "first name"
+msgstr ""
+
+#: forms.py:49
+msgid "last name"
+msgstr ""
+
+#: forms.py:54
+msgid "email"
+msgstr ""
+
+#: forms.py:58
+msgid "username"
+msgstr ""
+
+#: forms.py:76
+#, python-format
+msgid "Username %s already used"
+msgstr ""
+
+#: templates/lizard_auth_client/disallowed-user.html:7
+msgid ""
+"\n"
+"      Your account is not configured yet on this site.\n"
+"      please contact the maintainer.\n"
+"    "
+msgstr ""
+
+#: templates/lizard_auth_client/user_overview.html:9
+msgid "Add new user by searching by email on the SSO."
+msgstr ""
+
+#: templates/lizard_auth_client/user_overview.html:14
+msgid "Create new user on the SSO + add locally."
+msgstr ""
+
+#: templates/lizard_auth_client/user_overview.html:32
+msgid "You cannot disable yourself or a superuser"
+msgstr ""
+
+#: templates/lizard_auth_client/user_overview.html:49
+msgid "Deactivate"
+msgstr ""
+
+#: templates/lizard_auth_client/user_overview.html:79
+msgid "Activate"
+msgstr ""
+
+#: views.py:459
+msgid "User overview"
+msgstr ""
+
+#: views.py:502
+msgid "Search new user by email"
+msgstr ""
+
+#: views.py:514
+msgid "Create new user on the SSO"
+msgstr ""
+
+#: views.py:524
+msgid "Not allowed"
+msgstr ""

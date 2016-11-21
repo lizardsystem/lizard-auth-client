@@ -200,3 +200,18 @@ For local testing of this very app do you need this additional setting::
     SSO_STANDALONE = True
 
 This setting is already there in the ``testsettings.py``.
+
+
+Updating translations
+---------------------
+
+Go to the ``lizard_auth_client`` subdirectory::
+
+    $ docker-compose run web /bin/bash
+    $ cd lizard_auth_client
+    $ ../bin/django makemessages --all
+
+Update the translations (for Dutch), for instance with "poedit". Then compile
+the new translations::
+
+    $ ../bin/django compilemessages
