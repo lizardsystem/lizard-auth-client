@@ -709,6 +709,26 @@ class V2ViewsTest(TestCase):
         response = views.UserOverviewView.as_view()(request)
         self.assertEqual(200, response.status_code)
 
+    def test_user_overview_post(self):
+        superuser = User.objects.create_superuser('myuser',
+                                                  'myemail@test.com',
+                                                  'mypass')
+        user1 = User.objects.create_user('user1',
+                                         'user1@test.com',
+                                         'user1')
+        user2 = User.objects.create_user('user2',
+                                         'user2@test.com',
+                                         'user2')
+        user2.is_active = False
+        user2.save()
+
+        c = Client()
+        c.login(username='myuser', password='mypass')  # Superuser
+        response = c.post('/sso/user_overview/',
+                          {'to_disable': user1.id,
+                           'to_enable': user2.id})
+        self.assertEqual(response.status_code, 302)
+
     def test_search_user_smoke(self):
         request = self.request_factory.get('/sso/some_url/')
         request.session = {}
