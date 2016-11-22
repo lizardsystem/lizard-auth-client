@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 import os
 
+from django.contrib.messages import constants as messages
+
 
 SETTINGS_DIR = os.path.dirname(os.path.realpath(__file__))
 BUILDOUT_DIR = os.path.abspath(os.path.join(SETTINGS_DIR, '..'))
@@ -167,6 +169,17 @@ CACHES = {
 # Explicitly set a unique name to avoid cookie collisions when running multiple
 # applications on the same domain. See: http://stackoverflow.com/a/7894760
 SESSION_COOKIE_NAME = 'lizard_auth_client_sessionid'
+
+CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
+# message tag mapping to comply with bootstrap's alert classes
+MESSAGE_TAGS = {
+    messages.DEBUG: 'alert-info',
+    messages.INFO: 'alert-info',
+    messages.SUCCESS: 'alert-success',
+    messages.WARNING: 'alert-warning',
+    messages.ERROR: 'alert-danger',
+}
 
 try:
     # Import local settings that aren't stored in svn/git.

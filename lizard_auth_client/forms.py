@@ -8,6 +8,7 @@ from crispy_forms.layout import Field
 from crispy_forms.layout import Fieldset
 from crispy_forms.layout import Layout
 from crispy_forms.layout import Submit
+from crispy_forms.layout import HTML
 
 
 class OrganisationSelectorForm(forms.Form):
@@ -89,4 +90,72 @@ class UserAddForm(forms.ModelForm):
 
     @property
     def legend(self):
-        return _('Add a user')
+        return _('Add user')
+
+
+class ManageUserOrganisationDetailForm(forms.ModelForm):
+    """
+    """
+    # organisation name is set by the initial dict
+    organisation = forms.CharField(
+        label=_("Organisation"), disabled=True, required=False, help_text=None)
+
+    class Meta:
+        model = get_user_model()
+        fields = [
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+        ]
+
+    def __init__(self, *args, **kwargs):
+
+        # pop the user roles from the kwargs
+        roles = kwargs.pop('roles', [])
+
+        super(ManageUserOrganisationDetailForm, self).__init__(*args, **kwargs)
+
+        for field in self.Meta.fields:
+            # A manager is not allowed to change user data like `username`,
+            # `email address`, etc. once an account has been created.
+            self.fields[field].disabled = True
+            # Disabled fields are not submitted as form data, so make sure that
+            # they are allowed to be empty.
+            self.fields[field].required = False
+            # any help text for editing is now obsolete
+            self.fields[field].help_text = None
+
+        # create role fields
+        role_field_names = []
+        for i, (role, checked) in enumerate(roles):
+            role_field_name = 'role_%s' % role['code']
+            self.fields[role_field_name] = forms.BooleanField(
+                label=role['name'].lower(), required=False, initial=checked)
+            role_field_names.append(role_field_name)
+
+        # django-crispy-forms
+        self.helper = FormHelper(self)
+        self.helper.form_method = 'POST'
+        self.helper.layout = Layout(
+            Fieldset(
+                None,
+                'organisation',
+                'email',
+                'username',
+                'first_name',
+                'last_name'
+            ),
+            HTML("<br/>"),
+            Fieldset(
+                # TODO: make this label a setting with default: _("Roles")
+                _("Permissions"),
+                *role_field_names
+            ),
+            HTML("<br/>"),
+            ButtonHolder(
+                # TODO: implement delete user-organisation relation
+                Submit('delete', _("Delete"), css_class='btn-danger'),
+                Submit('save', _("Save"), css_class='btn-primary'),
+            )
+        )

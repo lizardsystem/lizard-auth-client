@@ -2,8 +2,18 @@
 {% load i18n %}
 {% load crispy_forms_tags %}
 
-{% block body %}
-<div class="container">
-    {% crispy form %}
-</div>
+{% block container %}
+
+    {% if organisations %}
+    <h3>{% trans "Pick an organisation to manage" %}</h3>
+    <hr/>
+    <ul>
+    {% for organisation in organisations %}
+        <li><a href="{% url 'lizard_auth_client.management_organisation_detail' organisation.pk %}">{{ organisation.name }}</a></li>
+    {% endfor %}
+    </ul>
+    {% else %}
+    <p>{% trans "No organisations." %}</p>
+    {% endif %}
+
 {% endblock %}

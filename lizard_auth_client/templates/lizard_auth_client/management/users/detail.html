@@ -2,9 +2,8 @@
 {% load i18n %}
 {% load crispy_forms_tags %}
 
-{% block body %}
-<div class="container">
-    <h2>{{ organisation }}</h2>
-    <h2>{{ user }}</h2>
-</div>
+{% block container %}
+    <h3>{% trans "Edit user" %}</h3>
+    <hr/>
+    {% crispy form %}
 {% endblock %}

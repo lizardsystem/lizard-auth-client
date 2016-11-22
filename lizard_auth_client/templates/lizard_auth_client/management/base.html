@@ -1,5 +1,7 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
+{% load static %}
+
 <!doctype html>
 <html lang="{{ LANGUAGE_CODE }}">
   <head>
@@ -32,6 +34,9 @@
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/css/bootstrap-select.min.css">
 
+    <!-- Custom styles for this template -->
+    <link href="{% static 'lizard_auth_client/css/main.css' %}" rel="stylesheet">
+
     <!-- Bootstrap-select compiled and minified JavaScript translation files -->
     {% if 'nl' in LANGUAGE_CODE %}
     <script
@@ -43,7 +48,31 @@
 
   </head>
   <body style="margin: 10px 0;">
+
   {% block body %}
+     <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="{% url 'lizard_auth_client.management_users_index' %}">{% trans "User management" %}</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#">{% trans 'Logged in as' %} {{ user }}</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+      {% if messages %}
+        {% for message in messages %}
+        <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      {% block container %}
+      {% endblock %}
+    </div>
   {% endblock %}
   </body>
 </html>

@@ -6,6 +6,7 @@ from collections import namedtuple
 import datetime
 import json
 
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
@@ -21,6 +22,7 @@ from django.http import HttpResponseForbidden
 from django.http import HttpResponsePermanentRedirect
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
+from django.utils.translation import ugettext_lazy as _
 from django.views.generic import FormView
 from django.views.generic.base import TemplateView, View
 
@@ -31,9 +33,10 @@ import six
 
 from lizard_auth_client import client
 from lizard_auth_client.client import sso_server_url
-from lizard_auth_client.forms import UserAddForm, OrganisationSelectorForm
+from lizard_auth_client.forms import (
+    UserAddForm, OrganisationSelectorForm, ManageUserOrganisationDetailForm)
 from lizard_auth_client.conf import settings
-from lizard_auth_client.models import Organisation, UserOrganisationRole
+from lizard_auth_client.models import Organisation, Role, UserOrganisationRole
 
 try:
     from urlparse import urljoin
@@ -487,6 +490,7 @@ class RoleRequiredMixin(AccessMixin):
         else:
             return False
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if not self.has_role():
             return self.handle_no_permission()
@@ -603,6 +607,32 @@ class ManageOrganisationSelector(
                 request, *args, **kwargs)
 
 
+def get_user_role_matrix_for_organisation(user, organisation, roles):
+    """
+    Make a role matrix for the given user.
+
+    :param user - a User instantce
+    :param organisation - an Organisation instance
+    :param roles - a dict containing role data with code and name as keys
+
+    :return a list of booleans representing whether the given user has the
+        roles for the given organisation, e.g. [True, False, False, False]
+
+    """
+    role_matrix = []
+    for role in roles:
+        try:
+            user.user_organisation_roles.get(
+                organisation=organisation, role__code=role['code'])
+        except ObjectDoesNotExist:
+            # the user does NOT have this role for this organisation
+            role_matrix.append(False)
+        else:
+            # the user has this role for this organisation
+            role_matrix.append(True)
+    return role_matrix
+
+
 class ManageOrganisationDetail(
     RoleRequiredMixin, ManagedObjectsMixin, TemplateView):
     """
@@ -617,10 +647,24 @@ class ManageOrganisationDetail(
         """Store organisation in the context."""
         context = super(ManageOrganisationDetail, self).get_context_data(
             **kwargs)
+
+        # add organisation to context
         if hasattr(self, 'organisation'):
             context['organisation'] = self.organisation
-        users = self.get_managed_users(self.organisation)
+
+        # add roles for header column title
+        roles = settings.SSO_AVAILABLE_ROLES
+        context['roles'] = roles
+
+        # add users with their role matrices to the context
+        managed_users = self.get_managed_users(self.organisation)
+        users = []
+        for user in managed_users:
+            user.role_matrix = get_user_role_matrix_for_organisation(
+                user, self.organisation, roles)
+            users.append(user)
         context['users'] = users
+
         return context
 
     def get(self, request, pk=None, *args, **kwargs):
@@ -636,28 +680,34 @@ class ManageOrganisationDetail(
 
 
 class ManageUserOrganisationDetail(
-    RoleRequiredMixin, ManagedObjectsMixin, TemplateView):
+    RoleRequiredMixin, ManagedObjectsMixin, FormView):
+
+    form_class = ManageUserOrganisationDetailForm
     template_name = 'lizard_auth_client/management/users/detail.html'
+
+    role_required = settings.SSO_MANAGER_ROLES
 
     def get_context_data(self, **kwargs):
         """Add organisation and user to the context."""
         context = super(ManageUserOrganisationDetail, self).get_context_data(
             **kwargs)
         context['organisation'] = self.organisation
+        roles = settings.SSO_AVAILABLE_ROLES
+        context['roles'] = roles
+        role_matrix = get_user_role_matrix_for_organisation(
+            self.user, self.organisation, roles)
+        self.user.role_matrix = role_matrix
         context['user'] = self.user
-        # TODO: consider making this a form with the roles for this user
-        # organisation combo
-        # TODO: add user organisation roles for this user organisation combo
         return context
 
-    def get(self, request, organisation_pk=None, user_pk=None, *args,
-            **kwargs):
+    def dispatch(self, request, organisation_pk=None, user_pk=None, *args,
+                 **kwargs):
         """
         Fetch requested organisation and user and store it as a class
         variable, so that they can be used in the context.
         """
         # filtering on managed organisations and users makes sure that the
-        # current user has manage rights to for the given organisation and user
+        # request user has manage rights to for the given organisation and user
         # combo
         managed_organisations = self.get_managed_organisations()
         try:
@@ -669,6 +719,83 @@ class ManageUserOrganisationDetail(
             self.user = managed_users.get(pk=user_pk)
         except ObjectDoesNotExist:
             return HttpResponseForbidden()
-        return super(ManageUserOrganisationDetail, self).get(
+        return super(ManageUserOrganisationDetail, self).dispatch(
+            request, organisation_pk, user_pk, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        # TODO: add organisation to form and list of organisations the request
+        # user manages and has a UserOrganisationRole instance with this user
+        # (self.user)
+        form_kwargs = super(ManageUserOrganisationDetail,
+                            self).get_form_kwargs()
+        form_kwargs['instance'] = self.user
+        roles = settings.SSO_AVAILABLE_ROLES
+        role_matrix = get_user_role_matrix_for_organisation(
+            self.user, self.organisation, roles)
+        form_kwargs['roles'] = zip(roles, role_matrix)
+        return form_kwargs
+
+    def get_initial(self):
+        # add organisation to the initial dict
+        initial = super(ManageUserOrganisationDetail, self).get_initial()
+        initial['organisation'] = self.organisation.name
+        return initial
+
+    def form_valid(self, form):
+        """
+        Save the user organisation roles.
+
+        form.cleaned_data example:
+        {
+            'username': u'sander.smits', 'first_name': u'Sander',
+            'last_name': u'Smits', 'organisation': u'Nelen & Schuurmans',
+            u'role_run_simulation': True, u'role_manage': False,
+            u'role_follow_simulation': True, u'role_change_model': True,
+            'email': u'sander.smits@nelen-schuurmans.nl'
+        }
+        """
+        user_role_codes = [
+            k[5:] for k in form.cleaned_data if
+            k.startswith('role_') and form.cleaned_data[k] is True]
+
+        # check whether the roles exist and if not, add them
+        for user_role_code in user_role_codes:
+            role = Role.objects.get(code=user_role_code)
+            try:
+                UserOrganisationRole.objects.get(
+                    user=self.user, organisation=self.organisation,
+                    role=role)
+            except ObjectDoesNotExist:
+                new_uor = UserOrganisationRole(
+                    user=self.user, organisation=self.organisation, role=role)
+                new_uor.save()
+
+        # and delete roles that were removed
+        uors = UserOrganisationRole.objects.filter(
+            user=self.user, organisation=self.organisation)
+        for uor in uors:
+            if uor.role.code not in user_role_codes:
+                uor.delete()
+
+        return super(ManageUserOrganisationDetail, self).form_valid(form)
+
+    def post(self, request, organisation_pk=None, user_pk=None, *args,
+             **kwargs):
+        # set success message
+        messages.add_message(
+            request, messages.SUCCESS,
+            _("Successfully saved user %(username)s.") % {
+                'username': self.user.username},
+            fail_silently=True
+        )
+        return super(ManageUserOrganisationDetail, self).post(
             request, *args, **kwargs)
 
+    def get_success_url(self):
+        return reverse(
+            'lizard_auth_client.management_user_organisation_detail',
+            kwargs={
+                'organisation_pk': self.organisation.id,
+                'user_pk': self.user.id
+            }
+        )
