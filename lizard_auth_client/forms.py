@@ -45,7 +45,7 @@ class OrganisationSelectorForm(forms.Form):
         return _('For which organisation do you want to manage its users?')
 
 
-class UserAddForm(forms.ModelForm):
+class ManageUserAddForm(forms.ModelForm):
     """Form for adding a user."""
     # username = forms.CharField(label=_("Username"), max_length=100)
     # email = forms.CharField(label=_("Email address"), max_length=100)
@@ -63,7 +63,7 @@ class UserAddForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Initialize this from with a crispy-forms FormHelper instance."""
-        super(UserAddForm, self).__init__(*args, **kwargs)
+        super(ManageUserAddForm, self).__init__(*args, **kwargs)
 
         self.fields['email'].required = True
         self.fields['email'].help_text = _(
@@ -74,7 +74,7 @@ class UserAddForm(forms.ModelForm):
         self.helper.form_method = 'POST'
         self.helper.layout = Layout(
             Fieldset(
-                self.legend,
+                None,
                 'email',
                 'username',
                 'first_name',
@@ -88,9 +88,18 @@ class UserAddForm(forms.ModelForm):
             )
         )
 
-    @property
-    def legend(self):
-        return _('Add user')
+    def _get_validation_exclusions(self):
+        # A user might be `new` to an organisation, but already exist in the
+        # database, because he has roles in other organsitions. In that
+        # case, `validate_unique` should not fire. NB: the SSO server
+        # matches on email address, not on username.
+        exclude = super(ManageUserAddForm, self)._get_validation_exclusions()
+        if 'email' in self.cleaned_data:
+            model = get_user_model()
+            email = self.cleaned_data['email']
+            if model.objects.filter(email=email).exists():
+                exclude.append('username')
+        return exclude
 
 
 class ManageUserOrganisationDetailForm(forms.ModelForm):

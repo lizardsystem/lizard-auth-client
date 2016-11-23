@@ -8,9 +8,8 @@
     <meta charset=utf-8>
     <title>{% block title %}Management{% endblock %}</title>
 
-    <!-- jQuery Core 3.1.1 slim minified -->
-    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"
-    integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="
+    <!-- jQuery Core 3.1.1 minified -->
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"
     crossorigin="anonymous"></script>
 
     <!-- Bootstrap compiled and minified JavaScript -->
@@ -74,5 +73,10 @@
       {% endblock %}
     </div>
   {% endblock %}
+
+  {% block jstail %}
+      <script src="{% static 'lizard_auth_client/js/onload.js' %}"></script>
+  {% endblock %}
+
   </body>
 </html>

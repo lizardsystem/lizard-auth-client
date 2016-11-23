@@ -5,7 +5,7 @@
 {% block container %}
     <h3>{% trans "User permissions for" %} {{ organisation.name }}</h3>
     <hr/>
-    <a href="#" class="btn btn-primary pull-right" role="button">{% trans "Add user" %}</a>
+    <a href="{% url 'lizard_auth_client.management_users_add' organisation_pk=organisation.id %}" class="btn btn-primary pull-right" role="button">{% trans "Add user" %}</a>
     {% if users %}
     <table class="table table-bordered">
         <caption class="text-left">{{ organisation.name }}</caption>

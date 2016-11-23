@@ -3,5 +3,7 @@
 {% load crispy_forms_tags %}
 
 {% block container %}
+    <h3>{% trans "Add user to" %} {{ organisation }}</h3>
+    <hr/>
     {% crispy form %}
 {% endblock %}

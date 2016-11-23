@@ -48,7 +48,7 @@ class SSOAppConf(AppConf):
     # the value of USER_IS_LINKED_ROLE_CODE as code. That way users can be
     # connected to organisations without having one of the permission
     # mentioned in the AVAILABLE_ROLES setting.
-    USER_CONNECTED_ROLE_CODE = 'is_connected'
+    CONNECTED_ROLE_CODE = 'is_connected'
 
     # management roles
     # manager is used by lizard-nxt and superman is used by 3di

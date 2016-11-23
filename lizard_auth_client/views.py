@@ -15,6 +15,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from django.core.urlresolvers import reverse
+from django.db import transaction
+from django.forms.models import model_to_dict
 from django.http import Http404
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
@@ -34,7 +36,8 @@ import six
 from lizard_auth_client import client
 from lizard_auth_client.client import sso_server_url
 from lizard_auth_client.forms import (
-    UserAddForm, OrganisationSelectorForm, ManageUserOrganisationDetailForm)
+    ManageUserAddForm, OrganisationSelectorForm,
+    ManageUserOrganisationDetailForm)
 from lizard_auth_client.conf import settings
 from lizard_auth_client.models import Organisation, Role, UserOrganisationRole
 
@@ -49,6 +52,43 @@ except ImportError:
 BACKEND = ModelBackend()
 JWT_EXPIRATION = datetime.timedelta(
     minutes=settings.SSO_JWT_EXPIRATION_MINUTES)
+
+
+def _sso_post(viewname, payload):
+    """Send a payload to the named URL at the SSO server.
+    Args:
+        viewname (str): The name of the URL (a bit like Django's reverse).
+            See https://sso.lizard.net/api2/.
+        payload (dict): A Python dictionary with key-value pairs to send.
+    Returns:
+        dict: The decoded JSON response.
+    Raises:
+        HTTPError, if one occured.
+    """
+    url = sso_server_url(viewname)
+    # Add required fields to the payload. These cannot/should not
+    # be set by the caller (will be overwritten if set).
+    payload['iss'] = settings.SSO_KEY
+    payload['exp'] = datetime.datetime.utcnow() + JWT_EXPIRATION
+    # Sign the message.
+    signed_message = jwt.encode(
+        payload,
+        settings.SSO_SECRET,
+        algorithm=settings.SSO_JWT_ALGORITHM,
+    )
+    # Send the key along with the signed message. This is a
+    # peculiarity of the SSO server: the signed message
+    # already contains the key.
+    r = requests.post(
+        url, data={
+            'message': signed_message,
+            'key': settings.SSO_KEY,
+        }
+    )
+    # Check that the request is succesful.
+    r.raise_for_status()
+    # Return the decoded JSON response.
+    return r.json()
 
 
 class HttpResponseServiceUnavailable(HttpResponse):
@@ -500,27 +540,6 @@ class RoleRequiredMixin(AccessMixin):
 
 class ManagedObjectsMixin(object):
 
-    def get_managed_objects(self, model_class):
-        """
-        Get the managed objects (organisation or users) for the request user.
-
-        Superusers are allowed to manage all objects.
-
-        :param model_class - should be either Organisation or User
-
-        :return - managed object instance of the requested model_class type
-
-        """
-        if self.request.user.is_superuser:
-            return model_class.objects.all()
-
-        # fetch the managed objects based on the UserOrganisationRole instances
-        # of the request user
-        user_organisation_roles = UserOrganisationRole.objects.filter(
-            user=self.request.user, role__code__in=settings.SSO_MANAGER_ROLES)
-        return model_class.objects.distinct().filter(
-            user_organisation_roles__in=user_organisation_roles)
-
     def get_managed_organisations(self):
         """
         Get the managed organisations for the current user. And set it as an
@@ -528,28 +547,36 @@ class ManagedObjectsMixin(object):
         """
         if hasattr(self, 'managed_organisations'):
             return self.managed_organisations
-        self.managed_organisations = self.get_managed_objects(Organisation)
+
+        # superusers are allowed to manage all objects
+        if self.request.user.is_superuser:
+            return Organisation.objects.all()
+
+        # fetch the managed organisations based on the UserOrganisationRole
+        # instances of the request user
+        user_organisation_roles = UserOrganisationRole.objects.filter(
+            user=self.request.user,
+            role__code__in=settings.SSO_MANAGER_ROLES)
+        self.managed_organisations = Organisation.objects.distinct().filter(
+            user_organisation_roles__in=user_organisation_roles)
         return self.managed_organisations
 
-    def get_managed_users(self, organisation=None):
+    def get_managed_users(self, managed_organisations):
         """
-        Get the managed users for the current user. And set it as an instance
+        Get all users for the managed organisations. And set it as an instance
         variable.
 
-        :param organisation - filter by organisation (optional)
+        :param managed_organisations - filter by these organisations
         """
         if hasattr(self, 'managed_users'):
             return self.managed_users
-        user_model = get_user_model()
-        self.managed_users = self.get_managed_objects(user_model)
 
         # filter on organisation if given
-        if organisation:
-            user_organisation_roles = UserOrganisationRole.objects.filter(
-                user=self.request.user, organisation=organisation,
-                role__code__in=settings.SSO_MANAGER_ROLES)
-            self.managed_users = self.managed_users.distinct().filter(
-                user_organisation_roles__in=user_organisation_roles)
+        is_connected_role = get_is_connected_role()
+        user_organisation_roles = UserOrganisationRole.objects.filter(
+            organisation__in=managed_organisations, role=is_connected_role)
+        self.managed_users = get_user_model().objects.all().distinct().filter(
+            user_organisation_roles__in=user_organisation_roles)
 
         return self.managed_users
 
@@ -657,7 +684,8 @@ class ManageOrganisationDetail(
         context['roles'] = roles
 
         # add users with their role matrices to the context
-        managed_users = self.get_managed_users(self.organisation)
+        managed_users = self.get_managed_users([self.organisation])
+
         users = []
         for user in managed_users:
             user.role_matrix = get_user_role_matrix_for_organisation(
@@ -714,7 +742,7 @@ class ManageUserOrganisationDetail(
             self.organisation = managed_organisations.get(pk=organisation_pk)
         except ObjectDoesNotExist:
             return HttpResponseForbidden()
-        managed_users = self.get_managed_users()
+        managed_users = self.get_managed_users(managed_organisations)
         try:
             self.user = managed_users.get(pk=user_pk)
         except ObjectDoesNotExist:
@@ -741,6 +769,7 @@ class ManageUserOrganisationDetail(
         initial['organisation'] = self.organisation.name
         return initial
 
+    @transaction.atomic
     def form_valid(self, form):
         """
         Save the user organisation roles.
@@ -777,6 +806,12 @@ class ManageUserOrganisationDetail(
             if uor.role.code not in user_role_codes:
                 uor.delete()
 
+        # add the connected role; no matter what happen before
+        is_connected_role = get_is_connected_role()
+        UserOrganisationRole.objects.get_or_create(
+            user=self.user, organisation=self.organisation,
+            role=is_connected_role)
+
         return super(ManageUserOrganisationDetail, self).form_valid(form)
 
     def post(self, request, organisation_pk=None, user_pk=None, *args,
@@ -799,3 +834,81 @@ class ManageUserOrganisationDetail(
                 'user_pk': self.user.id
             }
         )
+
+
+def get_is_connected_role():
+    # now connect the user to this organisation
+    is_connected_role, created = Role.objects.get_or_create(
+        code=settings.SSO_CONNECTED_ROLE_CODE,
+        defaults={
+            'unique_id': '0', 'name': 'Connected',
+            'internal_description': '-', 'external_description': '-'
+        }
+    )
+    return is_connected_role
+
+
+class ManageUserAddView(RoleRequiredMixin, ManagedObjectsMixin, FormView):
+
+    form_class = ManageUserAddForm
+    template_name = 'lizard_auth_client/management/users/add.html'
+
+    role_required = settings.SSO_MANAGER_ROLES
+
+    def get_context_data(self, **kwargs):
+        context = super(ManageUserAddView, self).get_context_data(**kwargs)
+        context['organisation'] = self.organisation
+        return context
+
+    def get_success_url(self):
+        return reverse(
+            'lizard_auth_client.management_organisation_detail',
+            kwargs={'pk': self.organisation.id})
+
+    @transaction.atomic
+    def form_valid(self, form):
+        prototype = form.save(commit=False)
+        payload = model_to_dict(prototype, form.Meta.fields)
+        # Once the activation process is finished, users receive a link to the
+        # portal that initiated the creation of the new SSO account. This may
+        # vary since the server can have multiple hostnames.
+        payload['visit_url'] = self.request.get_host()
+        response = _sso_post('new-user', payload)
+        updated_values = response['user']
+        # From the perspective of a manager, it's a new user, but the user
+        # might already exist in the lizard_nxt database. In that case,
+        # we'll update his credentials with the latest info from SSO.
+        user, created = get_user_model().objects.update_or_create(
+            username=updated_values.pop('username'),
+            defaults=updated_values,
+        )
+        # We are talking about SSO-managed users, so we want to be sure
+        # that the account has an unusuable password.
+        user.set_unusable_password()
+        user.save()
+
+        # now connect the user to this organisation
+        is_connected_role = get_is_connected_role()
+        UserOrganisationRole.objects.get_or_create(
+            user=user, organisation=self.organisation, role=is_connected_role)
+
+        # TODO: add the other roles
+
+        # set success message
+        messages.add_message(
+            self.request, messages.SUCCESS,
+            _("User %(username)s is now connected to %(organisation)s.") % {
+                'username': user.username, 'organisation': self.organisation},
+            fail_silently=True
+        )
+
+        return super(ManageUserAddView, self).form_valid(form)
+
+    def dispatch(self, request, organisation_pk=None, *args, **kwargs):
+        managed_organisations = self.get_managed_organisations()
+        try:
+            self.organisation = managed_organisations.get(pk=organisation_pk)
+        except ObjectDoesNotExist:
+            return HttpResponseForbidden()
+        return super(ManageUserAddView, self).dispatch(
+            request, *args, **kwargs)
