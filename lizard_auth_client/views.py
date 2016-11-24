@@ -501,7 +501,7 @@ class RoleRequiredMixin(AccessMixin):
         Override this method to override the role attribute.
         Must return an iterable.
         """
-        if not self.role_required is None:
+        if not self.role_required:
             raise ImproperlyConfigured(
                 '{0} is missing the role attribute. Define {0}.role, or '
                 'override {0}.get_role_required().'.format(
