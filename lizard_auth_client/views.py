@@ -556,7 +556,8 @@ class ManagedObjectsMixin(object):
             user=self.request.user,
             role__code__in=settings.SSO_MANAGER_ROLES)
         self.managed_organisations = Organisation.objects.distinct().filter(
-            user_organisation_roles__in=user_organisation_roles)
+            user_organisation_roles__in=user_organisation_roles).order_by(
+            'name')
         return self.managed_organisations
 
     def get_managed_users(self, managed_organisations):
@@ -574,7 +575,8 @@ class ManagedObjectsMixin(object):
         user_organisation_roles = UserOrganisationRole.objects.filter(
             organisation__in=managed_organisations, role=is_connected_role)
         self.managed_users = get_user_model().objects.all().distinct().filter(
-            user_organisation_roles__in=user_organisation_roles)
+            user_organisation_roles__in=user_organisation_roles).order_by(
+            'username')
 
         return self.managed_users
 
