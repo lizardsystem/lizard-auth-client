@@ -26,7 +26,7 @@ from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import FormView
-from django.views.generic.base import TemplateView, View
+from django.views.generic.base import RedirectView, TemplateView, View
 
 from itsdangerous import URLSafeTimedSerializer
 import jwt
@@ -819,7 +819,7 @@ class ManageUserOrganisationDetail(
         # set success message
         messages.add_message(
             request, messages.SUCCESS,
-            _("Successfully saved user %(username)s.") % {
+            _("Successfully updated user %(username)s.") % {
                 'username': self.user.username},
             fail_silently=True
         )
@@ -827,13 +827,10 @@ class ManageUserOrganisationDetail(
             request, *args, **kwargs)
 
     def get_success_url(self):
+        """Redirect to organisation detail view."""
         return reverse(
-            'lizard_auth_client.management_user_organisation_detail',
-            kwargs={
-                'organisation_pk': self.organisation.id,
-                'user_pk': self.user.id
-            }
-        )
+            'lizard_auth_client.management_organisation_detail',
+            kwargs={'pk': self.organisation.id})
 
 
 def get_is_connected_role():
@@ -912,3 +909,57 @@ class ManageUserAddView(RoleRequiredMixin, ManagedObjectsMixin, FormView):
             return HttpResponseForbidden()
         return super(ManageUserAddView, self).dispatch(
             request, *args, **kwargs)
+
+
+class ManageUserDeleteDetail(
+    RoleRequiredMixin, ManagedObjectsMixin, RedirectView):
+    """
+    Remove a user from an organisation by deleting the related user
+    organisation roles.
+    """
+    role_required = settings.SSO_MANAGER_ROLES
+
+    def get_redirect_url(self, *args, **kwargs):
+        """Redirect to the organisation detail view."""
+        return reverse('lizard_auth_client.management_organisation_detail',
+                       kwargs={'pk': self.organisation.id})
+
+    def get(self, request, organisation_pk=None, user_pk=None, *args,
+            **kwargs):
+        """
+        Check whether the request user is a manager for this
+        user-organisation combo.
+        """
+        managed_organisations = self.get_managed_organisations()
+        try:
+            self.organisation = managed_organisations.get(pk=organisation_pk)
+        except ObjectDoesNotExist:
+            raise Http404
+        managed_users = self.get_managed_users(managed_organisations)
+        try:
+            self.user = managed_users.get(pk=user_pk)
+        except ObjectDoesNotExist:
+            raise Http404
+
+        # all clear; disconnect the user from the organisation by deleting all
+        # its UserOrganisationRole instances
+        uors = self.user.user_organisation_roles.filter(
+            organisation=self.organisation)
+        for uor in uors:
+            uor.delete()
+
+        # add success message
+        messages.add_message(
+            self.request, messages.SUCCESS,
+            _("Successfully deleted user %(username)s from %(organisation)s.")
+            % {'username': self.user.username,
+               'organisation': self.organisation},
+            fail_silently=True
+        )
+
+        # now redirect via the super.get()
+        return super(ManageUserDeleteDetail, self).get(
+            request, *args, **kwargs)
+
+
+

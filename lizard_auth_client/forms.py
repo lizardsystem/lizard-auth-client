@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 
+from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import ButtonHolder
 from crispy_forms.layout import Field
@@ -162,9 +163,11 @@ class ManageUserOrganisationDetailForm(forms.ModelForm):
                 *role_field_names
             ),
             HTML("<br/>"),
-            ButtonHolder(
-                # TODO: implement delete user-organisation relation
-                Submit('delete', _("Delete"), css_class='btn-danger'),
-                Submit('save', _("Save"), css_class='btn-primary'),
-            )
+            FormActions(
+                HTML(
+                    """{% load i18n %}<a role="button" class="btn btn-danger"
+                    href="{% url 'lizard_auth_client.management_users_delete' organisation.id user.id %}">{% trans 'Delete' %}</a>
+                    """),  #NOQA
+                Submit('save', _("Save")),
+            ),
         )

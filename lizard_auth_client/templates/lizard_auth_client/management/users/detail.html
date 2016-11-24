@@ -3,7 +3,7 @@
 {% load crispy_forms_tags %}
 
 {% block container %}
-    <h3>{% trans "Edit user" %}</h3>
+    <h3>{% trans "Manage permissions of" %} {{ user.username }} for {{ organisation.name }}</h3>
     <hr/>
     {% crispy form %}
 {% endblock %}
