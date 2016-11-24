@@ -99,7 +99,7 @@ if settings.SSO_ENABLED:
             views.ManageOrganisationDetail.as_view(),
             name='lizard_auth_client.management_organisation_detail'),
         url(r'^management/organisations/$',
-            views.ManageOrganisationSelector.as_view(),
+            views.ManageOrganisationIndex.as_view(),
             name='lizard_auth_client.management_users_index'),
         url(r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/add/$',
             views.ManageUserAddView.as_view(),

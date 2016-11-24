@@ -4,55 +4,14 @@ from django.utils.translation import ugettext_lazy as _
 
 from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import ButtonHolder
-from crispy_forms.layout import Field
-from crispy_forms.layout import Fieldset
-from crispy_forms.layout import Layout
-from crispy_forms.layout import Submit
-from crispy_forms.layout import HTML
+from crispy_forms.layout import (
+    ButtonHolder, Fieldset, Layout, Submit, HTML)
+
+from lizard_auth_client.models import Role
 
 
-class OrganisationSelectorForm(forms.Form):
-
-    organisation = forms.ChoiceField()
-
-    def __init__(self, *args, **kwargs):
-        super(OrganisationSelectorForm, self).__init__(*args, **kwargs)
-
-        # get the choices
-        self.fields['organisation'].choices = [
-            (org.pk, org.name) for org in kwargs['initial']['organisations']]
-
-        self.helper = FormHelper(self)
-        self.helper.form_method = 'POST'
-        self.helper.layout = Layout(
-            Fieldset(
-                self.legend,
-                # 'organisations',
-                # 'username',
-                # 'first_name',
-                # 'last_name',
-                Field('organisation', css_class='selectpicker'),
-                # Field('admin_in', css_class='selectpicker'),
-                # Field('manager_in', css_class='selectpicker'),
-            ),
-            ButtonHolder(
-                Submit('next', _('Manage this organisation'), css_class='btn-primary'),
-            )
-        )
-
-    @property
-    def legend(self):
-        return _('For which organisation do you want to manage its users?')
-
-
-class ManageUserAddForm(forms.ModelForm):
-    """Form for adding a user."""
-    # username = forms.CharField(label=_("Username"), max_length=100)
-    # email = forms.CharField(label=_("Email address"), max_length=100)
-    # first_name = forms.CharField(label=_("First name"), max_length=100)
-    # last_name = forms.CharField(label=_("Last name"), max_length=100)
-
+class ManageUserBaseForm(forms.ModelForm):
+    """Base form for managing a user."""
     class Meta:
         model = get_user_model()
         fields = [
@@ -63,7 +22,49 @@ class ManageUserAddForm(forms.ModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
-        """Initialize this from with a crispy-forms FormHelper instance."""
+        # pop the user roles from the kwargs
+        roles = kwargs.pop('roles', [])
+
+        super(ManageUserBaseForm, self).__init__(*args, **kwargs)
+
+        # create role fields
+        self.role_field_names = []
+        for i, (role, checked) in enumerate(roles):
+            role_field_name = 'role_%s' % role['code']
+            self.fields[role_field_name] = forms.BooleanField(
+                label=role['name'].lower(), required=False, initial=checked)
+            self.role_field_names.append(role_field_name)
+
+    def get_role_field_names(self):
+        """Return the role field names."""
+        return self.role_field_names
+
+    def clean(self):
+        """
+        Add the Role instances to the cleaned data.
+
+        cleaned_data example:
+        {
+            'username': u'sander.smits', 'first_name': u'Sander',
+            'last_name': u'Smits', 'organisation': u'Nelen & Schuurmans',
+            u'role_run_simulation': True, u'role_manage': False,
+            u'role_follow_simulation': True, u'role_change_model': True,
+            'email': u'sander.smits@nelen-schuurmans.nl'
+        }
+        """
+        cleaned_data = super(ManageUserBaseForm, self).clean()
+        user_role_codes = [
+            k[5:] for k in cleaned_data if
+            k.startswith('role_') and cleaned_data[k] is True]
+        roles = Role.objects.filter(code__in=user_role_codes)
+        cleaned_data['roles'] = roles
+        return cleaned_data
+
+
+class ManageUserAddForm(ManageUserBaseForm):
+    """Form for adding a user with its roles/permissions."""
+    def __init__(self, *args, **kwargs):
+        """Initialize this form with a crispy forms FormHelper instance."""
         super(ManageUserAddForm, self).__init__(*args, **kwargs)
 
         self.fields['email'].required = True
@@ -80,10 +81,14 @@ class ManageUserAddForm(forms.ModelForm):
                 'username',
                 'first_name',
                 'last_name',
-                # Field('user_in', css_class='selectpicker'),
-                # Field('admin_in', css_class='selectpicker'),
-                # Field('manager_in', css_class='selectpicker'),
             ),
+            HTML("<br/>"),
+            Fieldset(
+                # TODO: make this label a setting with default: _("Roles")
+                _("Permissions"),
+                *self.get_role_field_names()
+            ),
+            HTML("<br/>"),
             ButtonHolder(
                 Submit('save', _('Save'), css_class='btn-primary'),
             )
@@ -103,28 +108,16 @@ class ManageUserAddForm(forms.ModelForm):
         return exclude
 
 
-class ManageUserOrganisationDetailForm(forms.ModelForm):
-    """
-    """
+class ManageUserChangeForm(ManageUserBaseForm):
+    """Form for changing user roles/permissions."""
+
     # organisation name is set by the initial dict
     organisation = forms.CharField(
         label=_("Organisation"), disabled=True, required=False, help_text=None)
 
-    class Meta:
-        model = get_user_model()
-        fields = [
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-        ]
-
     def __init__(self, *args, **kwargs):
-
-        # pop the user roles from the kwargs
-        roles = kwargs.pop('roles', [])
-
-        super(ManageUserOrganisationDetailForm, self).__init__(*args, **kwargs)
+        """Add a crispy forms FormHelper instance."""
+        super(ManageUserChangeForm, self).__init__(*args, **kwargs)
 
         for field in self.Meta.fields:
             # A manager is not allowed to change user data like `username`,
@@ -135,14 +128,6 @@ class ManageUserOrganisationDetailForm(forms.ModelForm):
             self.fields[field].required = False
             # any help text for editing is now obsolete
             self.fields[field].help_text = None
-
-        # create role fields
-        role_field_names = []
-        for i, (role, checked) in enumerate(roles):
-            role_field_name = 'role_%s' % role['code']
-            self.fields[role_field_name] = forms.BooleanField(
-                label=role['name'].lower(), required=False, initial=checked)
-            role_field_names.append(role_field_name)
 
         # django-crispy-forms
         self.helper = FormHelper(self)
@@ -160,7 +145,7 @@ class ManageUserOrganisationDetailForm(forms.ModelForm):
             Fieldset(
                 # TODO: make this label a setting with default: _("Roles")
                 _("Permissions"),
-                *role_field_names
+                *self.get_role_field_names()
             ),
             HTML("<br/>"),
             FormActions(

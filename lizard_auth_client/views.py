@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from __future__ import unicode_literals
 
 from collections import namedtuple
@@ -36,8 +35,7 @@ import six
 from lizard_auth_client import client
 from lizard_auth_client.client import sso_server_url
 from lizard_auth_client.forms import (
-    ManageUserAddForm, OrganisationSelectorForm,
-    ManageUserOrganisationDetailForm)
+    ManageUserAddForm, ManageUserChangeForm)
 from lizard_auth_client.conf import settings
 from lizard_auth_client.models import Organisation, Role, UserOrganisationRole
 
@@ -524,7 +522,7 @@ class RoleRequiredMixin(AccessMixin):
 
         roles = self.get_role_required()
         nr_of_user_organisation_roles = UserOrganisationRole.objects.filter(
-            user=user, role__code__in=roles).count()
+            user=user, role__code_in=roles).count()
         if nr_of_user_organisation_roles > 0:
             return True
         else:
@@ -581,40 +579,21 @@ class ManagedObjectsMixin(object):
         return self.managed_users
 
 
-class ManageOrganisationSelector(
-    RoleRequiredMixin, ManagedObjectsMixin, FormView):
+class ManageOrganisationIndex(
+    RoleRequiredMixin, ManagedObjectsMixin, TemplateView):
     """Index view for managing user permissions."""
 
-    form_class = OrganisationSelectorForm
     template_name = 'lizard_auth_client/management/users/index.html'
 
     role_required = settings.SSO_MANAGER_ROLES
 
     def get_context_data(self, **kwargs):
         """Add managed organisations and users to the context."""
-        context = super(ManageOrganisationSelector, self).get_context_data(
+        context = super(ManageOrganisationIndex, self).get_context_data(
             **kwargs)
         # put the managed organisations in the context
         context['organisations'] = self.get_managed_organisations()
         return context
-
-    def get_initial(self):
-        """
-        Add organisations to the initial dict to be used in the form_class.
-        """
-        initial = super(ManageOrganisationSelector, self).get_initial()
-        initial['organisations'] = self.get_managed_organisations()
-        return initial
-
-    def form_valid(self, form):
-        """
-        If the form is valid, redirect to the organisation detail page.
-        """
-        organisation_pk = form.cleaned_data['organisation']
-        success_url = reverse(
-            'lizard_auth_client.management_organisation_detail',
-            kwargs={'pk': organisation_pk})
-        return HttpResponseRedirect(success_url)
 
     def dispatch(self, request, *args, **kwargs):
         """Redirect to organisation management page if """
@@ -630,7 +609,7 @@ class ManageOrganisationSelector(
                 kwargs={'pk': organisation.pk})
             return HttpResponseRedirect(redirect_to=redirect_to)
         else:
-            return super(ManageOrganisationSelector, self).dispatch(
+            return super(ManageOrganisationIndex, self).dispatch(
                 request, *args, **kwargs)
 
 
@@ -710,7 +689,7 @@ class ManageOrganisationDetail(
 class ManageUserOrganisationDetail(
     RoleRequiredMixin, ManagedObjectsMixin, FormView):
 
-    form_class = ManageUserOrganisationDetailForm
+    form_class = ManageUserChangeForm
     template_name = 'lizard_auth_client/management/users/detail.html'
 
     role_required = settings.SSO_MANAGER_ROLES
@@ -771,47 +750,9 @@ class ManageUserOrganisationDetail(
 
     @transaction.atomic
     def form_valid(self, form):
-        """
-        Save the user organisation roles.
-
-        form.cleaned_data example:
-        {
-            'username': u'sander.smits', 'first_name': u'Sander',
-            'last_name': u'Smits', 'organisation': u'Nelen & Schuurmans',
-            u'role_run_simulation': True, u'role_manage': False,
-            u'role_follow_simulation': True, u'role_change_model': True,
-            'email': u'sander.smits@nelen-schuurmans.nl'
-        }
-        """
-        user_role_codes = [
-            k[5:] for k in form.cleaned_data if
-            k.startswith('role_') and form.cleaned_data[k] is True]
-
-        # check whether the roles exist and if not, add them
-        for user_role_code in user_role_codes:
-            role = Role.objects.get(code=user_role_code)
-            try:
-                UserOrganisationRole.objects.get(
-                    user=self.user, organisation=self.organisation,
-                    role=role)
-            except ObjectDoesNotExist:
-                new_uor = UserOrganisationRole(
-                    user=self.user, organisation=self.organisation, role=role)
-                new_uor.save()
-
-        # and delete roles that were removed
-        uors = UserOrganisationRole.objects.filter(
-            user=self.user, organisation=self.organisation)
-        for uor in uors:
-            if uor.role.code not in user_role_codes:
-                uor.delete()
-
-        # add the connected role; no matter what happen before
-        is_connected_role = get_is_connected_role()
-        UserOrganisationRole.objects.get_or_create(
-            user=self.user, organisation=self.organisation,
-            role=is_connected_role)
-
+        """Save the user organisation roles."""
+        roles = form.cleaned_data['roles']
+        save_roles(self.user, self.organisation, roles)
         return super(ManageUserOrganisationDetail, self).form_valid(form)
 
     def post(self, request, organisation_pk=None, user_pk=None, *args,
@@ -845,6 +786,27 @@ def get_is_connected_role():
     return is_connected_role
 
 
+@transaction.atomic
+def save_roles(user, organisation, roles, connect=True):
+    """
+    Store the given roles for the given user and organisation and make sure
+    the user is connected to the organisation if connect equals True.
+    """
+    # first delete all current user organisation roles
+    UserOrganisationRole.objects.filter(
+        user=user, organisation=organisation).delete()
+    # then save the given roles
+    for role in roles:
+        UserOrganisationRole.objects.get_or_create(
+            user=user, organisation=organisation, role=role)
+    # make sure the user is connected to this organisation, if connect
+    # equals True
+    if connect:
+        is_connected_role = get_is_connected_role()
+        UserOrganisationRole.objects.get_or_create(
+            user=user, organisation=organisation, role=is_connected_role)
+
+
 class ManageUserAddView(RoleRequiredMixin, ManagedObjectsMixin, FormView):
 
     form_class = ManageUserAddForm
@@ -861,6 +823,24 @@ class ManageUserAddView(RoleRequiredMixin, ManagedObjectsMixin, FormView):
         return reverse(
             'lizard_auth_client.management_organisation_detail',
             kwargs={'pk': self.organisation.id})
+
+    def get_form_kwargs(self):
+        # TODO: add organisation to form and list of organisations the request
+        # user manages and has a UserOrganisationRole instance with this user
+        # (self.user)
+        form_kwargs = super(ManageUserAddView,
+                            self).get_form_kwargs()
+        # TODO: get these role codes from the database
+        roles = settings.SSO_AVAILABLE_ROLES
+        role_matrix = [False] * len(roles)
+        form_kwargs['roles'] = zip(roles, role_matrix)
+        return form_kwargs
+
+    def get_initial(self):
+        # add organisation to the initial dict
+        initial = super(ManageUserAddView, self).get_initial()
+        initial['organisation'] = self.organisation.name
+        return initial
 
     @transaction.atomic
     def form_valid(self, form):
@@ -884,12 +864,9 @@ class ManageUserAddView(RoleRequiredMixin, ManagedObjectsMixin, FormView):
         user.set_unusable_password()
         user.save()
 
-        # now connect the user to this organisation
-        is_connected_role = get_is_connected_role()
-        UserOrganisationRole.objects.get_or_create(
-            user=user, organisation=self.organisation, role=is_connected_role)
-
-        # TODO: add the other roles
+        # save the user organisation roles
+        roles = form.cleaned_data['roles']
+        save_roles(user, self.organisation, roles)
 
         # set success message
         messages.add_message(
