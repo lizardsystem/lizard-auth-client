@@ -183,7 +183,8 @@ def get_user_org_role_dict(user):
     organisations = Organisation.objects.distinct().filter(
         user_organisation_roles__in=user.user_organisation_roles.all()
     )
-
+    if not organisations:
+        return
     # add orgnisation details and user specific roles (read permissions)
     for orga in organisations:
         orga_dict = {'name': orga.name, 'id': orga.unique_id}

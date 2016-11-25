@@ -18,7 +18,7 @@ from lizard_auth_client import signals
 from lizard_auth_client import urls
 from lizard_auth_client import views  # NOQA
 from lizard_auth_client.conf import settings
-from lizard_auth_client.models import get_user_payload_dict
+from lizard_auth_client.models import get_user_org_role_dict
 
 import jwt
 import logging
@@ -300,7 +300,7 @@ class TestGetUserOrgRoleDict(TestCase):
         """
         make sure the user_org_role dict contains the user data
         """
-        payload_dict = get_user_payload_dict(self.user)
+        payload_dict = get_user_org_role_dict(self.user)
         self.assertEqual(payload_dict['username'], 'testuser')
         self.assertFalse(payload_dict['is_superuser'])
         self.assertEqual(payload_dict['email'], 'testuser@beingused.to')
@@ -311,7 +311,7 @@ class TestGetUserOrgRoleDict(TestCase):
         """
         expected_roles_velen_huurmans = [u'Hero', u'superhero']
         expected_roles_power_inc = [u'Hero']
-        payload_dict = get_user_payload_dict(self.user)
+        payload_dict = get_user_org_role_dict(self.user)
         self.assertEqual(len(payload_dict['organisations']), 2)
         # should have two permissions
         self.assertEqual(
@@ -362,7 +362,7 @@ class TestGetUserOrgRoleDict(TestCase):
         # is_connected role should be filtered so we just expect a
         # single role for the testuser for organisation "Power Inc."
         expected_roles_power_inc = [u'Hero']
-        payload_dict = get_user_payload_dict(self.user)
+        payload_dict = get_user_org_role_dict(self.user)
         # should only contain permission "Hero"
         self.assertEqual(
             len(payload_dict['organisations'][1]['permissions']), 1
