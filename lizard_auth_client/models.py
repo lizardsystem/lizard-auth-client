@@ -171,6 +171,8 @@ def get_user_org_role_dict(user):
                              u'name': u'<str>.',
                              u'permissions': [u'<str>']}],
          }
+
+    :returns None if there is no relation  between the user and an organisation.
     """
     # add top level (user-) information
     payload = {
