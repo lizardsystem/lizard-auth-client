@@ -157,9 +157,9 @@ def get_organisation_with_role(user, rolecode):
 
 def get_user_org_role_dict(user):
     """
-    :returns a dict for a given user containing infomration about the user
+    :returns a dict for a given user containing information about the user
     itself, the organisations he/she belongs to, and the specific permissions
-    (or roles) he has within these organisations::
+    (or roles) he/she has within these organisations::
 
         {u'email': u'<str>',
          u'is_superuser': <bool>,
