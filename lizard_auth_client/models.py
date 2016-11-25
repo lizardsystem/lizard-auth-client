@@ -157,6 +157,7 @@ def get_organisation_with_role(user, rolecode):
 
 def get_user_org_role_dict(user):
     """
+    :param user: user model instance
     :returns a dict for a given user containing information about the user
     itself, the organisations he/she belongs to, and the specific permissions
     (or roles) he/she has within these organisations::
@@ -175,7 +176,7 @@ def get_user_org_role_dict(user):
     :returns None if there is no relation  between the user and an organisation.
     """
     # add top level (user-) information
-    payload = {
+    d = {
         'username': user.username,
         'email': user.email,
         'is_superuser': user.is_superuser,
@@ -196,5 +197,5 @@ def get_user_org_role_dict(user):
         )
         permissions.discard('is_connected')
         orga_dict['permissions'] = list(permissions)
-        payload['organisations'].append(orga_dict)
-    return payload
+        d['organisations'].append(orga_dict)
+    return d
