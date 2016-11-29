@@ -257,7 +257,7 @@ class TestGetUserOrgRoleDict(TestCase):
         models.UserOrganisationRole.create_from_list_of_dicts(
             self.user, [{
                 'organisation': {
-                    'unique_id': u"61f5a464c35044c19bc7d4b42d7f58cb",
+                    'unique_id': "61f5a464c35044c19bc7d4b42d7f58cb",
                     'name': "Velen & Huurmans"
                 },
                 'role': {
@@ -270,7 +270,7 @@ class TestGetUserOrgRoleDict(TestCase):
             },
                 {
                 'organisation': {
-                    'unique_id': u"61f5a464c35044c19bc7d4b42d7f58cb",
+                    'unique_id': "61f5a464c35044c19bc7d4b42d7f58cb",
                     'name': "Velen & Huurmans"
                 },
                 'role': {
@@ -283,7 +283,7 @@ class TestGetUserOrgRoleDict(TestCase):
             },
                 {
                 'organisation': {
-                    'unique_id': u"77f5a464c35044c19bc7d4b42d7f58da",
+                    'unique_id': "77f5a464c35044c19bc7d4b42d7f58da",
                     'name': "Power Inc."
                 },
                 'role': {
@@ -351,11 +351,11 @@ class TestGetUserOrgRoleDict(TestCase):
         ic = models.Role.objects.get(code='is_connected')
         self.assertTrue(repr(ic))
 
-        orga = models.Organisation.objects.get(
+        organisation = models.Organisation.objects.get(
             unique_id=u"77f5a464c35044c19bc7d4b42d7f58da"
         )
         models.UserOrganisationRole.objects.create(
-            user=self.user, role=role, organisation=orga)
+            user=self.user, role=role, organisation=organisation)
         uor = models.UserOrganisationRole.objects.filter(role=ic)
         self.assertTrue(repr(uor))
 

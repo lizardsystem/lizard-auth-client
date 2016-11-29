@@ -165,16 +165,16 @@ def get_user_org_role_dict(user):
         {u'email': u'<str>',
          u'is_superuser': <bool>,
          u'username': u'<str>',
-         u'organisations': [{u'id': u'<str>',
-                             u'name': u'<str>',
-                             u'permissions': [u'<str>', u'<str>']},
-                            {u'id': u'<str>',
-                             u'name': u'<str>.',
-                             u'permissions': [u'<str>']}],
+         u'organisations': [{'id': '<str>',
+                             'name': '<str>',
+                             'permissions': ['<str>', '<str>']},
+                            {'id': u'<str>',
+                             'name': u'<str>.',
+                             'permissions': ['<str>']}],
          }
 
-    :returns None if there is no relation  between the user and an organisation.
     """
+
     # add top level (user-) information
     d = {
         'username': user.username,
@@ -187,7 +187,7 @@ def get_user_org_role_dict(user):
         user_organisation_roles__in=user.user_organisation_roles.all()
     )
     if not organisations:
-        return
+        return d
     # add orgnisation details and user specific roles (read permissions)
     for orga in organisations:
         orga_dict = {'name': orga.name, 'id': orga.unique_id}
