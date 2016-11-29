@@ -30,9 +30,9 @@ class ManageUserBaseForm(forms.ModelForm):
         # create role fields
         self.role_field_names = []
         for i, (role, checked) in enumerate(roles):
-            role_field_name = 'role_%s' % role['code']
+            role_field_name = 'role_%s' % role.code
             self.fields[role_field_name] = forms.BooleanField(
-                label=role['name'].lower(), required=False, initial=checked)
+                label=role.name.lower(), required=False, initial=checked)
             self.role_field_names.append(role_field_name)
 
     def get_role_field_names(self):

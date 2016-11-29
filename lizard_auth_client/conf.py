@@ -33,28 +33,18 @@ class SSOAppConf(AppConf):
     CLIENT_SUPERUSER_ROLES = []
     CLIENT_STAFF_ROLES = []
 
-    # available roles
-    AVAILABLE_ROLES = [
-        # viewer permissions
-        {'code': 'follow_simulation', 'name': 'Follow simulation'},
-        # operator permissions
-        {'code': 'run_simulation', 'name': 'Run simulation'},
-        # modeller permissions
-        {'code': 'change_model', 'name': 'Change model'},
-        # manager permission
-        {'code': 'manage', 'name': 'Manage'},
-    ]
     # A user can be connected to an organisation by a Role that has
-    # the value of USER_IS_LINKED_ROLE_CODE as code. That way users can be
-    # connected to organisations without having one of the permission
-    # mentioned in the AVAILABLE_ROLES setting.
+    # the value of CONNECTED_ROLE_CODE as code. That way users can be
+    # connected to organisations without having other UserOrganisationRole
+    # instances.
     CONNECTED_ROLE_CODE = 'is_connected'
+    IGNORE_ROLE_CODES = []
 
-    # management roles
-    # manager is used by lizard-nxt and superman is used by 3di
+    # management role codes
+    # manager is used by lizard-nxt and superman was previously used by 3di
     # 3di is about to adopt a more permission-based role naming, therefore
     # the can_manage role/permission
-    MANAGER_ROLES = ['manager', 'superman', 'manage']
+    MANAGER_ROLE_CODES = ['manager', 'superman', 'manage']
 
     class Meta:
         prefix = 'sso'
