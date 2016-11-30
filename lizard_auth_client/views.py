@@ -653,7 +653,7 @@ def get_available_roles():
     if settings.SSO_CONNECTED_ROLE_CODE:
         excluded_roles.append(settings.SSO_CONNECTED_ROLE_CODE)
     if settings.SSO_IGNORE_ROLE_CODES:
-        excluded_roles.append(settings.SSO_IGNORE_ROLE_CODES)
+        excluded_roles.extend(settings.SSO_IGNORE_ROLE_CODES)
     if excluded_roles:
         qs = qs.exclude(code__in=excluded_roles)
     return qs
