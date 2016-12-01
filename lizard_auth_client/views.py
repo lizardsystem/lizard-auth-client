@@ -5,14 +5,22 @@ from collections import namedtuple
 import datetime
 import json
 
+from itsdangerous import URLSafeTimedSerializer
+import jwt
+import logging
+import requests
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse_lazy
 from django.db import transaction
 from django.forms.models import model_to_dict
 from django.http import Http404
@@ -23,12 +31,11 @@ from django.http import HttpResponsePermanentRedirect
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext_lazy as _
-from django.views.generic import (
-    DetailView, FormView, RedirectView, TemplateView, View)
-
-from itsdangerous import URLSafeTimedSerializer
-import jwt
-import requests
+from django.views.generic.base import TemplateView
+from django.views.generic.base import View
+from django.views.generic import DetailView
+from django.views.generic import RedirectView
+from django.views.generic.edit import FormView
 
 from lizard_auth_client import client
 from lizard_auth_client import forms
@@ -36,12 +43,17 @@ from lizard_auth_client import mixins
 from lizard_auth_client import models
 from lizard_auth_client.client import sso_server_url
 from lizard_auth_client.conf import settings
+from lizard_auth_client.forms import CreateNewUserForm
+from lizard_auth_client.forms import SearchEmailForm
 
 try:
     from urlparse import urljoin
     from urllib import urlencode
 except ImportError:
     from urllib.parse import urljoin, urlencode
+
+
+logger = logging.getLogger(__name__)
 
 
 # Used so we can login User objects we instantiated ourselves
@@ -99,7 +111,9 @@ class TestHomeView(View):
     def get(self, request, *args, **kwargs):
         user = request.user
         return HttpResponse(
-            '<a href="/">home</a> | <a href="/protected">protected</a>'
+            '<a href="/">home</a> '
+            '| <a href="/protected">protected</a>'
+            '| <a href="/sso/user_overview/">User overview</a>'
             '| <a href="/accounts/logout">logout</a> '
             '| <a href="/accounts/login">login</a> '
             '| user={} | home @ client'
@@ -223,6 +237,16 @@ class LocalLoginView(View):
                 return HttpResponseBadRequest(
                     "JWT recieved from the SSO has expired.")
             user_data = json.loads(payload['user'])
+            if settings.SSO_ALLOW_ONLY_KNOWN_USERS:
+                # First check if the user is known.
+                if not User.objects.filter(username=user_data['username'],
+                                           is_active=True).exists():
+                    logger.info(
+                        "Username %s isn't known/active locally",
+                        user_data['username'])
+                    return HttpResponseRedirect(
+                        reverse('lizard_auth_client.disallowed_user'))
+
             user = client.construct_user(user_data)
         else:
             user = verify_auth_token(message)
@@ -476,6 +500,80 @@ def build_sso_portal_action_url(action, domain=None):
     url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/portal_action') + '/'
     url = '%s?%s' % (url, query_string)
     return url
+
+
+class UserOverviewView(TemplateView):
+    """
+    Overview of users with/without access
+    """
+
+    template_name = 'lizard_auth_client/user_overview.html'
+    title = _("User overview")
+
+    @method_decorator(permission_required('auth.manage_users'))
+    def dispatch(self, request, *args, **kwargs):
+        return super(UserOverviewView, self).dispatch(
+            request, *args, **kwargs)
+
+    @property
+    def active_users(self):
+        return User.objects.filter(is_active=True)
+
+    @property
+    def inactive_users(self):
+        return User.objects.filter(is_active=False)
+
+    def post(self, request, *args, **kwargs):
+        """React on users being made active/inactive"""
+        to_disable = request.POST.getlist('to_disable')
+        to_disable = [int(id) for id in to_disable]
+        users_to_disable = [user for user in self.active_users
+                            if user.id in to_disable]
+        for user in users_to_disable:
+            if user.is_superuser or user == self.request.user:
+                logger.warn("Not disabling myself or a superuser")
+                continue
+            user.is_active = False
+            user.save()
+        to_enable = request.POST.getlist('to_enable')
+        to_enable = [int(id) for id in to_enable]
+        users_to_enable = [user for user in self.inactive_users
+                           if user.id in to_enable]
+        for user in users_to_enable:
+            user.is_active = True
+            user.save()
+
+        return HttpResponseRedirect(
+            reverse_lazy('lizard_auth_client.user_overview'))
+
+
+class SearchNewUserView(FormView):
+    template_name = 'lizard_auth_client/form.html'
+    form_class = SearchEmailForm
+    success_url = reverse_lazy('lizard_auth_client.user_overview')
+    title = _("Search new user by email")
+
+    @method_decorator(permission_required('auth.manage_users'))
+    def dispatch(self, request, *args, **kwargs):
+        return super(SearchNewUserView, self).dispatch(
+            request, *args, **kwargs)
+
+
+class CreateNewUserView(FormView):
+    template_name = 'lizard_auth_client/form.html'
+    form_class = CreateNewUserForm
+    success_url = reverse_lazy('lizard_auth_client.user_overview')
+    title = _("Create new user on the SSO")
+
+    @method_decorator(permission_required('auth.manage_users'))
+    def dispatch(self, request, *args, **kwargs):
+        return super(CreateNewUserView, self).dispatch(
+            request, *args, **kwargs)
+
+
+class DisallowedUserView(TemplateView):
+    template_name = 'lizard_auth_client/disallowed-user.html'
+    title = _("Not allowed")
 
 
 # Let this setting determine which version of the login/logout to use.

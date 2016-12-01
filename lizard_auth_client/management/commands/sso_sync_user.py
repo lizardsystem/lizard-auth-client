@@ -6,6 +6,7 @@ from lizard_auth_client.client import sso_get_user_django
 
 VERBOSE = V = True
 
+
 class Command(BaseCommand):
     """
     Comamnd to retrieve a single user's (serialized) data from

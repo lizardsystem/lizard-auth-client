@@ -2,10 +2,23 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.6 (unreleased)
+2.7 (unreleased)
 ----------------
 
 - Nothing changed yet.
+
+
+2.6 (2016-11-21)
+----------------
+
+- Added new ``SSO_ALLOW_ONLY_KNOWN_USERS``, ``True`` by default. If you use
+  the V2 API, only users that already have an existing local account are
+  allowed to log in. Set it to False to retain the old 'everybody can log in'
+  behaviour.
+
+- Added ``/sso/user_overview/`` page for enabling/disabling users, plus pages
+  to search for a user on the SSO by email or to create a whole new user on
+  the SSO.
 
 
 2.5 (2016-11-15)

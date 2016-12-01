@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.core.exceptions import ImproperlyConfigured
+
 from lizard_auth_client import views
 from lizard_auth_client.conf import settings
 
@@ -35,7 +37,7 @@ def check_settings():
             )
     else:
         if (not settings.SSO_SERVER_PUBLIC_URL or
-            not settings.SSO_SERVER_PRIVATE_URL):
+                not settings.SSO_SERVER_PRIVATE_URL):
             raise ImproperlyConfigured(
                 'Please define values for SSO_SERVER_PUBLIC_URL and '
                 'SSO_SERVER_PRIVATE_URL in your settings. '
@@ -75,6 +77,7 @@ if settings.SSO_ENABLED:
         url(r'^accounts/logout/$',
             views.LogoutView.as_view(),
             name='logout'),
+
         # URLS that perform the local login/logout
         # these are used by the SSO server to redirect the user back again
         url(r'^sso/local_login/$',
@@ -86,13 +89,14 @@ if settings.SSO_ENABLED:
         url(r'^sso/local_logout/$',
             views.LocalLogoutView.as_view(),
             name='lizard_auth_client.sso_local_logout'),
+
         # management URLS
         # TODO: put these in if-block (if settings.SSO_USE_V2_LOGIN)
         url(
-            r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/(?P<user_pk>[0-9]+)/delete/$',
+            r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/(?P<user_pk>[0-9]+)/delete/$',  # NOQA
             views.ManageUserDeleteDetail.as_view(),
             name='lizard_auth_client.management_users_delete'),
-        url(r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/(?P<user_pk>[0-9]+)/$',
+        url(r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/(?P<user_pk>[0-9]+)/$',  # NOQA
             views.ManageUserOrganisationDetail.as_view(),
             name='lizard_auth_client.management_user_organisation_detail'),
         url(r'^management/organisations/(?P<pk>[0-9]+)/users/$',
@@ -101,9 +105,23 @@ if settings.SSO_ENABLED:
         url(r'^management/organisations/$',
             views.ManageOrganisationIndex.as_view(),
             name='lizard_auth_client.management_users_index'),
-        url(r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/add/$',
+        url(r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/add/$',  # NOQA
             views.ManageUserAddView.as_view(),
             name='lizard_auth_client.management_users_add'),
+
+        # User management views
+        url(r'^sso/user_overview/$',
+            views.UserOverviewView.as_view(),
+            name='lizard_auth_client.user_overview'),
+        url(r'^sso/search_new_user/$',
+            views.SearchNewUserView.as_view(),
+            name='lizard_auth_client.search_new_user'),
+        url(r'^sso/create_new_user/$',
+            views.CreateNewUserView.as_view(),
+            name='lizard_auth_client.create_new_user'),
+        url(r'^sso/disallowed_user/$',
+            views.DisallowedUserView.as_view(),
+            name='lizard_auth_client.disallowed_user'),
     ]
 else:
     urlpatterns = []

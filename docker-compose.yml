@@ -3,11 +3,8 @@ services:
 
   web:
     build: .
-    command: "bin/django runserver 0.0.0.0:6000"
+    command: "bin/django runserver 0.0.0.0:5050"
     ports:
-      - "6000:6000"
+      - "5050:5050"
     volumes:
       - .:/code
-
-volumes:
-  pgdata:
