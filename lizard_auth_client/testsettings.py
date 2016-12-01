@@ -29,7 +29,7 @@ LOGGING = {
             'level': 'WARN'
         },
         'null': {
-            'class': 'django.utils.log.NullHandler',
+            'class': 'logging.NullHandler',
             'level': 'DEBUG'
         }
    },
