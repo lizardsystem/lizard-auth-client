@@ -8,6 +8,7 @@ from crispy_forms.layout import (
     ButtonHolder, Fieldset, Layout, Submit, HTML)
 
 from lizard_auth_client.models import Role
+from lizard_auth_client.conf import settings
 
 
 class ManageUserBaseForm(forms.ModelForm):
@@ -84,8 +85,7 @@ class ManageUserAddForm(ManageUserBaseForm):
             ),
             HTML("<br/>"),
             Fieldset(
-                # TODO: make this label a setting with default: _("Roles")
-                _("Permissions"),
+                settings.SSO_ROLES_LABEL,
                 *self.get_role_field_names()
             ),
             HTML("<br/>"),
@@ -143,8 +143,7 @@ class ManageUserChangeForm(ManageUserBaseForm):
             ),
             HTML("<br/>"),
             Fieldset(
-                # TODO: make this label a setting with default: _("Roles")
-                _("Permissions"),
+                settings.SSO_ROLES_LABEL,
                 *self.get_role_field_names()
             ),
             HTML("<br/>"),
@@ -152,7 +151,7 @@ class ManageUserChangeForm(ManageUserBaseForm):
                 HTML(
                     """{% load i18n %}<a role="button" class="btn btn-danger"
                     href="{% url 'lizard_auth_client.management_users_delete' organisation.id user.id %}">{% trans 'Delete' %}</a>
-                    """),  #NOQA
+                    """),  # NOQA
                 Submit('save', _("Save")),
             ),
         )

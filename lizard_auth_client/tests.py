@@ -12,7 +12,9 @@ from lizard_auth_client import admin  # NOQA
 from lizard_auth_client import apps  # NOQA
 from lizard_auth_client import backends
 from lizard_auth_client import client
+from lizard_auth_client import factories
 from lizard_auth_client import middleware  # NOQA
+from lizard_auth_client import mixins
 from lizard_auth_client import models
 from lizard_auth_client import signals
 from lizard_auth_client import urls
@@ -662,3 +664,98 @@ class V2ViewsTest(TestCase):
                              settings.SSO_SECRET,
                              issuer=settings.SSO_KEY)
         self.assertIn('logout_url', payload.keys())
+
+
+@override_settings(SSO_USE_V2_LOGIN=True)
+class TestRoleManagement(TestCase):
+
+    def setUp(self):
+        """
+        Construct user, organisation and role instances that will be used in
+        the tests.
+        """
+        self.user_1 = factories.UserFactory.create(username='user_1')
+        self.user_2 = factories.UserFactory.create(username='user_2')
+
+        self.organisation_1 = factories.OrganisationFactory.create(
+            name='organisation_1')
+        self.organisation_2 = factories.OrganisationFactory.create(
+            name='organisation_2')
+
+        # 3Di roles
+        # is_connected role
+        self.is_connected_role = factories.RoleFactory.create(
+            unique_id='00', code='is_connected', name='Connected')
+        # permission roles
+        self.follow_simulation_role = factories.RoleFactory.create(
+            unique_id='10', code='follow_simulation', name='Follow simulation')
+        self.run_simulation_role = factories.RoleFactory.create(
+            unique_id='15', code='run_simulation', name='Run simulation')
+        self.change_model_role = factories.RoleFactory.create(
+            unique_id='20', code='change_model', name='Change model')
+        self.manage_role = factories.RoleFactory.create(
+            unique_id='30', code='manage', name='Manage')
+
+        self.available_roles = mixins.RoleRequiredMixin().available_roles
+
+    def tearDown(self):
+        """Clean up."""
+        models.UserOrganisationRole.objects.all().delete()
+
+    def test_get_available_roles(self):
+        """
+        Check whether available only has the permission roles and not the
+        is_connected role."""
+        available_roles = mixins.RoleRequiredMixin().available_roles
+        self.assertEqual(len(available_roles), 4)
+        self.assertNotIn(self.is_connected_role, available_roles)
+
+    @override_settings(SSO_IGNORE_ROLE_CODES=['billing'])
+    def test_ignore_role(self):
+        """Check whether the SSO_IGNORE_ROLE_CODES setting works."""
+        billing_role = factories.RoleFactory.create(
+            unique_id='1', code='billing', name='Billing')
+        all_roles = models.Role.objects.all()
+        self.assertEqual(len(all_roles), 6)
+        available_roles = mixins.RoleRequiredMixin().available_roles
+        self.assertEqual(len(available_roles), 4)
+        self.assertNotIn(billing_role, available_roles)
+
+    def test_role_matrix_1(self):
+        """Test whether the expected role matrix is correct."""
+
+        # connect some roles to user 1 and organisation 1
+        user_roles = [self.follow_simulation_role, self.run_simulation_role]
+        for role in user_roles:
+            models.UserOrganisationRole.objects.create(
+                user=self.user_1, organisation=self.organisation_1, role=role)
+
+        role_matrix = views.get_user_role_matrix_for_organisation(
+            self.user_1, self.organisation_1, self.available_roles)
+        self.assertEqual(role_matrix, [True, True, False, False])
+
+    def test_role_matrix_2(self):
+        """Test whether the expected role matrix is correct."""
+
+        # connect one role to user 2 and organisation 1
+        user_roles = [self.follow_simulation_role]
+        for role in user_roles:
+            models.UserOrganisationRole.objects.create(
+                user=self.user_2, organisation=self.organisation_1, role=role)
+
+        role_matrix = views.get_user_role_matrix_for_organisation(
+            self.user_2, self.organisation_1, self.available_roles)
+        self.assertEqual(role_matrix, [True, False, False, False])
+
+    def test_role_matrix_3(self):
+        """Test whether the expected role matrix is correct."""
+
+        # connect all roles to user 2 and organisation 2
+        user_roles = self.available_roles
+        for role in user_roles:
+            models.UserOrganisationRole.objects.create(
+                user=self.user_2, organisation=self.organisation_2, role=role)
+
+        role_matrix = views.get_user_role_matrix_for_organisation(
+            self.user_2, self.organisation_2, self.available_roles)
+        self.assertEqual(role_matrix, [True, True, True, True])

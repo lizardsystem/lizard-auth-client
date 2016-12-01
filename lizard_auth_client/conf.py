@@ -4,9 +4,10 @@ from __future__ import unicode_literals
 from appconf import AppConf
 
 from django.conf import settings
+from django.utils.translation import ugettext_lazy as _
 
 
-settings  # Pyflakes
+settings  # NOQA
 
 
 class SSOAppConf(AppConf):
@@ -39,6 +40,9 @@ class SSOAppConf(AppConf):
     # instances.
     CONNECTED_ROLE_CODE = 'is_connected'
     IGNORE_ROLE_CODES = []
+    # ROLES_LABEL is used as label in forms, you can override this by setting
+    # it to _('Permissions')
+    ROLES_LABEL = _('Roles')
 
     # management role codes
     # manager is used by lizard-nxt and superman was previously used by 3di
