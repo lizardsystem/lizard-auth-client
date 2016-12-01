@@ -113,7 +113,7 @@ class ManageUserChangeForm(ManageUserBaseForm):
 
     # organisation name is set by the initial dict
     organisation = forms.CharField(
-        label=_("Organisation"), disabled=True, required=False, help_text=None)
+        label=_("Organisation"), required=False, help_text=None)
 
     def __init__(self, *args, **kwargs):
         """Add a crispy forms FormHelper instance."""
@@ -122,12 +122,17 @@ class ManageUserChangeForm(ManageUserBaseForm):
         for field in self.Meta.fields:
             # A manager is not allowed to change user data like `username`,
             # `email address`, etc. once an account has been created.
-            self.fields[field].disabled = True
+            self.fields[field].disabled = True  # Django >= 1.9
+            self.fields[field].widget.attrs['readonly'] = True  # Django < 1.9
             # Disabled fields are not submitted as form data, so make sure that
             # they are allowed to be empty.
             self.fields[field].required = False
             # any help text for editing is now obsolete
             self.fields[field].help_text = None
+
+        self.fields['organisation'].disabled = True  # Django >= 1.9
+        # Django < 1.9
+        self.fields['organisation'].widget.attrs['readonly'] = True
 
         # django-crispy-forms
         self.helper = FormHelper(self)
