@@ -79,7 +79,7 @@ class AccessMixin(object):
 
 class RoleRequiredMixin(AccessMixin):
     """
-    CBV mixin which verifies that the current user one of the specified
+    CBV mixin which verifies that the current user has one of the specified
     roles.
 
     """
@@ -152,7 +152,15 @@ class RoleRequiredMixin(AccessMixin):
 
 
 class ManagedObjectsMixin(object):
+    """
+    CBV mixin which provides a number of role/permission management-related
+    fields:
 
+    - managed_organisations: the organisations managed by the request user
+    - managed_users: the users managed by the request user for the given
+        organisation(s)
+
+    """
     def get_managed_organisations(self):
         """
         Get the managed organisations for the current user. And set it as an
@@ -194,22 +202,3 @@ class ManagedObjectsMixin(object):
             'username')
 
         return self.managed_users
-
-    def manage_roles(self):
-        """
-        Get all management roles based on the SSO_MANAGER_ROLE_CODES setting.
-        """
-        if hasattr(self, 'manage_roles'):
-            return self.manage_roles
-
-        manage_role_codes = settings.SSO_MANAGER_ROLE_CODES
-        self.manage_roles = []
-        for role_code in manage_role_codes:
-            try:
-                role = models.Role.objects.get(code=role_code)
-            except ObjectDoesNotExist:
-                pass
-            else:
-                self.manage_roles.append(role)
-
-        return self.manage_roles
