@@ -738,7 +738,7 @@ def sso_server_url(name):
         # First time, grab it from the server.
         response = requests.get(settings.SSO_SERVER_API_START_URL, timeout=10)
         sso_server_urls = response.json()
-        cache.set(cache_key, sso_server_urls)
+        cache.set(cache_key, sso_server_urls, 60 * 60)
     return sso_server_urls[name]
 
 
