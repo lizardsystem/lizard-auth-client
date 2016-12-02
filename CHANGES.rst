@@ -5,7 +5,9 @@ Changelog of lizard-auth-client
 2.7 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Don't cache server URLs forever, refresh them after an hour.
+
+- Sorting users on ``/sso/user_overview/`` alphabetically by email.
 
 
 2.6 (2016-11-21)
