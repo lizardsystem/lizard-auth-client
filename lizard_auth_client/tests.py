@@ -13,6 +13,7 @@ from lizard_auth_client import apps  # NOQA
 from lizard_auth_client import backends
 from lizard_auth_client import client
 from lizard_auth_client import factories
+from lizard_auth_client import forms
 from lizard_auth_client import middleware  # NOQA
 from lizard_auth_client import mixins
 from lizard_auth_client import models
@@ -971,3 +972,25 @@ class TestRoleManagement(TestCase):
         role_matrix = views.get_user_role_matrix_for_organisation(
             self.user_2, self.organisation_2, self.available_roles)
         self.assertEqual(role_matrix, [True, True, True, True])
+
+    # tests for usage permission management forms
+    def test_add_user_form_check_role_field_keys(self):
+        """
+        Check whether the correct number of role fields are present in the
+        ``add user`` form.
+        """
+        role_matrix = [False] * len(self.available_roles)
+        form = forms.ManageUserAddForm(
+            roles=zip(self.available_roles, role_matrix))
+
+        role_field_keys = [
+            role_field_key for role_field_key in form.fields.keys() if
+            role_field_key.startswith('role_')]
+
+        # 4 role keys should be present in the form
+        self.assertEqual(len(role_field_keys), 4)
+        # check each individual role field key
+        self.assertTrue('role_follow_simulation' in form.fields.keys())
+        self.assertTrue('role_run_simulation' in form.fields.keys())
+        self.assertTrue('role_change_model' in form.fields.keys())
+        self.assertTrue('role_manage' in form.fields.keys())
