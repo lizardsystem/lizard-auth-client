@@ -4,17 +4,17 @@ from __future__ import unicode_literals
 import logging
 
 from requests import HTTPError
-
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
-
 from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import (
-    ButtonHolder, Fieldset, Layout, Submit, HTML)
-
+from crispy_forms.layout import ButtonHolder
+from crispy_forms.layout import Fieldset
+from crispy_forms.layout import Layout
+from crispy_forms.layout import Submit
+from crispy_forms.layout import HTML
 from lizard_auth_client import client
 from lizard_auth_client.models import Role
 from lizard_auth_client.conf import settings
