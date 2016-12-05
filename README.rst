@@ -182,6 +182,8 @@ Tests and local development
 To run the tests, docker is used::
 
     $ docker-compose build
+    $ docker-compose run --rm web python bootstrap.py
+    $ docker-compose run --rm web bin/buildout
     $ docker-compose run web bin/test
 
 To not conflict with an optional local lizard-auth-server (running on port

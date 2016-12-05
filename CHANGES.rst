@@ -5,7 +5,9 @@ Changelog of lizard-auth-client
 2.7 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Added the function ``get_user_org_role_dict()`` to the models module.
+  The dictionary it returns will be used as JWT payload for
+  3Di services to share user permissions (roles).
 
 
 2.6 (2016-11-21)

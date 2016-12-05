@@ -153,3 +153,49 @@ def get_organisation_with_role(user, rolecode):
     Organisation.MultipleObjectsReturned if he has more than one.
     """
     return get_organisations_with_role(user, rolecode).get()
+
+
+def get_user_org_role_dict(user):
+    """
+    :param user: user model instance
+    :returns a dict for a given user containing information about the user
+    itself, the organisations he/she belongs to, and the specific permissions
+    (or roles) he/she has within these organisations::
+
+        {'email': '<str>',
+         'is_superuser': <bool>,
+         'username': '<str>',
+         'organisations': [{'id': '<str>',
+                             'name': '<str>',
+                             'permissions': ['<str>', '<str>']},
+                            {'id': '<str>',
+                             'name': '<str>.',
+                             'permissions': ['<str>']}],
+         }
+
+    """
+
+    # add top level (user-) information
+    d = {
+        'username': user.username,
+        'email': user.email,
+        'is_superuser': user.is_superuser,
+        'organisations': []
+    }
+    # get all organisations the given user is attached to
+    organisations = Organisation.objects.distinct().filter(
+        user_organisation_roles__in=user.user_organisation_roles.all()
+    )
+    if not organisations:
+        return d
+    # add orgnisation details and user specific roles (read permissions)
+    for organisation in organisations:
+        orga_dict = {'name': organisation.name, 'id': organisation.unique_id}
+        permissions = set(
+            organisation.user_organisation_roles.filter(
+                user=user).values_list('role__code', flat=True)
+        )
+        permissions.discard('is_connected')
+        orga_dict['permissions'] = list(permissions)
+        d['organisations'].append(orga_dict)
+    return d
