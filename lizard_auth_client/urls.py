@@ -91,7 +91,6 @@ if settings.SSO_ENABLED:
             name='lizard_auth_client.sso_local_logout'),
 
         # management URLS
-        # TODO: put these in if-block (if settings.SSO_USE_V2_LOGIN)
         url(
             r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/(?P<user_pk>[0-9]+)/delete/$',  # NOQA
             views.ManageUserDeleteDetail.as_view(),
