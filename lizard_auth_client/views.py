@@ -467,11 +467,11 @@ class UserOverviewView(TemplateView):
 
     @property
     def active_users(self):
-        return User.objects.filter(is_active=True)
+        return User.objects.filter(is_active=True).order_by('email')
 
     @property
     def inactive_users(self):
-        return User.objects.filter(is_active=False)
+        return User.objects.filter(is_active=False).order_by('email')
 
     def post(self, request, *args, **kwargs):
         """React on users being made active/inactive"""
