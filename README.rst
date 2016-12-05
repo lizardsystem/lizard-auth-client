@@ -131,6 +131,40 @@ It should be usable without Django settings as well::
     user_data = auth_client.sso_authenticate('http://url.tld', 'key', 'secret' 'username', 'password')
 
 
+Management pages for handling user-organisation roles/permissions
+-----------------------------------------------------------------
+
+Since SSO V2, authorisation management has been removed from the SSO server.
+To still be able to manage user permissions per organisation, management pages
+have been introduced to ``lizard-auth-client``. The main page is accessible
+via ``/management/organisations/``. Users that are either superusers or have
+management permissions see a list of manageable organisations on that page.
+From there on, they can add users to their organisation(s) and manage their
+permissions.
+
+Users can be added to organisations without assigning permissions to them.
+This is achieved by storing a ``UserOrganisationRole`` instance that has a
+connected role. This happens automatically when a user is added to an
+organisation. The connected role is only used for connecting users to
+organisations.
+
+Permissions can be added simply by adding a ``Role`` instance. This role will
+show up automatically as a new role/permission, unless the role code is added
+to the ``SSO_IGNORE_ROLE_CODES`` list setting.
+
+The management pages depend on ``django-crispy-forms``. Therefore, to access the
+role/permission management pages, you need to have ``django-crispy-forms``
+installed and have it in your project's ``INSTALLED_APPS`` setting. Also, you need
+to add the ``CRISPY_TEMPLATE_PACK`` setting to your project::
+
+    CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
+Other settings:
+
+- ``SSO_ROLES_LABEL``- the form label of the roles section (default: "Permissions")
+- ``SSO_MANAGER_ROLE_CODES`` - role codes that define a manager role
+
+
 Middleware: required login and attempted login
 ----------------------------------------------
 
