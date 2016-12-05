@@ -994,3 +994,19 @@ class TestRoleManagement(TestCase):
         self.assertTrue('role_run_simulation' in form.fields.keys())
         self.assertTrue('role_change_model' in form.fields.keys())
         self.assertTrue('role_manage' in form.fields.keys())
+
+    def test_change_user_form(self):
+        user_roles = self.available_roles
+        for role in user_roles:
+            models.UserOrganisationRole.objects.create(
+                user=self.user_1, organisation=self.organisation_1, role=role)
+        role_matrix = views.get_user_role_matrix_for_organisation(
+            self.user_1, self.organisation_1, self.available_roles)
+        form = forms.ManageUserChangeForm(
+            instance=self.user_1,
+            roles=zip(self.available_roles, role_matrix))
+        # check all user-related form fields
+        self.assertTrue('email' in form.fields.keys())
+        self.assertTrue('username' in form.fields.keys())
+        self.assertTrue('first_name' in form.fields.keys())
+        self.assertTrue('last_name' in form.fields.keys())
