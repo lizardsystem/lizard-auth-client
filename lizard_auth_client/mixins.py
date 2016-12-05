@@ -10,7 +10,6 @@ from django.core.exceptions import PermissionDenied
 from django.utils import six
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_text
-
 from lizard_auth_client import constants
 from lizard_auth_client import models
 from lizard_auth_client.conf import settings
