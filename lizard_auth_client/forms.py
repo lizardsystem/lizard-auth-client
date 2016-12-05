@@ -57,11 +57,11 @@ class ManageUserBaseForm(forms.ModelForm):
 
         cleaned_data example:
         {
-            'username': u'sander.smits', 'first_name': u'Sander',
-            'last_name': u'Smits', 'organisation': u'Nelen & Schuurmans',
-            u'role_run_simulation': True, u'role_manage': False,
-            u'role_follow_simulation': True, u'role_change_model': True,
-            'email': u'sander.smits@nelen-schuurmans.nl'
+            'username': 'sander.smits', 'first_name': 'Sander',
+            'last_name': 'Smits', 'organisation': 'Nelen & Schuurmans',
+            'role_run_simulation': True, 'role_manage': False,
+            'role_follow_simulation': True, 'role_change_model': True,
+            'email': 'sander.smits@nelen-schuurmans.nl'
         }
         """
         cleaned_data = super(ManageUserBaseForm, self).clean()
