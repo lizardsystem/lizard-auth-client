@@ -161,8 +161,8 @@ to add the ``CRISPY_TEMPLATE_PACK`` setting to your project::
 
 Other settings:
 
-- ``SSO_ROLES_LABEL``- the form label of the roles section (default: "Permissions")
-- ``SSO_MANAGER_ROLE_CODES`` - role codes that define a manager role
+- ``SSO_ROLES_LABEL``- the form label of the roles section (default: _("Permissions"))
+- ``SSO_MANAGER_ROLE_CODES`` - role codes that define a manager role (default: ['manager', 'superman', 'manage'])
 
 
 Middleware: required login and attempted login
