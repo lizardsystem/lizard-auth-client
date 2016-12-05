@@ -18,6 +18,7 @@ from lizard_auth_client import signals
 from lizard_auth_client import urls
 from lizard_auth_client import views  # NOQA
 from lizard_auth_client.conf import settings
+from lizard_auth_client.models import get_user_org_role_dict
 
 import jwt
 import logging
@@ -245,6 +246,131 @@ class TestUserOrganisationRole(TestCase):
             user=self.user,
             organisation__unique_id='NENS',
             role__code='klant'))
+
+
+@override_settings(SSO_USE_V2_LOGIN=False)
+class TestGetUserOrgRoleDict(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(
+            username='testuser', is_staff=False, is_superuser=False,
+            email='testuser@beingused.to')
+        models.UserOrganisationRole.create_from_list_of_dicts(
+            self.user, [{
+                'organisation': {
+                    'unique_id': "61f5a464c35044c19bc7d4b42d7f58cb",
+                    'name': "Velen & Huurmans"
+                },
+                'role': {
+                    'unique_id': 'superpower',
+                    'code': 'Hero',
+                    'name': 'Spiderman',
+                    'external_description': 'Spider',
+                    'internal_description': 'Fake',
+                }
+            },
+                {
+                'organisation': {
+                    'unique_id': "61f5a464c35044c19bc7d4b42d7f58cb",
+                    'name': "Velen & Huurmans"
+                },
+                'role': {
+                    'unique_id': 'extrasuperpower',
+                    'code': 'superhero',
+                    'name': 'Spidermanplus',
+                    'external_description': 'Spider+',
+                    'internal_description': 'Fake+',
+                }
+            },
+                {
+                'organisation': {
+                    'unique_id': "77f5a464c35044c19bc7d4b42d7f58da",
+                    'name': "Power Inc."
+                },
+                'role': {
+                    'unique_id': 'superpower',
+                    'code': 'Hero',
+                    'name': 'Spiderman',
+                    'external_description': 'Spider',
+                    'internal_description': 'Fake',
+                }
+            },
+            ])
+
+    def test_user_org_role_dict_has_user_info(self):
+        """
+        make sure the user_org_role dict contains the user data
+        """
+        payload_dict = get_user_org_role_dict(self.user)
+        self.assertEqual(payload_dict['username'], 'testuser')
+        self.assertFalse(payload_dict['is_superuser'])
+        self.assertEqual(payload_dict['email'], 'testuser@beingused.to')
+
+    def test_user_org_role_dict_contains_roles(self):
+        """
+        a user can have different roles for different organisations
+        """
+        expected_roles_velen_huurmans = ['Hero', 'superhero']
+        expected_roles_power_inc = ['Hero']
+        payload_dict = get_user_org_role_dict(self.user)
+        self.assertEqual(len(payload_dict['organisations']), 2)
+        # should have two permissions
+        self.assertEqual(
+            len(payload_dict['organisations'][0]['permissions']), 2
+        )
+        self.assertIn(
+            payload_dict['organisations'][0]['permissions'][0],
+            expected_roles_velen_huurmans
+        )
+        self.assertIn(
+            payload_dict['organisations'][0]['permissions'][1],
+            expected_roles_velen_huurmans
+        )
+        # should only contain permission "Hero"
+        self.assertEqual(
+            len(payload_dict['organisations'][1]['permissions']), 1
+        )
+        self.assertIn(
+            payload_dict['organisations'][1]['permissions'][0],
+            expected_roles_power_inc
+        )
+
+    def test_user_org_role_is_connected_is_excluded(self):
+        """
+        the roles a user can have for an organisation might
+        also include the role "is_connected". For the payload
+        this role is irrelevant so it has to be filtered out
+        """
+        role = models.Role.create_from_dict({
+            'unique_id': 'connected',
+            'code': 'is_connected',
+            'name': 'connector',
+            'external_description': 'connected',
+            'internal_description': 'connected',
+        })
+        # check if it is in the DB
+        ic = models.Role.objects.get(code='is_connected')
+        self.assertTrue(repr(ic))
+
+        organisation = models.Organisation.objects.get(
+            unique_id=u"77f5a464c35044c19bc7d4b42d7f58da"
+        )
+        models.UserOrganisationRole.objects.create(
+            user=self.user, role=role, organisation=organisation)
+        uor = models.UserOrganisationRole.objects.filter(role=ic)
+        self.assertTrue(repr(uor))
+
+        # is_connected role should be filtered so we just expect a
+        # single role for the testuser for organisation "Power Inc."
+        expected_roles_power_inc = ['Hero']
+        payload_dict = get_user_org_role_dict(self.user)
+        # should only contain permission "Hero"
+        self.assertEqual(
+            len(payload_dict['organisations'][1]['permissions']), 1
+        )
+        self.assertIn(
+            payload_dict['organisations'][1]['permissions'][0],
+            expected_roles_power_inc
+        )
 
 
 @override_settings(SSO_USE_V2_LOGIN=False)
