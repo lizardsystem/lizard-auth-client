@@ -45,9 +45,9 @@ class SSOAppConf(AppConf):
     ROLES_LABEL = _('Permissions')
 
     # management role codes
-    # manager is used by lizard-nxt and superman was previously used by 3di
-    # 3di is about to adopt a more permission-based role naming, therefore
-    # the can_manage role/permission
+    # manager is used by lizard-nxt and superman was previously used by 3Di
+    # 3Di is about to adopt a more permission-based role naming, therefore
+    # the manage role/permission
     MANAGER_ROLE_CODES = ['manager', 'superman', 'manage']
 
     class Meta:
