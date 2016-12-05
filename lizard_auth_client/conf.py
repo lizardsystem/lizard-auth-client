@@ -42,7 +42,7 @@ class SSOAppConf(AppConf):
     IGNORE_ROLE_CODES = []
     # ROLES_LABEL is used as label in forms, you can override this by setting
     # it to _('Permissions')
-    ROLES_LABEL = _('Roles')
+    ROLES_LABEL = _('Permissions')
 
     # management role codes
     # manager is used by lizard-nxt and superman was previously used by 3di
