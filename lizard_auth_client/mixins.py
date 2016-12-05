@@ -10,6 +10,7 @@ from django.core.exceptions import PermissionDenied
 from django.utils import six
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_text
+from django.utils.functional import cached_property
 from lizard_auth_client import constants
 from lizard_auth_client import models
 from lizard_auth_client.conf import settings
@@ -86,7 +87,7 @@ class RoleRequiredMixin(AccessMixin):
     """
     role_required = None  # can be a string or a list of strings
 
-    @property
+    @cached_property
     def available_roles(self):
         """
         Return the available roles.
@@ -96,10 +97,6 @@ class RoleRequiredMixin(AccessMixin):
         If an ``SSO_IGNORE_ROLE_CODES`` setting present, exclude those as well.
 
         """
-        # return cached available roles if present
-        if hasattr(self, '_available_roles'):
-            return self._available_roles
-
         qs = models.Role.objects.all()
         excluded_roles = []
         # always exclude the connected role
@@ -108,9 +105,7 @@ class RoleRequiredMixin(AccessMixin):
             excluded_roles.extend(settings.SSO_IGNORE_ROLE_CODES)
         if excluded_roles:
             qs = qs.exclude(code__in=excluded_roles)
-
-        self._available_roles = qs
-        return self._available_roles
+        return qs
 
     def get_role_required(self):
         """
@@ -164,14 +159,12 @@ class ManagedObjectsMixin(object):
         organisation(s)
 
     """
-    def get_managed_organisations(self):
+    @cached_property
+    def managed_organisations(self):
         """
         Get the managed organisations for the current user. And set it as an
         instance variable.
         """
-        if hasattr(self, 'managed_organisations'):
-            return self.managed_organisations
-
         # superusers are allowed to manage all objects
         if self.request.user.is_superuser:
             return models.Organisation.objects.all()
@@ -181,10 +174,9 @@ class ManagedObjectsMixin(object):
         user_organisation_roles = models.UserOrganisationRole.objects.filter(
             user=self.request.user,
             role__code__in=settings.SSO_MANAGER_ROLE_CODES)
-        self.managed_organisations = models.Organisation.objects.distinct().\
+        return models.Organisation.objects.distinct().\
             filter(user_organisation_roles__in=user_organisation_roles).\
             order_by('name')
-        return self.managed_organisations
 
     def get_managed_users(self, managed_organisations):
         """
@@ -198,6 +190,7 @@ class ManagedObjectsMixin(object):
 
         # filter on organisation if given
         is_connected_role = get_is_connected_role()
+        # filter on organisation if given
         user_organisation_roles = models.UserOrganisationRole.objects.filter(
             organisation__in=managed_organisations, role=is_connected_role)
         self.managed_users = get_user_model().objects.all().distinct().filter(

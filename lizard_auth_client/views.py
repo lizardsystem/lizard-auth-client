@@ -599,13 +599,13 @@ class ManageOrganisationIndex(
         context = super(ManageOrganisationIndex, self).get_context_data(
             **kwargs)
         # put the managed organisations in the context
-        context['organisations'] = self.get_managed_organisations()
+        context['organisations'] = self.managed_organisations
         return context
 
     def dispatch(self, request, *args, **kwargs):
         """Redirect to organisation management page if """
         # put the managed organisations in the context
-        organisations = self.get_managed_organisations()
+        organisations = self.managed_organisations
         if not organisations:
             raise Http404
         elif len(organisations) == 1:
@@ -678,7 +678,7 @@ class ManageOrganisationDetail(
 
     def get_queryset(self):
         """Only used the organisations managed by the request user."""
-        return self.get_managed_organisations()
+        return self.managed_organisations
 
     def dispatch(self, request, *args, **kwargs):
         """
@@ -728,12 +728,12 @@ class ManageUserOrganisationDetail(
         # filtering on managed organisations and users makes sure that the
         # request user has manage rights to for the given organisation and user
         # combo
-        managed_organisations = self.get_managed_organisations()
         try:
-            self.organisation = managed_organisations.get(pk=organisation_pk)
+            self.organisation = self.managed_organisations.get(
+                pk=organisation_pk)
         except ObjectDoesNotExist:
             return HttpResponseForbidden()
-        managed_users = self.get_managed_users(managed_organisations)
+        managed_users = self.get_managed_users(self.managed_organisations)
         try:
             self.user = managed_users.get(pk=user_pk)
         except ObjectDoesNotExist:
@@ -870,9 +870,9 @@ class ManageUserAddView(
         return super(ManageUserAddView, self).form_valid(form)
 
     def dispatch(self, request, organisation_pk=None, *args, **kwargs):
-        managed_organisations = self.get_managed_organisations()
         try:
-            self.organisation = managed_organisations.get(pk=organisation_pk)
+            self.organisation = self.managed_organisations.get(
+                pk=organisation_pk)
         except ObjectDoesNotExist:
             return HttpResponseForbidden()
         return super(ManageUserAddView, self).dispatch(
@@ -898,12 +898,12 @@ class ManageUserDeleteDetail(
         Check whether the request user is a manager for this
         user-organisation combo.
         """
-        managed_organisations = self.get_managed_organisations()
         try:
-            self.organisation = managed_organisations.get(pk=organisation_pk)
+            self.organisation = self.managed_organisations.get(
+                pk=organisation_pk)
         except ObjectDoesNotExist:
             raise Http404
-        managed_users = self.get_managed_users(managed_organisations)
+        managed_users = self.get_managed_users(self.managed_organisations)
         try:
             self.user = managed_users.get(pk=user_pk)
         except ObjectDoesNotExist:
