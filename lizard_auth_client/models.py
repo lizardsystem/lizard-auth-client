@@ -162,14 +162,14 @@ def get_user_org_role_dict(user):
     itself, the organisations he/she belongs to, and the specific permissions
     (or roles) he/she has within these organisations::
 
-        {u'email': u'<str>',
-         u'is_superuser': <bool>,
-         u'username': u'<str>',
-         u'organisations': [{'id': '<str>',
+        {'email': '<str>',
+         'is_superuser': <bool>,
+         'username': '<str>',
+         'organisations': [{'id': '<str>',
                              'name': '<str>',
                              'permissions': ['<str>', '<str>']},
-                            {'id': u'<str>',
-                             'name': u'<str>.',
+                            {'id': '<str>',
+                             'name': '<str>.',
                              'permissions': ['<str>']}],
          }
 
@@ -189,10 +189,10 @@ def get_user_org_role_dict(user):
     if not organisations:
         return d
     # add orgnisation details and user specific roles (read permissions)
-    for orga in organisations:
-        orga_dict = {'name': orga.name, 'id': orga.unique_id}
+    for organisation in organisations:
+        orga_dict = {'name': organisation.name, 'id': organisation.unique_id}
         permissions = set(
-            orga.user_organisation_roles.filter(
+            organisation.user_organisation_roles.filter(
                 user=user).values_list('role__code', flat=True)
         )
         permissions.discard('is_connected')

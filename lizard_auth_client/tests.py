@@ -253,7 +253,7 @@ class TestGetUserOrgRoleDict(TestCase):
     def setUp(self):
         self.user = User.objects.create(
             username='testuser', is_staff=False, is_superuser=False,
-            email=u'testuser@beingused.to')
+            email='testuser@beingused.to')
         models.UserOrganisationRole.create_from_list_of_dicts(
             self.user, [{
                 'organisation': {
@@ -309,8 +309,8 @@ class TestGetUserOrgRoleDict(TestCase):
         """
         a user can have different roles for different organisations
         """
-        expected_roles_velen_huurmans = [u'Hero', u'superhero']
-        expected_roles_power_inc = [u'Hero']
+        expected_roles_velen_huurmans = ['Hero', 'superhero']
+        expected_roles_power_inc = ['Hero']
         payload_dict = get_user_org_role_dict(self.user)
         self.assertEqual(len(payload_dict['organisations']), 2)
         # should have two permissions
@@ -361,7 +361,7 @@ class TestGetUserOrgRoleDict(TestCase):
 
         # is_connected role should be filtered so we just expect a
         # single role for the testuser for organisation "Power Inc."
-        expected_roles_power_inc = [u'Hero']
+        expected_roles_power_inc = ['Hero']
         payload_dict = get_user_org_role_dict(self.user)
         # should only contain permission "Hero"
         self.assertEqual(
