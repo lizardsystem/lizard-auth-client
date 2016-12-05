@@ -57,10 +57,14 @@ class ManageUserBaseForm(forms.ModelForm):
 
         cleaned_data example:
         {
-            'username': 'sander.smits', 'first_name': 'Sander',
-            'last_name': 'Smits', 'organisation': 'Nelen & Schuurmans',
-            'role_run_simulation': True, 'role_manage': False,
-            'role_follow_simulation': True, 'role_change_model': True,
+            'username': 'sander.smits',
+            'first_name': 'Sander',
+            'last_name': 'Smits',
+            'organisation': 'Nelen & Schuurmans',
+            'role_run_simulation': True,
+            'role_manage': False,
+            'role_follow_simulation': True,
+            'role_change_model': True,
             'email': 'sander.smits@nelen-schuurmans.nl'
         }
         """
