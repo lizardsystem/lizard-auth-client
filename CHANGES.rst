@@ -7,6 +7,10 @@ Changelog of lizard-auth-client
 
 - Add roles/permissions management views.
 
+- Don't cache server URLs forever, refresh them after an hour.
+
+- Sorting users on ``/sso/user_overview/`` alphabetically by email.
+
 - Added the function ``get_user_org_role_dict()`` to the models module.
   The dictionary it returns will be used as JWT payload for
   3Di services to share user permissions (roles).
