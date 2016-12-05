@@ -70,8 +70,8 @@ class ManageUserBaseForm(forms.ModelForm):
         """
         cleaned_data = super(ManageUserBaseForm, self).clean()
         user_role_codes = [
-            k[5:] for k in cleaned_data if
-            k.startswith('role_') and cleaned_data[k] is True]
+            key[5:] for key in cleaned_data if
+            key.startswith('role_') and cleaned_data[key] is True]
         roles = Role.objects.filter(code__in=user_role_codes)
         cleaned_data['roles'] = roles
         return cleaned_data
