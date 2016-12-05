@@ -38,11 +38,7 @@ class SSOAppConf(AppConf):
     CLIENT_SUPERUSER_ROLES = []
     CLIENT_STAFF_ROLES = []
 
-    # A user can be connected to an organisation by a Role that has
-    # the value of CONNECTED_ROLE_CODE as code. That way users can be
-    # connected to organisations without having other UserOrganisationRole
-    # instances.
-    CONNECTED_ROLE_CODE = 'is_connected'
+    # roles with the following codes will be ignored
     IGNORE_ROLE_CODES = []
     # ROLES_LABEL is used as label in forms, you can override this by setting
     # it to _('Permissions')

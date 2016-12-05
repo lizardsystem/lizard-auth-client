@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.contrib.auth import get_user_model, REDIRECT_FIELD_NAME
+from django.contrib.auth import get_user_model
+from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import redirect_to_login
-from django.core.exceptions import (
-    ImproperlyConfigured, ObjectDoesNotExist, PermissionDenied)
+from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import PermissionDenied
 from django.utils import six
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_text
 
+from lizard_auth_client import constants
 from lizard_auth_client import models
 from lizard_auth_client.conf import settings
 
@@ -17,7 +19,7 @@ from lizard_auth_client.conf import settings
 def get_is_connected_role():
     """Get or create the connection role."""
     is_connected_role, created = models.Role.objects.get_or_create(
-        code=settings.SSO_CONNECTED_ROLE_CODE,
+        code=constants.CONNECTED_ROLE_CODE,
         defaults={
             'unique_id': '0', 'name': 'Connected',
             'internal_description': '-', 'external_description': '-'
@@ -90,8 +92,10 @@ class RoleRequiredMixin(AccessMixin):
         """
         Return the available roles.
 
-        If there is a ``SSO_CONNECTED_ROLE_CODE`` or a ``SSO_IGNORE_ROLE_CODES``
-        setting present, exclude those.
+        Always exclude a role with the ``constants.CONNECTED_ROLE_CODE`` as
+        code.
+        If an ``SSO_IGNORE_ROLE_CODES`` setting present, exclude those as well.
+
         """
         # return cached available roles if present
         if hasattr(self, '_available_roles'):
@@ -99,8 +103,8 @@ class RoleRequiredMixin(AccessMixin):
 
         qs = models.Role.objects.all()
         excluded_roles = []
-        if settings.SSO_CONNECTED_ROLE_CODE:
-            excluded_roles.append(settings.SSO_CONNECTED_ROLE_CODE)
+        # always exclude the connected role
+        excluded_roles.append(constants.CONNECTED_ROLE_CODE)
         if settings.SSO_IGNORE_ROLE_CODES:
             excluded_roles.extend(settings.SSO_IGNORE_ROLE_CODES)
         if excluded_roles:
