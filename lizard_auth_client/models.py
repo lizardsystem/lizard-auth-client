@@ -15,6 +15,9 @@ class Role(models.Model):
 
     BILLING_ROLE_CODE = 'billing'
 
+    class Meta:
+        ordering = ['unique_id']
+
     def __str__(self):
         return self.name
 

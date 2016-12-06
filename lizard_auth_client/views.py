@@ -1,37 +1,50 @@
 # -*- coding: utf-8 -*-
-
 from __future__ import unicode_literals
+
 from collections import namedtuple
+import datetime
+import json
+
+from itsdangerous import URLSafeTimedSerializer
+import jwt
+import logging
+import requests
+
+from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
+from django.db import transaction
+from django.forms.models import model_to_dict
+from django.http import Http404
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
+from django.http import HttpResponseForbidden
 from django.http import HttpResponsePermanentRedirect
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django.views.generic.base import TemplateView
 from django.views.generic.base import View
+from django.views.generic import DetailView
+from django.views.generic import RedirectView
 from django.views.generic.edit import FormView
-from itsdangerous import URLSafeTimedSerializer
+
 from lizard_auth_client import client
+from lizard_auth_client import forms
+from lizard_auth_client import mixins
+from lizard_auth_client import models
 from lizard_auth_client.client import sso_server_url
 from lizard_auth_client.conf import settings
 from lizard_auth_client.forms import CreateNewUserForm
 from lizard_auth_client.forms import SearchEmailForm
-
-import datetime
-import json
-import jwt
-import logging
-import requests
-
 
 try:
     from urlparse import urljoin
@@ -47,6 +60,43 @@ logger = logging.getLogger(__name__)
 BACKEND = ModelBackend()
 JWT_EXPIRATION = datetime.timedelta(
     minutes=settings.SSO_JWT_EXPIRATION_MINUTES)
+
+
+def _sso_post(viewname, payload):
+    """Send a payload to the named URL at the SSO server.
+    Args:
+        viewname (str): The name of the URL (a bit like Django's reverse).
+            See https://sso.lizard.net/api2/.
+        payload (dict): A Python dictionary with key-value pairs to send.
+    Returns:
+        dict: The decoded JSON response.
+    Raises:
+        HTTPError, if one occured.
+    """
+    url = sso_server_url(viewname)
+    # Add required fields to the payload. These cannot/should not
+    # be set by the caller (will be overwritten if set).
+    payload['iss'] = settings.SSO_KEY
+    payload['exp'] = datetime.datetime.utcnow() + JWT_EXPIRATION
+    # Sign the message.
+    signed_message = jwt.encode(
+        payload,
+        settings.SSO_SECRET,
+        algorithm=settings.SSO_JWT_ALGORITHM,
+    )
+    # Send the key along with the signed message. This is a
+    # peculiarity of the SSO server: the signed message
+    # already contains the key.
+    r = requests.post(
+        url, data={
+            'message': signed_message,
+            'key': settings.SSO_KEY,
+        }
+    )
+    # Check that the request is succesful.
+    r.raise_for_status()
+    # Return the decoded JSON response.
+    return r.json()
 
 
 class HttpResponseServiceUnavailable(HttpResponse):
@@ -529,3 +579,352 @@ class DisallowedUserView(TemplateView):
 # Let this setting determine which version of the login/logout to use.
 LoginView = JWTLoginView if settings.SSO_USE_V2_LOGIN else LoginViewV1
 LogoutView = JWTLogoutView if settings.SSO_USE_V2_LOGIN else LogoutViewV1
+
+
+# ### management views ###
+class ManageOrganisationIndex(
+        mixins.RoleRequiredMixin, mixins.ManagedObjectsMixin, TemplateView):
+    """Index view for managing user permissions.
+
+    If the request.user manages only one organisation, the response is
+    redirected to the organisation management page.
+
+    """
+    template_name = 'lizard_auth_client/management/users/index.html'
+
+    role_required = settings.SSO_MANAGER_ROLE_CODES
+
+    def get_context_data(self, **kwargs):
+        """Add managed organisations and users to the context."""
+        context = super(ManageOrganisationIndex, self).get_context_data(
+            **kwargs)
+        # put the managed organisations in the context
+        context['organisations'] = self.managed_organisations
+        return context
+
+    def dispatch(self, request, *args, **kwargs):
+        """Redirect to organisation management page if """
+        # put the managed organisations in the context
+        organisations = self.managed_organisations
+        if not organisations:
+            raise Http404
+        elif len(organisations) == 1:
+            # redirect to organisation detail page
+            organisation = organisations[0]
+            redirect_to = reverse(
+                'lizard_auth_client.management_organisation_detail',
+                kwargs={'pk': organisation.pk})
+            return HttpResponseRedirect(redirect_to=redirect_to)
+        else:
+            return super(ManageOrganisationIndex, self).dispatch(
+                request, *args, **kwargs)
+
+
+def get_user_role_matrix_for_organisation(user, organisation, roles):
+    """
+    Make a role matrix for the given user.
+
+    :param user - a User instantce
+    :param organisation - an Organisation instance
+    :param roles - a queryset with Role instances
+
+    :return a list of booleans representing whether the given user has the
+        roles for the given organisation, e.g. [True, False, False, False]
+
+    """
+    role_matrix = []
+    for role in roles:
+        try:
+            user.user_organisation_roles.get(
+                organisation=organisation, role__code=role.code)
+        except ObjectDoesNotExist:
+            # the user does NOT have this role for this organisation
+            role_matrix.append(False)
+        else:
+            # the user has this role for this organisation
+            role_matrix.append(True)
+    return role_matrix
+
+
+class ManageOrganisationDetail(
+        mixins.RoleRequiredMixin, mixins.ManagedObjectsMixin, DetailView):
+    """User management per organisation."""
+
+    role_required = settings.SSO_MANAGER_ROLE_CODES
+
+    def get_context_data(self, **kwargs):
+        """Store organisation in the context."""
+        context = super(ManageOrganisationDetail, self).get_context_data(
+            **kwargs)
+
+        # add organisation to context
+        if hasattr(self, 'organisation'):
+            context['organisation'] = self.object
+
+        # add roles for header column title
+        context['roles'] = self.available_roles
+
+        # add users with their role matrices to the context
+        managed_users = self.get_managed_users([self.object])
+
+        users = []
+        for user in managed_users:
+            user.role_matrix = get_user_role_matrix_for_organisation(
+                user, self.object, self.available_roles)
+            users.append(user)
+        context['users'] = users
+
+        return context
+
+    def get_queryset(self):
+        """Only used the organisations managed by the request user."""
+        return self.managed_organisations
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        If user takes the manage permission for this organisation from himself,
+        he should be redirected to the main management page.
+        """
+        try:
+            return super(ManageOrganisationDetail, self).dispatch(
+                request, *args, **kwargs)
+        except Http404:
+            # user has probably taken the management permission for this
+            # organisation from himself, so we direct him to the main
+            # management page
+            return HttpResponseRedirect(reverse(
+                'lizard_auth_client.management_users_index'))
+        except:
+            # catch all other exceptions and respond with a 404
+            raise Http404
+
+
+class ManageUserOrganisationDetail(
+        mixins.RoleRequiredMixin, mixins.ManagedObjectsMixin, FormView):
+    """View that allows changing one user for one organisation."""
+    form_class = forms.ManageUserChangeForm
+    template_name = 'lizard_auth_client/management/users/detail.html'
+
+    role_required = settings.SSO_MANAGER_ROLE_CODES
+
+    def get_context_data(self, **kwargs):
+        """Add organisation and user to the context."""
+        context = super(ManageUserOrganisationDetail, self).get_context_data(
+            **kwargs)
+        context['organisation'] = self.organisation
+        context['roles'] = self.available_roles
+        role_matrix = get_user_role_matrix_for_organisation(
+            self.user, self.organisation, self.available_roles)
+        self.user.role_matrix = role_matrix
+        context['user'] = self.user
+        return context
+
+    def dispatch(self, request, organisation_pk=None, user_pk=None, *args,
+                 **kwargs):
+        """
+        Fetch requested organisation and user and store it as a class
+        variable, so that they can be used in the context.
+        """
+        # filtering on managed organisations and users makes sure that the
+        # request user has manage rights to for the given organisation and user
+        # combo
+        try:
+            self.organisation = self.managed_organisations.get(
+                pk=organisation_pk)
+        except ObjectDoesNotExist:
+            return HttpResponseForbidden()
+        managed_users = self.get_managed_users(self.managed_organisations)
+        try:
+            self.user = managed_users.get(pk=user_pk)
+        except ObjectDoesNotExist:
+            return HttpResponseForbidden()
+        return super(ManageUserOrganisationDetail, self).dispatch(
+            request, organisation_pk, user_pk, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        form_kwargs = super(
+            ManageUserOrganisationDetail, self).get_form_kwargs()
+        form_kwargs['instance'] = self.user
+        role_matrix = get_user_role_matrix_for_organisation(
+            self.user, self.organisation, self.available_roles)
+        form_kwargs['roles'] = zip(self.available_roles, role_matrix)
+        return form_kwargs
+
+    def get_initial(self):
+        # add organisation to the initial dict
+        initial = super(ManageUserOrganisationDetail, self).get_initial()
+        initial['organisation'] = self.organisation.name
+        return initial
+
+    @transaction.atomic
+    def form_valid(self, form):
+        """Save the user organisation roles."""
+        roles = form.cleaned_data['roles']
+        save_roles(self.user, self.organisation, roles)
+        return super(ManageUserOrganisationDetail, self).form_valid(form)
+
+    def post(self, request, organisation_pk=None, user_pk=None, *args,
+             **kwargs):
+        # set success message
+        messages.add_message(
+            request, messages.SUCCESS,
+            _("Successfully updated user %(username)s.") % {
+                'username': self.user.username},
+            fail_silently=True
+        )
+        return super(ManageUserOrganisationDetail, self).post(
+            request, *args, **kwargs)
+
+    def get_success_url(self):
+        """Redirect to organisation detail view."""
+        return reverse(
+            'lizard_auth_client.management_organisation_detail',
+            kwargs={'pk': self.organisation.id})
+
+
+@transaction.atomic
+def save_roles(user, organisation, roles, connect=True):
+    """
+    Store the given roles for the given user and organisation and make sure
+    the user is connected to the organisation if connect equals True.
+    """
+    # first delete all current user organisation roles
+    models.UserOrganisationRole.objects.filter(
+        user=user, organisation=organisation).delete()
+    # then save the given roles
+    for role in roles:
+        models.UserOrganisationRole.objects.get_or_create(
+            user=user, organisation=organisation, role=role)
+    # make sure the user is connected to this organisation, if connect
+    # equals True
+    if connect:
+        is_connected_role = mixins.get_is_connected_role()
+        models.UserOrganisationRole.objects.get_or_create(
+            user=user, organisation=organisation, role=is_connected_role)
+
+
+class ManageUserAddView(
+        mixins.RoleRequiredMixin, mixins.ManagedObjectsMixin, FormView):
+    """View for adding users to an organisation."""
+    form_class = forms.ManageUserAddForm
+    template_name = 'lizard_auth_client/management/users/add.html'
+
+    role_required = settings.SSO_MANAGER_ROLE_CODES
+
+    def get_context_data(self, **kwargs):
+        context = super(ManageUserAddView, self).get_context_data(**kwargs)
+        context['organisation'] = self.organisation
+        return context
+
+    def get_success_url(self):
+        return reverse(
+            'lizard_auth_client.management_organisation_detail',
+            kwargs={'pk': self.organisation.id})
+
+    def get_form_kwargs(self):
+        form_kwargs = super(ManageUserAddView, self).get_form_kwargs()
+        role_matrix = [False] * len(self.available_roles)
+        form_kwargs['roles'] = zip(self.available_roles, role_matrix)
+        return form_kwargs
+
+    def get_initial(self):
+        # add organisation to the initial dict
+        initial = super(ManageUserAddView, self).get_initial()
+        initial['organisation'] = self.organisation.name
+        return initial
+
+    @transaction.atomic
+    def form_valid(self, form):
+        prototype = form.save(commit=False)
+        payload = model_to_dict(prototype, form.Meta.fields)
+        # Once the activation process is finished, users receive a link to the
+        # portal that initiated the creation of the new SSO account. This may
+        # vary since the server can have multiple hostnames.
+        payload['visit_url'] = self.request.get_host()
+        response = _sso_post('new-user', payload)
+        updated_values = response['user']
+        # From the perspective of a manager, it's a new user, but the user
+        # might already exist in the lizard_nxt database. In that case,
+        # we'll update his credentials with the latest info from SSO.
+        user, created = get_user_model().objects.update_or_create(
+            username=updated_values.pop('username'),
+            defaults=updated_values,
+        )
+        # We are talking about SSO-managed users, so we want to be sure
+        # that the account has an unusuable password.
+        user.set_unusable_password()
+        user.save()
+
+        # save the user organisation roles
+        roles = form.cleaned_data['roles']
+        save_roles(user, self.organisation, roles)
+
+        # set success message
+        messages.add_message(
+            self.request, messages.SUCCESS,
+            _("User %(username)s is now connected to %(organisation)s.") % {
+                'username': user.username, 'organisation': self.organisation},
+            fail_silently=True
+        )
+
+        return super(ManageUserAddView, self).form_valid(form)
+
+    def dispatch(self, request, organisation_pk=None, *args, **kwargs):
+        try:
+            self.organisation = self.managed_organisations.get(
+                pk=organisation_pk)
+        except ObjectDoesNotExist:
+            return HttpResponseForbidden()
+        return super(ManageUserAddView, self).dispatch(
+            request, *args, **kwargs)
+
+
+class ManageUserDeleteDetail(
+        mixins.RoleRequiredMixin, mixins.ManagedObjectsMixin, RedirectView):
+    """
+    Remove a user from an organisation by deleting the related user
+    organisation roles.
+    """
+    role_required = settings.SSO_MANAGER_ROLE_CODES
+
+    def get_redirect_url(self, *args, **kwargs):
+        """Redirect to the organisation detail view."""
+        return reverse('lizard_auth_client.management_organisation_detail',
+                       kwargs={'pk': self.organisation.id})
+
+    def get(self, request, organisation_pk=None, user_pk=None, *args,
+            **kwargs):
+        """
+        Check whether the request user is a manager for this
+        user-organisation combo.
+        """
+        try:
+            self.organisation = self.managed_organisations.get(
+                pk=organisation_pk)
+        except ObjectDoesNotExist:
+            raise Http404
+        managed_users = self.get_managed_users(self.managed_organisations)
+        try:
+            self.user = managed_users.get(pk=user_pk)
+        except ObjectDoesNotExist:
+            raise Http404
+
+        # all clear; disconnect the user from the organisation by deleting all
+        # its UserOrganisationRole instances
+        uors = self.user.user_organisation_roles.filter(
+            organisation=self.organisation)
+        for uor in uors:
+            uor.delete()
+
+        # add success message
+        messages.add_message(
+            self.request, messages.SUCCESS,
+            _("Successfully deleted user %(username)s from %(organisation)s.")
+            % {'username': self.user.username,
+               'organisation': self.organisation},
+            fail_silently=True
+        )
+
+        # now redirect via the super.get()
+        return super(ManageUserDeleteDetail, self).get(
+            request, *args, **kwargs)

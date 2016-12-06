@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 from appconf import AppConf
 from django.conf import settings
+from django.utils.translation import ugettext_lazy as _
 
 
-settings  # Pyflakes
+settings  # NOQA
 
 
 class SSOAppConf(AppConf):
@@ -35,6 +37,18 @@ class SSOAppConf(AppConf):
     # Role syncing from signals.py. V1 API only
     CLIENT_SUPERUSER_ROLES = []
     CLIENT_STAFF_ROLES = []
+
+    # roles with the following codes will be ignored
+    IGNORE_ROLE_CODES = []
+    # ROLES_LABEL is used as label in forms, you can override this by setting
+    # it to _('Permissions')
+    ROLES_LABEL = _('Permissions')
+
+    # management role codes
+    # manager is used by lizard-nxt and superman was previously used by 3Di
+    # 3Di is about to adopt a more permission-based role naming, therefore
+    # the manage role/permission
+    MANAGER_ROLE_CODES = ['manager', 'superman', 'manage']
 
     class Meta:
         prefix = 'sso'

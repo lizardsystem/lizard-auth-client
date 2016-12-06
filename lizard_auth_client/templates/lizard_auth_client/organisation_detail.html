@@ -1,0 +1,37 @@
+{% extends "lizard_auth_client/management/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block container %}
+    <h3>{% trans "User permissions for" %} {{ organisation.name }}</h3>
+    <hr/>
+    <a href="{% url 'lizard_auth_client.management_users_add' organisation_pk=organisation.id %}" class="btn btn-primary pull-right" role="button">{% trans "Add user" %}</a>
+    {% if users %}
+    <table class="table table-bordered">
+        <caption class="text-left">{{ organisation.name }}</caption>
+        <thead>
+            <tr>
+              <th>{% trans "Username" %}</th>
+              {% for role in roles %}
+              <th>{{ role.name }}</th>
+              {% endfor %}
+              <!--th>{% trans "Read" %}</th>
+              <th>{% trans "Write" %}</th>
+              <th>{% trans "Manage" %}</th-->
+            </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            <tr>
+                <td><a href="{% url 'lizard_auth_client.management_user_organisation_detail' organisation_pk=organisation.pk user_pk=user.pk %}">{{ user.username }}</a></td>
+                {% for has_role in user.role_matrix %}
+                <td><img src={% if has_role %}"{% static 'lizard_auth_client/img/icon-yes.gif' %}"{% else %}"{% static 'lizard_auth_client/img/icon-no.gif' %}"{% endif %} alt="{{ has_role }}"></td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>{% trans "No users linked to this organisation." %}</p>
+    {% endif %}
+{% endblock %}

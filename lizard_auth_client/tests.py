@@ -3,6 +3,8 @@
 from __future__ import unicode_literals
 from django.contrib.auth.models import User
 from django.core.exceptions import ImproperlyConfigured
+from django.core.urlresolvers import reverse
+from django.http import Http404
 from django.test import Client
 from django.test import override_settings
 from django.test import RequestFactory
@@ -12,7 +14,10 @@ from lizard_auth_client import admin  # NOQA
 from lizard_auth_client import apps  # NOQA
 from lizard_auth_client import backends
 from lizard_auth_client import client
+from lizard_auth_client import factories
+from lizard_auth_client import forms
 from lizard_auth_client import middleware  # NOQA
+from lizard_auth_client import mixins
 from lizard_auth_client import models
 from lizard_auth_client import signals
 from lizard_auth_client import urls
@@ -874,3 +879,209 @@ class V2ViewsTest(TestCase):
         request.user = superuser
         response = views.CreateNewUserView.as_view()(request)
         self.assertEqual(200, response.status_code)
+
+
+@override_settings(SSO_USE_V2_LOGIN=True)
+class TestRoleManagement(TestCase):
+
+    def setUp(self):
+        """
+        Construct user, organisation and role instances that will be used in
+        the tests.
+        """
+        self.user_1 = factories.UserFactory.create(username='user_1')
+        self.user_2 = factories.UserFactory.create(username='user_2')
+
+        self.organisation_1 = factories.OrganisationFactory.create(
+            name='organisation_1')
+        self.organisation_2 = factories.OrganisationFactory.create(
+            name='organisation_2')
+
+        # 3Di roles
+        # is_connected role
+        self.is_connected_role = factories.RoleFactory.create(
+            unique_id='00', code='is_connected', name='Connected')
+        # permission roles
+        self.follow_simulation_role = factories.RoleFactory.create(
+            unique_id='10', code='follow_simulation', name='Follow simulation')
+        self.run_simulation_role = factories.RoleFactory.create(
+            unique_id='15', code='run_simulation', name='Run simulation')
+        self.change_model_role = factories.RoleFactory.create(
+            unique_id='20', code='change_model', name='Change model')
+        self.manage_role = factories.RoleFactory.create(
+            unique_id='30', code='manage', name='Manage')
+
+        self.available_roles = mixins.RoleRequiredMixin().available_roles
+
+    def tearDown(self):
+        """Clean up."""
+        models.UserOrganisationRole.objects.all().delete()
+
+    def test_get_available_roles(self):
+        """
+        Check whether available only has the permission roles and not the
+        is_connected role."""
+        available_roles = mixins.RoleRequiredMixin().available_roles
+        self.assertEqual(len(available_roles), 4)
+        self.assertNotIn(self.is_connected_role, available_roles)
+
+    @override_settings(SSO_IGNORE_ROLE_CODES=['billing'])
+    def test_ignore_role(self):
+        """Check whether the SSO_IGNORE_ROLE_CODES setting works."""
+        billing_role = factories.RoleFactory.create(
+            unique_id='1', code='billing', name='Billing')
+        all_roles = models.Role.objects.all()
+        self.assertEqual(len(all_roles), 6)
+        available_roles = mixins.RoleRequiredMixin().available_roles
+        self.assertEqual(len(available_roles), 4)
+        self.assertNotIn(billing_role, available_roles)
+
+    def test_role_matrix_1(self):
+        """Test whether the expected role matrix is correct."""
+
+        # connect some roles to user 1 and organisation 1
+        user_roles = [self.follow_simulation_role, self.run_simulation_role]
+        for role in user_roles:
+            models.UserOrganisationRole.objects.create(
+                user=self.user_1, organisation=self.organisation_1, role=role)
+
+        role_matrix = views.get_user_role_matrix_for_organisation(
+            self.user_1, self.organisation_1, self.available_roles)
+        self.assertEqual(role_matrix, [True, True, False, False])
+
+    def test_role_matrix_2(self):
+        """Test whether the expected role matrix is correct."""
+
+        # connect one role to user 2 and organisation 1
+        user_roles = [self.follow_simulation_role]
+        for role in user_roles:
+            models.UserOrganisationRole.objects.create(
+                user=self.user_2, organisation=self.organisation_1, role=role)
+
+        role_matrix = views.get_user_role_matrix_for_organisation(
+            self.user_2, self.organisation_1, self.available_roles)
+        self.assertEqual(role_matrix, [True, False, False, False])
+
+    def test_role_matrix_3(self):
+        """Test whether the expected role matrix is correct."""
+
+        # connect all roles to user 2 and organisation 2
+        user_roles = self.available_roles
+        for role in user_roles:
+            models.UserOrganisationRole.objects.create(
+                user=self.user_2, organisation=self.organisation_2, role=role)
+
+        role_matrix = views.get_user_role_matrix_for_organisation(
+            self.user_2, self.organisation_2, self.available_roles)
+        self.assertEqual(role_matrix, [True, True, True, True])
+
+    # tests for usage permission management forms
+    def test_add_user_form_check_role_field_keys(self):
+        """
+        Check whether the correct number of role fields are present in the
+        ``add user`` form.
+        """
+        role_matrix = [False] * len(self.available_roles)
+        form = forms.ManageUserAddForm(
+            roles=zip(self.available_roles, role_matrix))
+
+        role_field_keys = [
+            role_field_key for role_field_key in form.fields.keys() if
+            role_field_key.startswith('role_')]
+
+        # 4 role keys should be present in the form
+        self.assertEqual(len(role_field_keys), 4)
+        # check each individual role field key
+        self.assertTrue('role_follow_simulation' in form.fields.keys())
+        self.assertTrue('role_run_simulation' in form.fields.keys())
+        self.assertTrue('role_change_model' in form.fields.keys())
+        self.assertTrue('role_manage' in form.fields.keys())
+
+    def test_change_user_form(self):
+        user_roles = self.available_roles
+        for role in user_roles:
+            models.UserOrganisationRole.objects.create(
+                user=self.user_1, organisation=self.organisation_1, role=role)
+        role_matrix = views.get_user_role_matrix_for_organisation(
+            self.user_1, self.organisation_1, self.available_roles)
+        form = forms.ManageUserChangeForm(
+            instance=self.user_1,
+            roles=zip(self.available_roles, role_matrix))
+        # check all user-related form fields
+        self.assertTrue('email' in form.fields.keys())
+        self.assertTrue('username' in form.fields.keys())
+        self.assertTrue('first_name' in form.fields.keys())
+        self.assertTrue('last_name' in form.fields.keys())
+
+
+@override_settings(SSO_USE_V2_LOGIN=True)
+class TestManagementViews(TestCase):
+    """Tests for permission/role management views."""
+
+    def setUp(self):
+        """Create a couple of reusable object instances."""
+        self.user_1 = factories.UserFactory.create(username='user_1')
+        self.user_2 = factories.UserFactory.create(username='user_2')
+
+        self.organisation_1 = factories.OrganisationFactory.create(
+            name='organisation_1')
+        self.organisation_2 = factories.OrganisationFactory.create(
+            name='organisation_2')
+
+        # 3Di roles
+        # is_connected role
+        self.is_connected_role = factories.RoleFactory.create(
+            unique_id='00', code='is_connected', name='Connected')
+        # permission roles
+        self.follow_simulation_role = factories.RoleFactory.create(
+            unique_id='10', code='follow_simulation', name='Follow simulation')
+        self.run_simulation_role = factories.RoleFactory.create(
+            unique_id='15', code='run_simulation', name='Run simulation')
+        self.change_model_role = factories.RoleFactory.create(
+            unique_id='20', code='change_model', name='Change model')
+        self.manage_role = factories.RoleFactory.create(
+            unique_id='30', code='manage', name='Manage')
+
+        self.request_factory = RequestFactory()
+
+    def test_organisation_index_view_404(self):
+        """
+        Test permission denied for non-superuser users that don't have a
+        management role.
+
+        ManageOrganisationIndex view should raise a 404 exception, since the
+        request user is not a superuser and does not have a manager role.
+
+        """
+        request = self.request_factory.get(
+            reverse('lizard_auth_client.management_users_index'))
+        request.session = {}
+        request.user = self.user_1
+
+        self.assertRaises(
+            Http404, views.ManageOrganisationIndex.as_view(), request)
+
+    def test_organisation_index_view_superuser(self):
+        """A superuser should have access to the management index view."""
+        request = self.request_factory.get(
+            reverse('lizard_auth_client.management_users_index'))
+        request.session = {}
+        request.user = self.user_1
+        request.user.is_superuser = True
+        response = views.ManageOrganisationIndex.as_view()(request)
+        self.assertEqual(response.status_code, 200)
+
+    def test_organisation_index_view_manager(self):
+        """A manager should have access to the management index view."""
+        request = self.request_factory.get(
+            reverse('lizard_auth_client.management_users_index'))
+        request.session = {}
+        # give user_1 the management role for organisation_1
+        models.UserOrganisationRole.objects.create(
+            user=self.user_1, organisation=self.organisation_1,
+            role=self.manage_role)
+        request.user = self.user_1
+        response = views.ManageOrganisationIndex.as_view()(request)
+        # redirects to the organisation detail page, because the user only
+        # manages one organisation
+        self.assertEqual(response.status_code, 302)

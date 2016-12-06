@@ -5,6 +5,8 @@ Changelog of lizard-auth-client
 2.7 (unreleased)
 ----------------
 
+- Add roles/permissions management views.
+
 - Don't cache server URLs forever, refresh them after an hour.
 
 - Sorting users on ``/sso/user_overview/`` alphabetically by email.
