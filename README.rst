@@ -36,7 +36,7 @@ import them in the root of your urlpatterns::
 
     urlpatterns = patterns(
         '',
-        (r'^', include('lizard_auth_client.urls')),
+        (r'', include('lizard_auth_client.urls')),
     )
 
 
