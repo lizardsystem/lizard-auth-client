@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.7 (unreleased)
+2.7 (2016-12-06)
 ----------------
 
 - Add roles/permissions management views.
