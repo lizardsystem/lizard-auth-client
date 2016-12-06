@@ -3,6 +3,8 @@
 from __future__ import unicode_literals
 from django.contrib.auth.models import User
 from django.core.exceptions import ImproperlyConfigured
+from django.core.urlresolvers import reverse
+from django.http import Http404
 from django.test import Client
 from django.test import override_settings
 from django.test import RequestFactory
@@ -1010,3 +1012,76 @@ class TestRoleManagement(TestCase):
         self.assertTrue('username' in form.fields.keys())
         self.assertTrue('first_name' in form.fields.keys())
         self.assertTrue('last_name' in form.fields.keys())
+
+
+@override_settings(SSO_USE_V2_LOGIN=True)
+class TestManagementViews(TestCase):
+    """Tests for permission/role management views."""
+
+    def setUp(self):
+        """Create a couple of reusable object instances."""
+        self.user_1 = factories.UserFactory.create(username='user_1')
+        self.user_2 = factories.UserFactory.create(username='user_2')
+
+        self.organisation_1 = factories.OrganisationFactory.create(
+            name='organisation_1')
+        self.organisation_2 = factories.OrganisationFactory.create(
+            name='organisation_2')
+
+        # 3Di roles
+        # is_connected role
+        self.is_connected_role = factories.RoleFactory.create(
+            unique_id='00', code='is_connected', name='Connected')
+        # permission roles
+        self.follow_simulation_role = factories.RoleFactory.create(
+            unique_id='10', code='follow_simulation', name='Follow simulation')
+        self.run_simulation_role = factories.RoleFactory.create(
+            unique_id='15', code='run_simulation', name='Run simulation')
+        self.change_model_role = factories.RoleFactory.create(
+            unique_id='20', code='change_model', name='Change model')
+        self.manage_role = factories.RoleFactory.create(
+            unique_id='30', code='manage', name='Manage')
+
+        self.request_factory = RequestFactory()
+
+    def test_organisation_index_view_404(self):
+        """
+        Test permission denied for non-superuser users that don't have a
+        management role.
+
+        ManageOrganisationIndex view should raise a 404 exception, since the
+        request user is not a superuser and does not have a manager role.
+
+        """
+        request = self.request_factory.get(
+            reverse('lizard_auth_client.management_users_index'))
+        request.session = {}
+        request.user = self.user_1
+
+        self.assertRaises(
+            Http404, views.ManageOrganisationIndex.as_view(), request)
+
+    def test_organisation_index_view_superuser(self):
+        """A superuser should have access to the management index view."""
+        request = self.request_factory.get(
+            reverse('lizard_auth_client.management_users_index'))
+        request.session = {}
+        request.user = self.user_1
+        request.user.is_superuser = True
+        response = views.ManageOrganisationIndex.as_view()(request)
+        self.assertEqual(response.status_code, 200)
+
+    def test_organisation_index_view_manager(self):
+        """A manager should have access to the management index view."""
+        request = self.request_factory.get(
+            reverse('lizard_auth_client.management_users_index'))
+        request.session = {}
+        # give user_1 the management role for organisation_1
+        models.UserOrganisationRole.objects.create(
+            user=self.user_1, organisation=self.organisation_1,
+            role=self.manage_role)
+        request.user = self.user_1
+        response = views.ManageOrganisationIndex.as_view()(request)
+        # redirects to the organisation detail page, because the user only
+        # manages one organisation
+        self.assertEqual(response.status_code, 302)
