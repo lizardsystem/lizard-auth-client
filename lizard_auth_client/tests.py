@@ -6,9 +6,9 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.http import Http404
 from django.test import Client
-from django.test import override_settings
 from django.test import RequestFactory
 from django.test import TestCase
+from django.test import override_settings
 from faker import Faker
 from lizard_auth_client import admin  # NOQA
 from lizard_auth_client import apps  # NOQA
