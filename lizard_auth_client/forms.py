@@ -190,13 +190,14 @@ class SearchEmailForm(forms.Form):
             user_dict = client.sso_search_user_by_email(
                 self.cleaned_data['email'])
         except HTTPError as e:
+            error_text = e.response.text
             logger.info("Error when searching user on the SSO: %s",
-                        e.response.text)
+                        error_text)
             if e.response.status_code == 404:
                 msg = _("User with email %s not found")
                 raise ValidationError(
                     {'email': msg % self.cleaned_data['email']})
-            raise ValidationError(e)
+            raise ValidationError(error_text[:200])
         user = client.construct_user(user_dict)
         logger.info("Added SSO user %s locally", user)
 
@@ -231,16 +232,15 @@ class CreateNewUserForm(forms.Form):
                 self.cleaned_data['email'],
                 self.cleaned_data['username'])
         except HTTPError as e:
+            error_text = e.response.text
             logger.warn("Error when creating user on the SSO: %s",
-                        e.response.text)
-            if e.response.status_code == 400:
-                # According to lizard-auth-server, this normally means a
-                # duplicate username. Assuming we've send a correct message.
+                        error_text)
+            if 'duplicate username' in error_text:
                 raise ValidationError(
                     {'username': (_("Username %s already used") %
                                   self.cleaned_data['username'])}
                 )
-            raise ValidationError(e)
+            raise ValidationError(error_text[:200])
         user = client.construct_user(user_dict)
         logger.info("Created user %s on the SSO and added it locally",
                     user)
