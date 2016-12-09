@@ -160,13 +160,6 @@ INSTALLED_APPS = (
     'crispy_forms',
 )
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': os.path.join(BUILDOUT_DIR, 'var', 'cache'),
-    }
-}
-
 # Explicitly set a unique name to avoid cookie collisions when running multiple
 # applications on the same domain. See: http://stackoverflow.com/a/7894760
 SESSION_COOKIE_NAME = 'lizard_auth_client_sessionid'

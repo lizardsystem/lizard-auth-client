@@ -22,6 +22,12 @@ from lizard_auth_client.conf import settings
 logger = logging.getLogger(__name__)
 
 
+# The API errors from the SSO are nice short textual messages. Older versions
+# returned big html pages. We strip the error messages to a max length to
+# prevent huge feedback messages.
+MAX_ERROR_MESSAGE_LENGTH = 200
+
+
 class ManageUserBaseForm(forms.ModelForm):
     """Base form for managing a user."""
     class Meta:
@@ -190,13 +196,14 @@ class SearchEmailForm(forms.Form):
             user_dict = client.sso_search_user_by_email(
                 self.cleaned_data['email'])
         except HTTPError as e:
-            logger.info("Error when searching user on the SSO: %s",
-                        e.response.text)
+            error_text = e.response.text
             if e.response.status_code == 404:
                 msg = _("User with email %s not found")
                 raise ValidationError(
                     {'email': msg % self.cleaned_data['email']})
-            raise ValidationError(e)
+            logger.error("Error when searching user on the SSO: %s",
+                         error_text)
+            raise ValidationError(error_text[:MAX_ERROR_MESSAGE_LENGTH])
         user = client.construct_user(user_dict)
         logger.info("Added SSO user %s locally", user)
 
@@ -231,16 +238,15 @@ class CreateNewUserForm(forms.Form):
                 self.cleaned_data['email'],
                 self.cleaned_data['username'])
         except HTTPError as e:
-            logger.warn("Error when creating user on the SSO: %s",
-                        e.response.text)
-            if e.response.status_code == 400:
-                # According to lizard-auth-server, this normally means a
-                # duplicate username. Assuming we've send a correct message.
+            error_text = e.response.text
+            if 'duplicate username' in error_text:
                 raise ValidationError(
                     {'username': (_("Username %s already used") %
                                   self.cleaned_data['username'])}
                 )
-            raise ValidationError(e)
+            logger.error("Error when creating user on the SSO: %s",
+                         error_text)
+            raise ValidationError(error_text[:MAX_ERROR_MESSAGE_LENGTH])
         user = client.construct_user(user_dict)
         logger.info("Created user %s on the SSO and added it locally",
                     user)
