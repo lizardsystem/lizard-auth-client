@@ -5,7 +5,11 @@ Changelog of lizard-auth-client
 2.8 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Nicer error messages with better feedback (in English...) from the SSO
+  server if something goes wrong.
+
+- Such errors are logged in the site itself at error level now, making it
+  easier to figure out what went wrong.
 
 
 2.7 (2016-12-06)
