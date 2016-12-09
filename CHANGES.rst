@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.8 (unreleased)
+2.8 (2016-12-09)
 ----------------
 
 - Nicer error messages with better feedback (in English...) from the SSO
