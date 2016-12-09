@@ -22,6 +22,12 @@ from lizard_auth_client.conf import settings
 logger = logging.getLogger(__name__)
 
 
+# The API errors from the SSO are nice short textual messages. Older versions
+# returned big html pages. We strip the error messages to a max length to
+# prevent huge feedback messages.
+MAX_ERROR_MESSAGE_LENGTH = 200
+
+
 class ManageUserBaseForm(forms.ModelForm):
     """Base form for managing a user."""
     class Meta:
@@ -191,13 +197,13 @@ class SearchEmailForm(forms.Form):
                 self.cleaned_data['email'])
         except HTTPError as e:
             error_text = e.response.text
-            logger.info("Error when searching user on the SSO: %s",
-                        error_text)
             if e.response.status_code == 404:
                 msg = _("User with email %s not found")
                 raise ValidationError(
                     {'email': msg % self.cleaned_data['email']})
-            raise ValidationError(error_text[:200])
+            logger.error("Error when searching user on the SSO: %s",
+                         error_text)
+            raise ValidationError(error_text[:MAX_ERROR_MESSAGE_LENGTH])
         user = client.construct_user(user_dict)
         logger.info("Added SSO user %s locally", user)
 
@@ -233,14 +239,14 @@ class CreateNewUserForm(forms.Form):
                 self.cleaned_data['username'])
         except HTTPError as e:
             error_text = e.response.text
-            logger.warn("Error when creating user on the SSO: %s",
-                        error_text)
             if 'duplicate username' in error_text:
                 raise ValidationError(
                     {'username': (_("Username %s already used") %
                                   self.cleaned_data['username'])}
                 )
-            raise ValidationError(error_text[:200])
+            logger.error("Error when creating user on the SSO: %s",
+                         error_text)
+            raise ValidationError(error_text[:MAX_ERROR_MESSAGE_LENGTH])
         user = client.construct_user(user_dict)
         logger.info("Created user %s on the SSO and added it locally",
                     user)
