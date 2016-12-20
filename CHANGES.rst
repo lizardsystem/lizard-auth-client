@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.9 (unreleased)
+2.9 (2016-12-20)
 ----------------
 
 - Changed the method ``create`` to ``get_or_create`` in migration 0003* 
