@@ -6,7 +6,7 @@ Changelog of lizard-auth-client
 ----------------
 
 - Changed the method ``create`` to ``get_or_create`` in migration 0003* 
-  to avoid faliing tests.
+  to avoid failing tests.
 
 2.8 (2016-12-09)
 ----------------
