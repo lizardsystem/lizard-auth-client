@@ -9,7 +9,7 @@ def add_custom_permission(apps, schema_editor):
     User = apps.get_model('auth', 'User')
     ContentType = apps.get_model('contenttypes', 'ContentType')
     content_type = ContentType.objects.get_for_model(User)
-    Permission.objects.create(
+    obj, created = Permission.objects.get_or_create(
         codename='manage_users',
         name='Can manage users',
         content_type=content_type
