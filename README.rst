@@ -87,7 +87,10 @@ like this::
     SSO_SERVER_API_START_URL = 'https://sso.lizard.net/api2/'
     SSO_KEY = 'sdfkljlkasdflkasfdlkasfdlk;asdflkjlaksdfjlkas'
     SSO_SECRET = 'jklsdfjlksdfjklasdfkljasdfjlkasjkd;fasdf'
-    SSO_ALLOW_ANYONE = False
+    SSO_ALLOW_ONLY_KNOWN_USERS = True
+
+Note that with these settings, logging in won't be allowed right away due to
+the ``SSO_ALLOW_ONLY_KNOWN_USERS`` setting, see the section below.
 
 
 Restricting access
