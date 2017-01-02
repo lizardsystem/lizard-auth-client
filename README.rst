@@ -39,6 +39,16 @@ import them in the root of your urlpatterns::
         (r'', include('lizard_auth_client.urls')),
     )
 
+Optionally, add our authentication backend in addition to Django's default one::
+
+    AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend',
+                               'lizard_auth_client.backends.SSOBackend']
+
+Normally, the authentication backend is not needed if you only log in through
+the reguler part of your website, using the regular django login url. The
+backend is used if you log in directly via ``/admin/`` or via django rest
+framework.
+
 
 Settings for the original V1 API
 --------------------------------
