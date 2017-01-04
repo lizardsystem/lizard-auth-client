@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 2.10 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Adds migration for role META.
 
 
 2.9 (2016-12-20)
