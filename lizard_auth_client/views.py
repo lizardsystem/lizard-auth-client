@@ -602,6 +602,7 @@ class ManageOrganisationIndex(
         context['organisations'] = self.managed_organisations
         return context
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         """Redirect to organisation management page if """
         # put the managed organisations in the context
