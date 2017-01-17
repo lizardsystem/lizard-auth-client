@@ -681,6 +681,7 @@ class ManageOrganisationDetail(
         """Only used the organisations managed by the request user."""
         return self.managed_organisations
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         """
         If user takes the manage permission for this organisation from himself,
@@ -720,6 +721,7 @@ class ManageUserOrganisationDetail(
         context['user'] = self.user
         return context
 
+    @method_decorator(login_required)
     def dispatch(self, request, organisation_pk=None, user_pk=None, *args,
                  **kwargs):
         """
@@ -870,6 +872,7 @@ class ManageUserAddView(
 
         return super(ManageUserAddView, self).form_valid(form)
 
+    @method_decorator(login_required)
     def dispatch(self, request, organisation_pk=None, *args, **kwargs):
         try:
             self.organisation = self.managed_organisations.get(
