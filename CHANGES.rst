@@ -5,8 +5,8 @@ Changelog of lizard-auth-client
 2.10 (unreleased)
 -----------------
 
-- Add ``login_required`` decorator to selected management views (decorators
-  are not inherited from ``RoleRequiredMixin``).
+- Add ``login_required`` decorator to selected management views (because
+  decorators are not inherited from ``RoleRequiredMixin``).
 
 - Adds migration for role META.
 
@@ -14,7 +14,7 @@ Changelog of lizard-auth-client
 2.9 (2016-12-20)
 ----------------
 
-- Changed the method ``create`` to ``get_or_create`` in migration 0003* 
+- Changed the method ``create`` to ``get_or_create`` in migration 0003*
   to avoid failing tests.
 
 2.8 (2016-12-09)
