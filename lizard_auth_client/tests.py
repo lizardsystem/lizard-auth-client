@@ -841,9 +841,9 @@ class V2ViewsTest(TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_user_overview_post(self):
-        superuser = User.objects.create_superuser('myuser',
-                                                  'myemail@test.com',
-                                                  'mypass')
+        User.objects.create_superuser('myuser',
+                                      'myemail@test.com',
+                                      'mypass')
         user1 = User.objects.create_user('user1',
                                          'user1@test.com',
                                          'user1')
