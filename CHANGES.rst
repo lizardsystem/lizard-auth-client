@@ -5,13 +5,15 @@ Changelog of lizard-auth-client
 2.10 (unreleased)
 -----------------
 
-- Adds migration for role META.
+- Added migration for role META.
+
+- Added fix for user_overview template condition typo.
 
 
 2.9 (2016-12-20)
 ----------------
 
-- Changed the method ``create`` to ``get_or_create`` in migration 0003* 
+- Changed the method ``create`` to ``get_or_create`` in migration 0003*
   to avoid failing tests.
 
 2.8 (2016-12-09)
