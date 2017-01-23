@@ -27,7 +27,7 @@
             <td>
               <input type="checkbox"
                      name="to_disable"
-                     {% if user.is_superuser or user = request.user %}
+                     {% if user.is_superuser or user == request.user %}
                        disabled="true"
                        title='{% trans "You cannot disable yourself or a superuser" %}'
                      {% endif %}

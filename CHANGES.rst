@@ -8,7 +8,13 @@ Changelog of lizard-auth-client
 - Add ``login_required`` decorator to selected management views (because
   decorators are not inherited from ``RoleRequiredMixin``).
 
-- Adds migration for role META.
+
+2.9.1 (2017-01-20)
+------------------
+
+- Added migration for role META.
+
+- Added fix for user_overview template condition typo.
 
 
 2.9 (2016-12-20)
