@@ -5,7 +5,8 @@ Changelog of lizard-auth-client
 2.10 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Add ``login_required`` decorator to selected management views (because
+  decorators are not inherited from ``RoleRequiredMixin``).
 
 
 2.9.1 (2017-01-20)
