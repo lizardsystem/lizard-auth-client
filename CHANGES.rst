@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 2.11 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Update admin. Add search and filters.
 
 
 2.10 (2017-01-23)
