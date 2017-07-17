@@ -9,6 +9,7 @@ class OrganisationAdmin(admin.ModelAdmin):
     list_display = ('name', 'unique_id', )
     search_fields = ('name', )
 
+
 class UserOrganisationRoleAdmin(admin.ModelAdmin):
     model = models.UserOrganisationRole
     list_display = ('role', 'user', 'organisation', )
