@@ -1097,14 +1097,37 @@ class TestManagementViews(TestCase):
         return views.ManageUserAddView.as_view()(
             request, self.organisation_1.id)
 
-    def test_organisation_add_user(self):
+    def test_organisation_add_totally_new_user(self):
         """A manager should be able to add an user
+           with an unknown email address and username
         """
         with self.get_new_user_sso_mock():
             response = self.get_new_user_response(
                 {'username': 'root_new',
                  'first_name': 'willie',
                  'email': 'noreply_new@example.com'})
+
+            # Should return an HTTP redirect to detail page
+            self.assertEqual(response.status_code, 302)
+
+    def test_organisation_add_known_exact_match_user(self):
+        """A manager should be able to add an user
+           with an exactly matching email-address/username combination
+        """
+        with self.get_new_user_sso_mock() as sso_mock:
+            # Inject error raised by _new_user_sso_post
+            sso_mock.side_effect = views.UserNotCreatedError(
+                "User could not be created",
+                response=mock.Mock(
+                    status_code=200,
+                    __getitem__=lambda x, y: {
+                        'username': 'root',
+                        'email': 'noreply@example.com'}))
+
+            response = self.get_new_user_response(
+                {'username': 'root',
+                 'first_name': 'willie',
+                 'email': 'noreply@example.com'})
 
             # Should return an HTTP redirect to detail page
             self.assertEqual(response.status_code, 302)
@@ -1116,19 +1139,25 @@ class TestManagementViews(TestCase):
         with self.get_new_user_sso_mock() as sso_mock:
             sso_mock.side_effect = views.UserNotCreatedError(
                 "User could not be created",
-                response=mock.Mock(status_code=200))
+                response=mock.Mock(
+                    status_code=200,
+                    __getitem__=lambda x, y: {
+                        'username': 'root_existing',
+                        'email': 'noreply@example.com'}))
 
             response = self.get_new_user_response(
                 {'username': 'root_new',
                  'first_name': 'willie',
                  'email': 'noreply@example.com'})
 
-            # Should return form validation error
+            # Should return form validation error indicating
+            # that a user with "root_existing" username already
+            # exists for the given email-address
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
-                response.context_data['form'].errors['email'],
-                ['This email address is already in use, please specify a '
-                 'different one'])
+                response.context_data['form'].errors['username'],
+                ['The given username does not match the email address, '
+                 'please use: root_existing'])
 
     def test_organisation_add_user_with_existing_username(self):
         """A manager should not be able to add an user with an existing

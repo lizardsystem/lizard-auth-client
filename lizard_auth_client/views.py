@@ -880,22 +880,27 @@ class ManageUserAddView(
         try:
             response = _new_user_sso_post('new-user', payload)
         except requests.exceptions.HTTPError as e:
-            if e.response.status_code == 409:
+            response = e.response
+            if response.status_code == 409:
                 form.add_error(
                     'username',
                     'This username is already in use, please specify a '
                     'different one')
                 return self.form_invalid(form)
-            elif e.response.status_code == 200:
-                # Expect an 201 (created), 200 indcates the
-                # e-mail adres is already
-                # in use..
-                form.add_error(
-                    'email',
-                    'This email address is already in use, please specify a '
-                    'different one')
-                return self.form_invalid(form)
-            raise e
+            elif response.status_code == 200:
+                # Expect an 201 (created), 200 indicates the
+                # e-mail adres is already in use
+                # Return a validation error if the username is not the same
+                if (response['user']['username'] !=
+                    payload['username']):
+                    form.add_error(
+                        'username',
+                        'The given username does not match the email address, '
+                        'please use: %s' %
+                        response['user']['username'])
+                    return self.form_invalid(form)
+            else:
+                raise e
 
         updated_values = response['user']
         # From the perspective of a manager, it's a new user, but the user
