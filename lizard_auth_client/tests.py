@@ -24,6 +24,7 @@ from lizard_auth_client import urls
 from lizard_auth_client import views  # NOQA
 from lizard_auth_client.conf import settings
 from lizard_auth_client.models import get_user_org_role_dict
+from requests.exceptions import HTTPError
 
 import jwt
 import logging
@@ -1070,6 +1071,85 @@ class TestManagementViews(TestCase):
         request.user.is_superuser = True
         response = views.ManageOrganisationIndex.as_view()(request)
         self.assertEqual(response.status_code, 200)
+
+    def get_new_user_sso_mock(self):
+        return mock.patch(
+            'lizard_auth_client.views._new_user_sso_post',
+            return_value={
+                'success': True,
+                'user': {'username': 'root',
+                         'first_name': 'willie',
+                         'last_name': 'wortel',
+                         'email': 'noreply@example.com',
+                         'is_active': True,
+                         'is_staff': False,
+                         'is_superuser': False}})
+
+    def get_new_user_response(self, post_data):
+        request = self.request_factory.post(
+            reverse('lizard_auth_client.management_users_add',
+                    args=[self.organisation_1.id]))
+        request.session = {}
+        request.user = self.user_1
+        request.user.is_superuser = True
+        request.POST = post_data
+
+        return views.ManageUserAddView.as_view()(
+            request, self.organisation_1.id)
+
+    def test_organisation_add_user(self):
+        """A manager should be able to add an user
+        """
+        with self.get_new_user_sso_mock():
+            response = self.get_new_user_response(
+                {'username': 'root_new',
+                 'first_name': 'willie',
+                 'email': 'noreply_new@example.com'})
+
+            # Should return an HTTP redirect to detail page
+            self.assertEqual(response.status_code, 302)
+
+    def test_organisation_add_user_with_existing_email_address(self):
+        """A manager should not be able to add an user with an existing
+           email address
+        """
+        with self.get_new_user_sso_mock() as sso_mock:
+            sso_mock.side_effect = views.UserNotCreatedError(
+                "User could not be created",
+                response=mock.Mock(status_code=200))
+
+            response = self.get_new_user_response(
+                {'username': 'root_new',
+                 'first_name': 'willie',
+                 'email': 'noreply@example.com'})
+
+            # Should return form validation error
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.context_data['form'].errors['email'],
+                ['This email address is already in use, please specify a '
+                 'different one'])
+
+    def test_organisation_add_user_with_existing_username(self):
+        """A manager should not be able to add an user with an existing
+           username
+        """
+        with self.get_new_user_sso_mock() as sso_mock:
+            sso_mock.side_effect = HTTPError(
+                "Error: Username is already in use: root",
+                response=mock.Mock(status_code=409))
+
+            response = self.get_new_user_response(
+                {'username': 'root',
+                 'first_name': 'willie',
+                 'email': 'noreply_new@example.com'})
+
+            # Returns form with validation error
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.context_data['form'].errors['username'],
+                ['This username is already in use, please specify a '
+                 'different one'])
 
     def test_organisation_index_view_manager(self):
         """A manager should have access to the management index view."""

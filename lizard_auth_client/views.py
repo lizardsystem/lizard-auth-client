@@ -46,6 +46,8 @@ from lizard_auth_client.conf import settings
 from lizard_auth_client.forms import CreateNewUserForm
 from lizard_auth_client.forms import SearchEmailForm
 
+from requests.exceptions import HTTPError
+
 try:
     from urlparse import urljoin
     from urllib import urlencode
@@ -62,7 +64,11 @@ JWT_EXPIRATION = datetime.timedelta(
     minutes=settings.SSO_JWT_EXPIRATION_MINUTES)
 
 
-def _sso_post(viewname, payload):
+class UserNotCreatedError(HTTPError):
+    pass
+
+
+def _sso_post(viewname, payload, return_response=False):
     """Send a payload to the named URL at the SSO server.
     Args:
         viewname (str): The name of the URL (a bit like Django's reverse).
@@ -93,9 +99,36 @@ def _sso_post(viewname, payload):
             'key': settings.SSO_KEY,
         }
     )
-    # Check that the request is succesful.
+
+    if return_response:
+        return r
+
+    # Check that the request is succesfull.
+    # catches 4xx/5xx errors
     r.raise_for_status()
+
     # Return the decoded JSON response.
+    return r.json()
+
+
+def _new_user_sso_post(viewname, payload):
+    """
+    Wrap __sso_post for new_user specific
+    status_code checks.
+    """
+
+    r = _sso_post(viewname, payload, return_response=True)
+
+    # Check that the request is succesfull.
+    # catches 4xx/5xx errors
+    r.raise_for_status()
+
+    if r.status_code == 200:
+        # User is not created, should be an 201 created
+        # probably the email adres is already in use
+        raise(UserNotCreatedError("User could not be created", response=r))
+
+    # Return the decoded JSON response
     return r.json()
 
 
@@ -844,7 +877,26 @@ class ManageUserAddView(
         # portal that initiated the creation of the new SSO account. This may
         # vary since the server can have multiple hostnames.
         payload['visit_url'] = self.request.get_host()
-        response = _sso_post('new-user', payload)
+        try:
+            response = _new_user_sso_post('new-user', payload)
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 409:
+                form.add_error(
+                    'username',
+                    'This username is already in use, please specify a '
+                    'different one')
+                return self.form_invalid(form)
+            elif e.response.status_code == 200:
+                # Expect an 201 (created), 200 indcates the
+                # e-mail adres is already
+                # in use..
+                form.add_error(
+                    'email',
+                    'This email address is already in use, please specify a '
+                    'different one')
+                return self.form_invalid(form)
+            raise e
+
         updated_values = response['user']
         # From the perspective of a manager, it's a new user, but the user
         # might already exist in the lizard_nxt database. In that case,
