@@ -768,9 +768,9 @@ class V2ViewsTest(TestCase):
             result.json.return_value = self.server_urls
             return result
 
-        with mock.patch('requests.get', mock_get):
-            # Fill the cache
-            views.sso_server_url('login')
+        with mock.patch('lizard_auth_client.client.requests.get', mock_get):
+            # Fill the cache (force reloading)
+            views.sso_server_url('login', True)
 
         self.request_factory = RequestFactory()
 
@@ -1015,6 +1015,23 @@ class TestRoleManagement(TestCase):
         self.assertTrue('last_name' in form.fields.keys())
 
 
+class MockResponse:
+    """
+    Mocks the requests.Response object
+    """
+    def __init__(self, status_code, json_data):
+        self.status_code = status_code
+        self.json_data = json_data
+
+    def json(self):
+        return self.json_data
+
+    def raise_for_status(self):
+        # Raise HTTPError for 4xx and 5xx
+        if self.status_code / 100 in (4, 5):
+            raise HTTPError(response=self)
+
+
 @override_settings(SSO_USE_V2_LOGIN=True)
 class TestManagementViews(TestCase):
     """Tests for permission/role management views."""
@@ -1072,18 +1089,24 @@ class TestManagementViews(TestCase):
         response = views.ManageOrganisationIndex.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
-    def get_new_user_sso_mock(self):
+    def get_new_user_sso_mock(self, override_user_data=None, status_code=201):
+        user_data = {'username': 'root',
+                     'first_name': 'willie',
+                     'last_name': 'wortel',
+                     'email': 'noreply@example.com',
+                     'is_active': True,
+                     'is_staff': False,
+                     'is_superuser': False}
+
+        if override_user_data:
+            user_data.update(override_user_data)
+
         return mock.patch(
-            'lizard_auth_client.views._new_user_sso_post',
-            return_value={
-                'success': True,
-                'user': {'username': 'root',
-                         'first_name': 'willie',
-                         'last_name': 'wortel',
-                         'email': 'noreply@example.com',
-                         'is_active': True,
-                         'is_staff': False,
-                         'is_superuser': False}})
+            'lizard_auth_client.views.requests.post',
+            return_value=MockResponse(
+                status_code,
+                {'success': True,
+                 'user': user_data}))
 
     def get_new_user_response(self, post_data):
         request = self.request_factory.post(
@@ -1101,7 +1124,7 @@ class TestManagementViews(TestCase):
         """A manager should be able to add an user
            with an unknown email address and username
         """
-        with self.get_new_user_sso_mock():
+        with self.get_new_user_sso_mock(status_code=201):
             response = self.get_new_user_response(
                 {'username': 'root_new',
                  'first_name': 'willie',
@@ -1114,36 +1137,26 @@ class TestManagementViews(TestCase):
         """A manager should be able to add an user
            with an exactly matching email-address/username combination
         """
-        with self.get_new_user_sso_mock() as sso_mock:
-            # Inject error raised by _new_user_sso_post
-            sso_mock.side_effect = views.UserNotCreatedError(
-                "User could not be created",
-                response=mock.Mock(
-                    status_code=200,
-                    __getitem__=lambda x, y: {
-                        'username': 'root',
-                        'email': 'noreply@example.com'}))
+        with self.get_new_user_sso_mock(
+             {'username': 'root', 'email': 'noreply@example.com'},
+             status_code=200):
 
             response = self.get_new_user_response(
                 {'username': 'root',
                  'first_name': 'willie',
                  'email': 'noreply@example.com'})
 
-            # Should return an HTTP redirect to detail page
+            # Should return an HTTP redirect to new created user
+            # detail page,
             self.assertEqual(response.status_code, 302)
 
     def test_organisation_add_user_with_existing_email_address(self):
         """A manager should not be able to add an user with an existing
            email address
         """
-        with self.get_new_user_sso_mock() as sso_mock:
-            sso_mock.side_effect = views.UserNotCreatedError(
-                "User could not be created",
-                response=mock.Mock(
-                    status_code=200,
-                    __getitem__=lambda x, y: {
-                        'username': 'root_existing',
-                        'email': 'noreply@example.com'}))
+        with self.get_new_user_sso_mock(
+             {'username': 'root_existing', 'email': 'noreply@example.com'},
+             status_code=200):
 
             response = self.get_new_user_response(
                 {'username': 'root_new',
@@ -1163,10 +1176,7 @@ class TestManagementViews(TestCase):
         """A manager should not be able to add an user with an existing
            username
         """
-        with self.get_new_user_sso_mock() as sso_mock:
-            sso_mock.side_effect = HTTPError(
-                "Error: Username is already in use: root",
-                response=mock.Mock(status_code=409))
+        with self.get_new_user_sso_mock(status_code=409):
 
             response = self.get_new_user_response(
                 {'username': 'root',

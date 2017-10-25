@@ -878,31 +878,32 @@ class ManageUserAddView(
         # vary since the server can have multiple hostnames.
         payload['visit_url'] = self.request.get_host()
         try:
-            response = _new_user_sso_post('new-user', payload)
+            json_data = _new_user_sso_post('new-user', payload)
         except requests.exceptions.HTTPError as e:
-            response = e.response
-            if response.status_code == 409:
+            json_data = e.response.json()
+
+            if e.response.status_code == 409:
                 form.add_error(
                     'username',
                     'This username is already in use, please specify a '
                     'different one')
                 return self.form_invalid(form)
-            elif response.status_code == 200:
+            elif e.response.status_code == 200:
                 # Expect an 201 (created), 200 indicates the
                 # e-mail adres is already in use
                 # Return a validation error if the username is not the same
-                if (response['user']['username'] !=
+                if (json_data['user']['username'] !=
                     payload['username']):
                     form.add_error(
                         'username',
                         'The given username does not match the email address, '
                         'please use: %s' %
-                        response['user']['username'])
+                        json_data['user']['username'])
                     return self.form_invalid(form)
             else:
                 raise e
 
-        updated_values = response['user']
+        updated_values = json_data['user']
         # From the perspective of a manager, it's a new user, but the user
         # might already exist in the lizard_nxt database. In that case,
         # we'll update his credentials with the latest info from SSO.
