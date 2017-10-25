@@ -713,7 +713,7 @@ def get_billable_organisation(user, role_code=models.Role.BILLING_ROLE_CODE):
                 synced = True
 
 
-def sso_server_url(name):
+def sso_server_url(name, ignore_cache=False):
     """Return url of endpoint on the SSO server
 
     The v2 API has a starting point that lists the available endpoints. We
@@ -732,7 +732,8 @@ def sso_server_url(name):
     """
     cache_key = 'cached_sso_server_urls'
     sso_server_urls = cache.get(cache_key)
-    if sso_server_urls is None:
+
+    if sso_server_urls is None or ignore_cache:
         # import here so this module can easily be reused outside of Django
         from lizard_auth_client.conf import settings
         # First time, grab it from the server.
