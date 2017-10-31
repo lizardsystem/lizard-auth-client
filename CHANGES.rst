@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.11 (unreleased)
+2.11 (2017-10-31)
 -----------------
 
 - Make compatible again with Django 1.6.
