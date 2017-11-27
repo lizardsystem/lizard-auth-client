@@ -5,7 +5,10 @@ Changelog of lizard-auth-client
 2.11 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Check if an email address exists on the SSO server before adding new user, add
+  the user if the username is the same on the SSO server else show a form error.
+
+- Show a form error if the username already exists on the SSO server.
 
 
 2.10 (2017-01-23)

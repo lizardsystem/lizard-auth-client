@@ -68,16 +68,38 @@ class UserNotCreatedError(HTTPError):
     pass
 
 
-def _sso_post(viewname, payload, return_response=False):
+def sso_search_user_by_email(email):
+    """Try to get a user by email at the SSO server.
+    Args:
+        email (str): The email address to search for
+    Returns:
+        response
+    """
+
+    payload = {
+        'iss': settings.SSO_KEY,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(
+            minutes=settings.SSO_JWT_EXPIRATION_MINUTES),
+        'email': email,
+    }
+    signed_message = jwt.encode(payload, settings.SSO_SECRET,
+                                algorithm=settings.SSO_JWT_ALGORITHM)
+    url = sso_server_url('find-user')
+    params = {
+        'message': signed_message,
+        'key': settings.SSO_KEY,
+    }
+    return requests.get(url, params=params, timeout=10)
+
+
+def _sso_post(viewname, payload):
     """Send a payload to the named URL at the SSO server.
     Args:
         viewname (str): The name of the URL (a bit like Django's reverse).
             See https://sso.lizard.net/api2/.
         payload (dict): A Python dictionary with key-value pairs to send.
     Returns:
-        dict: The decoded JSON response.
-    Raises:
-        HTTPError, if one occured.
+        response
     """
     url = sso_server_url(viewname)
     # Add required fields to the payload. These cannot/should not
@@ -93,43 +115,12 @@ def _sso_post(viewname, payload, return_response=False):
     # Send the key along with the signed message. This is a
     # peculiarity of the SSO server: the signed message
     # already contains the key.
-    r = requests.post(
+    return requests.post(
         url, data={
             'message': signed_message,
             'key': settings.SSO_KEY,
         }
     )
-
-    if return_response:
-        return r
-
-    # Check that the request is succesfull.
-    # catches 4xx/5xx errors
-    r.raise_for_status()
-
-    # Return the decoded JSON response.
-    return r.json()
-
-
-def _new_user_sso_post(viewname, payload):
-    """
-    Wrap __sso_post for new_user specific
-    status_code checks.
-    """
-
-    r = _sso_post(viewname, payload, return_response=True)
-
-    # Check that the request is succesfull.
-    # catches 4xx/5xx errors
-    r.raise_for_status()
-
-    if r.status_code == 200:
-        # User is not created, should be an 201 created
-        # probably the email adres is already in use
-        raise(UserNotCreatedError("User could not be created", response=r))
-
-    # Return the decoded JSON response
-    return r.json()
 
 
 class HttpResponseServiceUnavailable(HttpResponse):
@@ -869,39 +860,67 @@ class ManageUserAddView(
         initial['organisation'] = self.organisation.name
         return initial
 
+    def _search_user_by_email(self, payload):
+        # Try to find the user by e-mail
+        response = sso_search_user_by_email(payload['email'])
+        # Raise exception for all 4xx/5xx statuscodes other than
+        # 404
+        if response.status_code != 404:
+            response.raise_for_status()
+
+        return response
+
+    def _create_new_user(self, payload):
+        # Try to add the new user
+        response = _sso_post('new-user', payload)
+
+        # Raise exception for all 4xx/5xx statuscodes other than
+        # 409
+        if response.status_code != 409:
+            response.raise_for_status()
+
+        return response
+
     @transaction.atomic
     def form_valid(self, form):
         prototype = form.save(commit=False)
+
         payload = model_to_dict(prototype, form.Meta.fields)
         # Once the activation process is finished, users receive a link to the
         # portal that initiated the creation of the new SSO account. This may
         # vary since the server can have multiple hostnames.
         payload['visit_url'] = self.request.get_host()
-        try:
-            json_data = _new_user_sso_post('new-user', payload)
-        except requests.exceptions.HTTPError as e:
-            json_data = e.response.json()
 
-            if e.response.status_code == 409:
+        # Search user by e-mail address
+        search_res = self._search_user_by_email(payload)
+
+        assert search_res.status_code in (200, 404)
+
+        if search_res.status_code == 200:
+            # Email is already in use, raise error if
+            # username is not the same
+            json_data = search_res.json()
+            if json_data['user']['username'] != payload['username']:
                 form.add_error(
                     'username',
-                    'This username is already in use, please specify a '
-                    'different one')
+                    _('The given username does not match with the username '
+                      'on the SSO server, please use: %s') %
+                    json_data['user']['username'])
                 return self.form_invalid(form)
-            elif e.response.status_code == 200:
-                # Expect an 201 (created), 200 indicates the
-                # e-mail adres is already in use
-                # Return a validation error if the username is not the same
-                if (json_data['user']['username'] !=
-                    payload['username']):
-                    form.add_error(
-                        'username',
-                        'The given username does not match the email address, '
-                        'please use: %s' %
-                        json_data['user']['username'])
-                    return self.form_invalid(form)
-            else:
-                raise e
+        elif search_res.status_code == 404:
+            # Email is unknown, try to create the
+            # user on the SSO server
+            add_res = self._create_new_user(payload)
+
+            if add_res.status_code == 409:
+                # Username is already in use
+                form.add_error(
+                    'username',
+                    _('This username is already in use on the SSO server, '
+                      'please specify a different one'))
+                return self.form_invalid(form)
+
+            json_data = add_res.json()
 
         updated_values = json_data['user']
         # From the perspective of a manager, it's a new user, but the user
