@@ -1117,10 +1117,10 @@ class TestManagementViews(TestCase):
         # Patch both requests post and get
         return nested(
             mock.patch(
-                'lizard_auth_client.views.requests.post',
+                'lizard_auth_client.client.requests.post',
                 side_effect=get_return_value),
             mock.patch(
-                'lizard_auth_client.views.requests.get',
+                'lizard_auth_client.client.requests.get',
                 side_effect=get_return_value))
 
     def _get_new_user_response(self, post_data):

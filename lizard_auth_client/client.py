@@ -743,9 +743,12 @@ def sso_server_url(name, use_cache=True):
     return sso_server_urls[name]
 
 
-def sso_search_user_by_email(email):
-    """
-    Return a user dict, if found.
+def _sso_search_user_by_email_request(email):
+    """Try to get a user by email at the SSO server.
+    Args:
+        email (str): The email address to search for
+    Returns:
+        response
     """
     from lizard_auth_client.conf import settings
 
@@ -762,15 +765,45 @@ def sso_search_user_by_email(email):
         'message': signed_message,
         'key': settings.SSO_KEY,
     }
-    r = requests.get(url, params=params, timeout=10)
+    return requests.get(url, params=params, timeout=10)
+
+
+def sso_search_user_by_email(email):
+    """
+    Return a user dict, if found.
+    """
+    r = _sso_search_user_by_email_request(email)
+
     r.raise_for_status()
     return r.json()['user']
+
+
+def _sso_create_user_request_by_payload(payload):
+    """Try to get add an user to the SSO server.
+    Args:
+        payload (dict): The user data
+
+    Returns:
+        response
+    """
+    from lizard_auth_client.conf import settings
+
+    signed_message = jwt.encode(payload, settings.SSO_SECRET,
+                                algorithm=settings.SSO_JWT_ALGORITHM)
+    url = sso_server_url('new-user')
+    data = {
+        'message': signed_message,
+        'key': settings.SSO_KEY,
+    }
+
+    return requests.post(url, data=data, timeout=10)
 
 
 def sso_create_user(first_name, last_name, email, username):
     """
     Return a user dict, if successful.
     """
+
     from lizard_auth_client.conf import settings
 
     payload = {
@@ -783,13 +816,7 @@ def sso_create_user(first_name, last_name, email, username):
         'username': username,
         'language': settings.SSO_INVITATION_LANGUAGE,
     }
-    signed_message = jwt.encode(payload, settings.SSO_SECRET,
-                                algorithm=settings.SSO_JWT_ALGORITHM)
-    url = sso_server_url('new-user')
-    data = {
-        'message': signed_message,
-        'key': settings.SSO_KEY,
-    }
-    r = requests.post(url, data=data, timeout=10)
+
+    r = _sso_create_user_request_by_payload(payload)
     r.raise_for_status()
     return r.json()['user']

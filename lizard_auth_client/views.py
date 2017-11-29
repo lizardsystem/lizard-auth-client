@@ -41,7 +41,10 @@ from lizard_auth_client import client
 from lizard_auth_client import forms
 from lizard_auth_client import mixins
 from lizard_auth_client import models
-from lizard_auth_client.client import sso_server_url
+from lizard_auth_client.client import (
+    sso_server_url,
+    _sso_search_user_by_email_request,
+    _sso_create_user_request_by_payload)
 from lizard_auth_client.conf import settings
 from lizard_auth_client.forms import CreateNewUserForm
 from lizard_auth_client.forms import SearchEmailForm
@@ -66,30 +69,6 @@ JWT_EXPIRATION = datetime.timedelta(
 
 class UserNotCreatedError(HTTPError):
     pass
-
-
-def sso_search_user_by_email(email):
-    """Try to get a user by email at the SSO server.
-    Args:
-        email (str): The email address to search for
-    Returns:
-        response
-    """
-
-    payload = {
-        'iss': settings.SSO_KEY,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(
-            minutes=settings.SSO_JWT_EXPIRATION_MINUTES),
-        'email': email,
-    }
-    signed_message = jwt.encode(payload, settings.SSO_SECRET,
-                                algorithm=settings.SSO_JWT_ALGORITHM)
-    url = sso_server_url('find-user')
-    params = {
-        'message': signed_message,
-        'key': settings.SSO_KEY,
-    }
-    return requests.get(url, params=params, timeout=10)
 
 
 def _sso_post(viewname, payload):
@@ -862,7 +841,7 @@ class ManageUserAddView(
 
     def _search_user_by_email(self, payload):
         # Try to find the user by e-mail
-        response = sso_search_user_by_email(payload['email'])
+        response = _sso_search_user_by_email_request(payload['email'])
         # Raise exception for all 4xx/5xx statuscodes other than
         # 404
         if response.status_code != 404:
@@ -872,7 +851,7 @@ class ManageUserAddView(
 
     def _create_new_user(self, payload):
         # Try to add the new user
-        response = _sso_post('new-user', payload)
+        response = _sso_create_user_request_by_payload(payload)
 
         # Raise exception for all 4xx/5xx statuscodes other than
         # 409
