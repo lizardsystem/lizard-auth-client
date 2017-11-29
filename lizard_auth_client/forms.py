@@ -115,12 +115,23 @@ class ManageUserAddForm(ManageUserBaseForm):
             )
         )
 
-    def _get_validation_exclusions(self):
+    def validate_unique(self):
+        """
+        Calls the instance's validate_unique() method and updates the form's
+        validation errors if any were raised.
+        """
+        exclude = self._get_validation_unique_exclusions()
+        try:
+            self.instance.validate_unique(exclude=exclude)
+        except ValidationError as e:
+            self._update_errors(e)
+
+    def _get_validation_unique_exclusions(self):
         # A user might be `new` to an organisation, but already exist in the
         # database, because he has roles in other organsitions. In that
         # case, `validate_unique` should not fire. NB: the SSO server
         # matches on email address, not on username.
-        exclude = super(ManageUserAddForm, self)._get_validation_exclusions()
+        exclude = self._get_validation_exclusions()
         if 'email' in self.cleaned_data:
             model = get_user_model()
             email = self.cleaned_data['email']

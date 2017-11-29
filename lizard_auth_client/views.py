@@ -41,10 +41,15 @@ from lizard_auth_client import client
 from lizard_auth_client import forms
 from lizard_auth_client import mixins
 from lizard_auth_client import models
-from lizard_auth_client.client import sso_server_url
+from lizard_auth_client.client import (
+    sso_server_url,
+    _sso_search_user_by_email_request,
+    _sso_create_user_request_by_payload)
 from lizard_auth_client.conf import settings
 from lizard_auth_client.forms import CreateNewUserForm
 from lizard_auth_client.forms import SearchEmailForm
+
+from requests.exceptions import HTTPError
 
 try:
     from urlparse import urljoin
@@ -62,6 +67,10 @@ JWT_EXPIRATION = datetime.timedelta(
     minutes=settings.SSO_JWT_EXPIRATION_MINUTES)
 
 
+class UserNotCreatedError(HTTPError):
+    pass
+
+
 def _sso_post(viewname, payload):
     """Send a payload to the named URL at the SSO server.
     Args:
@@ -69,9 +78,7 @@ def _sso_post(viewname, payload):
             See https://sso.lizard.net/api2/.
         payload (dict): A Python dictionary with key-value pairs to send.
     Returns:
-        dict: The decoded JSON response.
-    Raises:
-        HTTPError, if one occured.
+        response
     """
     url = sso_server_url(viewname)
     # Add required fields to the payload. These cannot/should not
@@ -87,16 +94,12 @@ def _sso_post(viewname, payload):
     # Send the key along with the signed message. This is a
     # peculiarity of the SSO server: the signed message
     # already contains the key.
-    r = requests.post(
+    return requests.post(
         url, data={
             'message': signed_message,
             'key': settings.SSO_KEY,
         }
     )
-    # Check that the request is succesful.
-    r.raise_for_status()
-    # Return the decoded JSON response.
-    return r.json()
 
 
 class HttpResponseServiceUnavailable(HttpResponse):
@@ -836,16 +839,69 @@ class ManageUserAddView(
         initial['organisation'] = self.organisation.name
         return initial
 
+    def _search_user_by_email(self, payload):
+        # Try to find the user by e-mail
+        response = _sso_search_user_by_email_request(payload['email'])
+        # Raise exception for all 4xx/5xx statuscodes other than
+        # 404
+        if response.status_code != 404:
+            response.raise_for_status()
+
+        return response
+
+    def _create_new_user(self, payload):
+        # Try to add the new user
+        response = _sso_create_user_request_by_payload(payload)
+
+        # Raise exception for all 4xx/5xx statuscodes other than
+        # 409
+        if response.status_code != 409:
+            response.raise_for_status()
+
+        return response
+
     @transaction.atomic
     def form_valid(self, form):
         prototype = form.save(commit=False)
+
         payload = model_to_dict(prototype, form.Meta.fields)
         # Once the activation process is finished, users receive a link to the
         # portal that initiated the creation of the new SSO account. This may
         # vary since the server can have multiple hostnames.
         payload['visit_url'] = self.request.get_host()
-        response = _sso_post('new-user', payload)
-        updated_values = response['user']
+
+        # Search user by e-mail address
+        search_res = self._search_user_by_email(payload)
+
+        assert search_res.status_code in (200, 404)
+
+        if search_res.status_code == 200:
+            # Email is already in use, raise error if
+            # username is not the same
+            json_data = search_res.json()
+            if json_data['user']['username'] != payload['username']:
+                form.add_error(
+                    'username',
+                    _('The given username does not match with the username '
+                      'on the SSO server, please use: %s') %
+                    json_data['user']['username'])
+                return self.form_invalid(form)
+        elif search_res.status_code == 404:
+            # Email is unknown, try to create the
+            # user on the SSO server
+            add_res = self._create_new_user(payload)
+
+            if add_res.status_code == 409:
+                # Username is already in use
+                form.add_error(
+                    'username',
+                    _('This username is already in use on the SSO server, '
+                      'please specify a different one'))
+                return self.form_invalid(form)
+
+            json_data = add_res.json()
+
+        updated_values = json_data['user']
         # From the perspective of a manager, it's a new user, but the user
         # might already exist in the lizard_nxt database. In that case,
         # we'll update his credentials with the latest info from SSO.
