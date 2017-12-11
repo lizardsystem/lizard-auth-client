@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.12 (unreleased)
+2.12 (2017-12-11)
 -----------------
 
 - Check if an email address exists on the SSO server before adding new user, add
