@@ -96,13 +96,19 @@ class UserOrganisationRole(models.Model):
     user_model = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
     user = models.ForeignKey(
         user_model,
-        related_name='user_organisation_roles')
+        related_name='user_organisation_roles',
+        on_delete=models.CASCADE
+    )
     organisation = models.ForeignKey(
         Organisation,
-        related_name='user_organisation_roles')
+        related_name='user_organisation_roles',
+        on_delete=models.CASCADE
+    )
     role = models.ForeignKey(
         Role,
-        related_name='user_organisation_roles')
+        related_name='user_organisation_roles',
+        on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return '%s %s %s' % (

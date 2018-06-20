@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 2.13 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Some minor changes to make the lib Django >= 2.0 compatible.
 
 
 2.12 (2017-12-11)

@@ -15,16 +15,28 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='userorganisationrole',
             name='organisation',
-            field=models.ForeignKey(related_name='user_organisation_roles', to='lizard_auth_client.Organisation'),
+            field=models.ForeignKey(
+                related_name='user_organisation_roles',
+                to='lizard_auth_client.Organisation',
+                on_delete=models.CASCADE
+            ),
         ),
         migrations.AlterField(
             model_name='userorganisationrole',
             name='role',
-            field=models.ForeignKey(related_name='user_organisation_roles', to='lizard_auth_client.Role'),
+            field=models.ForeignKey(
+                related_name='user_organisation_roles',
+                to='lizard_auth_client.Role',
+                on_delete=models.CASCADE
+            ),
         ),
         migrations.AlterField(
             model_name='userorganisationrole',
             name='user',
-            field=models.ForeignKey(related_name='user_organisation_roles', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(
+                related_name='user_organisation_roles',
+                to=settings.AUTH_USER_MODEL,
+                on_delete=models.CASCADE
+            ),
         ),
     ]
