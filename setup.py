@@ -25,7 +25,6 @@ tests_require = [
     'factory-boy',
     'fake-factory',
     'mock',
-    'contextlib2',
 ]
 
 setup(
