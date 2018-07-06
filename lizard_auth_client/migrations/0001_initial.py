@@ -41,9 +41,9 @@ class Migration(migrations.Migration):
             name='UserOrganisationRole',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('organisation', models.ForeignKey(to='lizard_auth_client.Organisation')),
-                ('role', models.ForeignKey(to='lizard_auth_client.Role')),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('organisation', models.ForeignKey(to='lizard_auth_client.Organisation', on_delete=models.CASCADE)),
+                ('role', models.ForeignKey(to='lizard_auth_client.Role', on_delete=models.CASCADE)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
             },
