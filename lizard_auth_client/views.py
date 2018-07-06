@@ -878,7 +878,6 @@ class ManageUserAddView(
 
         # Search user by e-mail address
         search_res = self._search_user_by_email(payload)
-
         assert search_res.status_code in (200, 404)
 
         if search_res.status_code == 200:
