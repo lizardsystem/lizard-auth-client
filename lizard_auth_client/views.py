@@ -19,8 +19,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import reverse
-from django.core.urlresolvers import reverse_lazy
+try:
+    from django.core.urlresolvers import reverse
+    from django.core.urlresolvers import reverse_lazy
+# django => 2.0 combat
+except ImportError:
+    from django.urls import reverse
+    from django.urls import reverse_lazy
+
 from django.db import transaction
 from django.forms.models import model_to_dict
 from django.http import Http404
@@ -875,7 +881,6 @@ class ManageUserAddView(
 
         # Search user by e-mail address
         search_res = self._search_user_by_email(payload)
-
         assert search_res.status_code in (200, 404)
 
         if search_res.status_code == 200:

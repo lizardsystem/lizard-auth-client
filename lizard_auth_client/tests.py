@@ -1134,10 +1134,10 @@ class TestManagementViews(TestCase):
         # new_user returns 201, user created
         with mock.patch(
                 'lizard_auth_client.client.requests.post',
-                side_effect=[MockResponse(201, {})]) as _:
+                side_effect=[MockResponse(201, {})]):
             with mock.patch(
                     'lizard_auth_client.client.requests.get',
-                    side_effect=[MockResponse(404, {})]) as _:
+                    side_effect=[MockResponse(404, {})]):
 
                 response = self._get_new_user_response(
                     {'username': 'root_new',
@@ -1166,7 +1166,7 @@ class TestManagementViews(TestCase):
                         {'username': 'root',
                          'email': 'noreply@example.com'}
                     )
-                ]) as _:
+                ]):
 
             response = self._get_new_user_response(
                 {'username': 'root',
@@ -1198,7 +1198,7 @@ class TestManagementViews(TestCase):
                         {'username': 'root_existing',
                          'email': 'noreply@example.com'}
                     ),
-                ]) as _:
+                ]):
 
             response = self._get_new_user_response(
                 {'username': 'root_new',
@@ -1214,7 +1214,7 @@ class TestManagementViews(TestCase):
             self.assertEqual(
                 msg,
                 'The given username does not match with the username on the'
-                    ' SSO server, please use: root_existing')
+                ' SSO server, please use: root_existing')
 
     def test_organisation_add_user_with_existing_username(self):
         """A manager should not be able to add an user with an existing
@@ -1230,10 +1230,10 @@ class TestManagementViews(TestCase):
         # new_user returns 409 conflict status
         with mock.patch(
                 'lizard_auth_client.client.requests.post',
-                side_effect=[MockResponse(409, {})]) as _:
+                side_effect=[MockResponse(409, {})]):
             with mock.patch(
                     'lizard_auth_client.client.requests.get',
-                    side_effect=[MockResponse(404, {})]) as _:
+                    side_effect=[MockResponse(404, {})]):
 
                 response = self._get_new_user_response(
                     {'username': 'root',
@@ -1245,7 +1245,7 @@ class TestManagementViews(TestCase):
                 self.assertEqual(
                     msg,
                     'This username is already in use on the SSO server, '
-                     'please specify a different one')
+                    'please specify a different one')
 
     def test_organisation_index_view_manager(self):
         """A manager should have access to the management index view."""

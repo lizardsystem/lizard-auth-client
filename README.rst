@@ -39,6 +39,17 @@ import them in the root of your urlpatterns::
         (r'', include('lizard_auth_client.urls')),
     )
 
+If you use django >= 2.0 you have to use the ``path(route, view, kwargs=None, name=None)``
+method like so::
+
+    from django.urls import include, path
+
+    urlpatterns = patterns(
+        '',
+        path(r'', include('lizard_auth_client.urls')),
+        ...
+    )
+
 Optionally, add our authentication backend in addition to Django's default one::
 
     AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend',
