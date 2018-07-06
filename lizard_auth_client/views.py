@@ -22,7 +22,7 @@ from django.core.exceptions import ObjectDoesNotExist
 try:
     from django.core.urlresolvers import reverse
     from django.core.urlresolvers import reverse_lazy
-# django > 1.9 combat
+# django => 2.0 combat
 except ImportError:
     from django.urls import reverse
     from django.urls import reverse_lazy

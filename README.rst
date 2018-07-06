@@ -40,7 +40,7 @@ import them in the root of your urlpatterns::
     )
 
 If you use django >= 2.0 you have to use the ``path(route, view, kwargs=None, name=None)``
-method like so:
+method like so::
 
     from django.urls import include, path
 
