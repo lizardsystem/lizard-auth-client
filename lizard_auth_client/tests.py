@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Yet untested, but we want them reported by coverage.py, so we import them.
 from __future__ import unicode_literals
-from contextlib import nested
 from django.contrib.auth.models import User
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
@@ -10,15 +9,11 @@ from django.test import Client
 from django.test import RequestFactory
 from django.test import TestCase
 from django.test import override_settings
-from django.utils.translation import ugettext_lazy as _
 from faker import Faker
-from lizard_auth_client import admin  # NOQA
-from lizard_auth_client import apps  # NOQA
 from lizard_auth_client import backends
 from lizard_auth_client import client
 from lizard_auth_client import factories
 from lizard_auth_client import forms
-from lizard_auth_client import middleware  # NOQA
 from lizard_auth_client import mixins
 from lizard_auth_client import models
 from lizard_auth_client import signals
@@ -33,7 +28,7 @@ import jwt
 import logging
 import mock
 import pprint
-
+import json
 
 logger = logging.getLogger(__name__)
 fake = Faker()
@@ -1076,6 +1071,15 @@ class TestManagementViews(TestCase):
 
         self.request_factory = RequestFactory()
 
+    def _get_error_msg(self, response, key):
+        _err = response.context_data['form'].errors
+        if hasattr(_err, 'as_json'):
+            data = json.loads(
+                response.context_data['form'].errors.as_json(escape_html=True)
+            )
+            return data[key][0]['message']
+        return _err[key][0]
+
     def test_organisation_index_view_404(self):
         """
         Test permission denied for non-superuser users that don't have a
@@ -1103,26 +1107,6 @@ class TestManagementViews(TestCase):
         response = views.ManageOrganisationIndex.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
-    def _get_new_user_sso_mock(self, mock_responses):
-        """
-        Helper function for mocking requests.post
-        """
-        def get_return_value(url, *args, **kwargs):
-            # Find and return the mock for an URL
-
-            if 'find-user' in url or 'find_user' in url:
-                return mock_responses['find_user']
-            return mock_responses['new_user']
-
-        # Patch both requests post and get
-        return nested(
-            mock.patch(
-                'lizard_auth_client.client.requests.post',
-                side_effect=get_return_value),
-            mock.patch(
-                'lizard_auth_client.client.requests.get',
-                side_effect=get_return_value))
-
     def _get_new_user_response(self, post_data):
         request = self.request_factory.post(
             reverse('lizard_auth_client.management_users_add',
@@ -1145,21 +1129,23 @@ class TestManagementViews(TestCase):
            (local_email not in sso_email) and
            (local_username not in sso_username)
         """
+
         # find_user returns 404, user not found
         # new_user returns 201, user created
-        with self._get_new_user_sso_mock(
-            {'find_user':
-                MockResponse(404, {}),
-             'new_user':
-                MockResponse(201, {})}):
+        with mock.patch(
+                'lizard_auth_client.client.requests.post',
+                side_effect=[MockResponse(201, {})]) as _:
+            with mock.patch(
+                    'lizard_auth_client.client.requests.get',
+                    side_effect=[MockResponse(404, {})]) as _:
 
-            response = self._get_new_user_response(
-                {'username': 'root_new',
-                 'first_name': 'willie',
-                 'email': 'noreply_new@example.com'})
+                response = self._get_new_user_response(
+                    {'username': 'root_new',
+                     'first_name': 'willie',
+                     'email': 'noreply_new@example.com'})
 
-            # Should return an HTTP redirect to detail page
-            self.assertEqual(response.status_code, 302)
+                # Should return an HTTP redirect to detail page
+                self.assertEqual(response.status_code, 302)
 
     def test_organisation_add_known_exact_match_user(self):
         """A manager should be able to add an user
@@ -1172,10 +1158,15 @@ class TestManagementViews(TestCase):
         """
         # find_user returns 200, user found
         # Don't need to create the user on SSO server.
-        with self._get_new_user_sso_mock(
-            {'find_user':
-                MockResponse(200, {
-                    'username': 'root', 'email': 'noreply@example.com'})}):
+        with mock.patch(
+                'lizard_auth_client.client.requests.get',
+                side_effect=[
+                    MockResponse(
+                        200,
+                        {'username': 'root',
+                         'email': 'noreply@example.com'}
+                    )
+                ]) as _:
 
             response = self._get_new_user_response(
                 {'username': 'root',
@@ -1185,6 +1176,7 @@ class TestManagementViews(TestCase):
             # Should return an HTTP redirect to new created user
             # detail page,
             self.assertEqual(response.status_code, 302)
+
 
     def test_organisation_add_user_with_existing_email_address(self):
         """A manager should not be able to add an user with an existing
@@ -1198,11 +1190,15 @@ class TestManagementViews(TestCase):
 
         # find_user returns 200, user found
         # new_user is not called because username differs.
-        with self._get_new_user_sso_mock(
-            {'find_user':
-                MockResponse(200, {
-                    'username': 'root_existing',
-                    'email': 'noreply@example.com'})}):
+        with mock.patch(
+                'lizard_auth_client.client.requests.get',
+                side_effect=[
+                    MockResponse(
+                        200,
+                        {'username': 'root_existing',
+                         'email': 'noreply@example.com'}
+                    ),
+                ]) as _:
 
             response = self._get_new_user_response(
                 {'username': 'root_new',
@@ -1214,10 +1210,11 @@ class TestManagementViews(TestCase):
             # exists for the given email-address
 
             self.assertEqual(response.status_code, 200)
+            msg = self._get_error_msg(response, 'username')
             self.assertEqual(
-                response.context_data['form'].errors['username'],
-                [_('The given username does not match with the username on the'
-                    ' SSO server, please use: root_existing')])
+                msg,
+                'The given username does not match with the username on the'
+                    ' SSO server, please use: root_existing')
 
     def test_organisation_add_user_with_existing_username(self):
         """A manager should not be able to add an user with an existing
@@ -1231,23 +1228,24 @@ class TestManagementViews(TestCase):
 
         # find_user returns 404, user not found
         # new_user returns 409 conflict status
-        with self._get_new_user_sso_mock(
-            {'find_user':
-                MockResponse(404, {}),
-             'new_user':
-                MockResponse(409, {})}):
+        with mock.patch(
+                'lizard_auth_client.client.requests.post',
+                side_effect=[MockResponse(409, {})]) as _:
+            with mock.patch(
+                    'lizard_auth_client.client.requests.get',
+                    side_effect=[MockResponse(404, {})]) as _:
 
-            response = self._get_new_user_response(
-                {'username': 'root',
-                 'first_name': 'willie',
-                 'email': 'noreply_new@example.com'})
-
-            # Returns form with validation error
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(
-                response.context_data['form'].errors['username'],
-                [_('This username is already in use on the SSO server, '
-                 'please specify a different one')])
+                response = self._get_new_user_response(
+                    {'username': 'root',
+                     'first_name': 'willie',
+                     'email': 'noreply_new@example.com'})
+                # Returns form with validation error
+                self.assertEqual(response.status_code, 200)
+                msg = self._get_error_msg(response, 'username')
+                self.assertEqual(
+                    msg,
+                    'This username is already in use on the SSO server, '
+                     'please specify a different one')
 
     def test_organisation_index_view_manager(self):
         """A manager should have access to the management index view."""
