@@ -727,7 +727,10 @@ class ManageUserOrganisationDetail(
         role_matrix = get_user_role_matrix_for_organisation(
             self.user, self.organisation, self.available_roles)
         self.user.role_matrix = role_matrix
-        context['user'] = self.user
+        # There are 2 types of users on this page:
+        # - The 'logged_in_user' who is making a request to this page
+        # - The 'user' the logged_in_user wants to see and manage
+        context['logged_in_user'] = self.user
         return context
 
     @method_decorator(login_required)

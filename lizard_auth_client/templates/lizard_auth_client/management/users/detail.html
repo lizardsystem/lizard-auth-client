@@ -4,7 +4,7 @@
 
 {% block container %}
     <h3>
-    {% blocktrans with user=user.username organisation=organisation.name %}
+    {% blocktrans with user=logged_in_user.username organisation=organisation.name %}
         Manage permissions of {{ user }} for {{ organisation }}
     {% endblocktrans %}
     </h3>

@@ -1177,6 +1177,7 @@ class TestManagementViews(TestCase):
             # detail page,
             self.assertEqual(response.status_code, 302)
 
+
     def test_organisation_add_user_with_existing_email_address(self):
         """A manager should not be able to add an user with an existing
            email address using a different username
