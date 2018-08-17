@@ -12,7 +12,6 @@ install_requires = [
     'Django >= 1.4',
     'django-appconf',
     'django-extensions',
-    'django-nose',
     'itsdangerous',
     'requests',
     'PyJWT',
@@ -22,6 +21,7 @@ install_requires = [
 tests_require = [
     'coverage',
     'coveralls',
+    'django-nose',
     'factory-boy',
     'fake-factory',
     'mock',
