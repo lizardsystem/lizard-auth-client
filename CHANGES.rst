@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.14 (unreleased)
+2.14 (2018-08-21)
 -----------------
 
 - Moved django-nose from install to test dependencies.
