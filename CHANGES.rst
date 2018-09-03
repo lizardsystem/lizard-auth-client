@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 2.14 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Bugfix: don't remove logged in user when removing other users.
 
 
 2.13 (2018-07-06)
