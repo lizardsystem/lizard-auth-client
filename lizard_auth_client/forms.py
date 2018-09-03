@@ -187,7 +187,7 @@ class ManageUserChangeForm(ManageUserBaseForm):
             FormActions(
                 HTML(
                     """{% load i18n %}<a role="button" class="btn btn-danger"
-                    href="{% url 'lizard_auth_client.management_users_delete' organisation.id user.id %}">{% trans 'Delete' %}</a>
+                    href="{% url 'lizard_auth_client.management_users_delete' organisation.id user_to_manage.id %}">{% trans 'Delete' %}</a>
                     """),  # NOQA
                 Submit('save', _("Save")),
             ),
