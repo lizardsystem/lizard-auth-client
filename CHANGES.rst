@@ -5,7 +5,8 @@ Changelog of lizard-auth-client
 2.16 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Make the signature of the authenticate method of SSOBackend compatible with
+  Django 2.1 without breaking older versions.
 
 
 2.15 (2018-09-03)
