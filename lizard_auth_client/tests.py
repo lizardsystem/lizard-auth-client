@@ -24,6 +24,7 @@ from lizard_auth_client.conf import settings
 from lizard_auth_client.models import get_user_org_role_dict
 from requests.exceptions import HTTPError
 
+import inspect
 import jwt
 import logging
 import mock
@@ -32,6 +33,47 @@ import json
 
 logger = logging.getLogger(__name__)
 fake = Faker()
+
+
+class TestAuthenticate(TestCase):
+    """
+    In function `django.contrib.auth.__init__.authenticate` the signature of
+    the `authenticate` method of the various authentication backends is
+    inspected. Django 2.1 silently skips backends that do not comply! Our
+    custom SSOBackend is used across different versions of Django, so it
+    is very important to have the signature right.
+
+    """
+    def setUp(self):
+        self.backend = backends.SSOBackend()
+        self.request = None
+        self.credentials = {
+            'username': fake.user_name(),
+            'password': fake.password(),
+        }
+        self.expected = {'request': self.request, 'kwargs': {}}
+        self.expected.update(self.credentials)
+
+    def test_django_2_1(self):
+        callargs = inspect.getcallargs(
+            self.backend.authenticate, self.request, **self.credentials
+        )
+        self.assertIsInstance(callargs.pop('self'), backends.SSOBackend)
+        self.assertEqual(self.expected, callargs)
+
+    def test_django_1_11(self):
+        callargs = inspect.getcallargs(
+            self.backend.authenticate, request=self.request, **self.credentials
+        )
+        self.assertIsInstance(callargs.pop('self'), backends.SSOBackend)
+        self.assertEqual(self.expected, callargs)
+
+    def test_django_1_10(self):
+        callargs = inspect.getcallargs(
+            self.backend.authenticate, **self.credentials
+        )
+        self.assertIsInstance(callargs.pop('self'), backends.SSOBackend)
+        self.assertEqual(self.expected, callargs)
 
 
 @override_settings(SSO_USE_V2_LOGIN=False)
@@ -602,7 +644,7 @@ class TestSSOBackendV1(TestCase):
             backend = backends.SSOBackend()
             username = fake.user_name()
             password = fake.password()
-            user = backend.authenticate(username, password)
+            user = backend.authenticate(username=username, password=password)
             self.assertIsNone(user)
 
     def test_authentication_failed(self):
@@ -612,7 +654,7 @@ class TestSSOBackendV1(TestCase):
             backend = backends.SSOBackend()
             username = fake.user_name()
             password = fake.password()
-            user = backend.authenticate(username, password)
+            user = backend.authenticate(username=username, password=password)
             self.assertIsNone(user)
 
     def test_authenticate(self):
@@ -632,7 +674,7 @@ class TestSSOBackendV1(TestCase):
                 'lizard_auth_client.client.sso_sync_user_organisation_roles',
                 return_value=[]):
             backend = backends.SSOBackend()
-            user = backend.authenticate(username, password)
+            user = backend.authenticate(username=username, password=password)
             self.assertTrue(isinstance(user, User))
             self.assertEqual(username, user.username)
 
@@ -1176,7 +1218,6 @@ class TestManagementViews(TestCase):
             # Should return an HTTP redirect to new created user
             # detail page,
             self.assertEqual(response.status_code, 302)
-
 
     def test_organisation_add_user_with_existing_email_address(self):
         """A manager should not be able to add an user with an existing

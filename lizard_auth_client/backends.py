@@ -25,7 +25,8 @@ class SSOBackend(ModelBackend):
     Set SSO_CREDENTIAL_CACHE_TIMEOUT_SECONDS for this.
     """
 
-    def authenticate(self, username=None, password=None):
+    def authenticate(self, request=None, username=None, password=None,
+                     **kwargs):
         try:
             if username and password:
                 user_data = None
