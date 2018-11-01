@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.16 (unreleased)
+2.16 (2018-11-01)
 -----------------
 
 - Make the signature of the authenticate method of SSOBackend compatible with
