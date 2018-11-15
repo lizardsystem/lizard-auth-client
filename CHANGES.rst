@@ -5,7 +5,12 @@ Changelog of lizard-auth-client
 2.17 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Added a migration to delete dupicate UserOrganisationRoles (keeping 1).
+
+- Added a unique_together constraint to UserOrganisationRole (user,
+  organisation, role).
+
+- Added support for dumping and restoring UserOrganisationRoles by natural key.
 
 
 2.16 (2018-11-01)
