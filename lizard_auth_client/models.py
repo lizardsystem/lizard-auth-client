@@ -5,8 +5,15 @@ from django.utils.encoding import python_2_unicode_compatible
 from lizard_auth_client.conf import settings
 
 
+class RoleManager(models.Manager):
+    def get_by_natural_key(self, unique_id):
+        return self.get(unique_id=unique_id)
+
+
 @python_2_unicode_compatible
 class Role(models.Model):
+    objects = RoleManager()
+
     unique_id = models.CharField(max_length=32, unique=True)
     code = models.CharField(max_length=255, null=False, blank=False)
     name = models.CharField(max_length=255, null=False, blank=False)
@@ -20,6 +27,9 @@ class Role(models.Model):
 
     def __str__(self):
         return self.name
+
+    def natural_key(self):
+        return (self.unique_id,)
 
     @classmethod
     def create_from_dict(cls, dict_from_server):
@@ -110,9 +120,19 @@ class UserOrganisationRole(models.Model):
         on_delete=models.CASCADE
     )
 
+    class Meta:
+        unique_together = ('user', 'organisation', 'role')
+
     def __str__(self):
         return '%s %s %s' % (
             str(self.user), str(self.organisation), str(self.role))
+
+    def natural_key(self):
+        return (
+            self.user.username,
+            self.organisation.unique_id,
+            self.role.unique_id,
+        )
 
     @classmethod
     def create_from_list_of_dicts(cls, user, organisation_roles):
