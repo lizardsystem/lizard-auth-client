@@ -361,22 +361,22 @@ class TestGetUserOrgRoleDict(TestCase):
         self.assertEqual(len(payload_dict['organisations']), 2)
         # should have two permissions
         self.assertEqual(
-            len(payload_dict['organisations'][0]['permissions']), 2
+            len(payload_dict['organisations'][1]['permissions']), 2
         )
         self.assertIn(
-            payload_dict['organisations'][0]['permissions'][0],
+            payload_dict['organisations'][1]['permissions'][0],
             expected_roles_velen_huurmans
         )
         self.assertIn(
-            payload_dict['organisations'][0]['permissions'][1],
+            payload_dict['organisations'][1]['permissions'][1],
             expected_roles_velen_huurmans
         )
         # should only contain permission "Hero"
         self.assertEqual(
-            len(payload_dict['organisations'][1]['permissions']), 1
+            len(payload_dict['organisations'][0]['permissions']), 1
         )
         self.assertIn(
-            payload_dict['organisations'][1]['permissions'][0],
+            payload_dict['organisations'][0]['permissions'][0],
             expected_roles_power_inc
         )
 
@@ -411,10 +411,10 @@ class TestGetUserOrgRoleDict(TestCase):
         payload_dict = get_user_org_role_dict(self.user)
         # should only contain permission "Hero"
         self.assertEqual(
-            len(payload_dict['organisations'][1]['permissions']), 1
+            len(payload_dict['organisations'][0]['permissions']), 1
         )
         self.assertIn(
-            payload_dict['organisations'][1]['permissions'][0],
+            payload_dict['organisations'][0]['permissions'][0],
             expected_roles_power_inc
         )
 
