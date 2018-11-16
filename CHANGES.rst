@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.17 (unreleased)
+2.17 (2018-11-16)
 -----------------
 
 - Changed default ordering for Organisation (is now by name).
