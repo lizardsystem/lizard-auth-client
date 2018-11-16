@@ -5,6 +5,8 @@ Changelog of lizard-auth-client
 2.17 (unreleased)
 -----------------
 
+- Changed default ordering for Organisation (is now by name).
+
 - Added a migration to delete duplicate UserOrganisationRoles (keeping 1).
 
 - Added a unique_together constraint to UserOrganisationRole (user,
