@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.18 (unreleased)
+2.18 (2018-12-05)
 -----------------
 
 - Fixed user management form (could not create a new user on the SSO server
