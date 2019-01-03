@@ -2,10 +2,17 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.18 (unreleased)
+2.19 (unreleased)
 -----------------
 
 - Nothing changed yet.
+
+
+2.18 (2018-12-05)
+-----------------
+
+- Fixed user management form (could not create a new user on the SSO server
+  due to a missing iss JWT claim).
 
 
 2.17 (2018-11-16)

@@ -788,9 +788,9 @@ def _sso_create_user_request_by_payload(payload):
     """
     from lizard_auth_client.conf import settings
 
-    signed_message = jwt.encode(
-        payload, settings.SSO_SECRET,
-        algorithm=settings.SSO_JWT_ALGORITHM).decode('ascii')
+    payload['iss'] = settings.SSO_KEY
+    signed_message = jwt.encode(payload, settings.SSO_SECRET,
+                                algorithm=settings.SSO_JWT_ALGORITHM)
     url = sso_server_url('new-user')
     data = {
         'message': signed_message,
