@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 #   libfreetype6-dev \
 #   libpng12-dev \
     python3-dev \
-#   python3-pip \
+    python3-pip \
     gettext \
 && rm -rf /var/lib/apt/lists/*
 
