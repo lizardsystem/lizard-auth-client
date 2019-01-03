@@ -2,15 +2,7 @@ dist: bionic
 language: python
 python:
   - "3.6"
-cache:
-  directories:
-    - eggs
-    - $HOME/.local
-#sudo: false
 install:
-# - deactivate
-# - pip install --user psycopg2
-  - pip install psycopg2
   - python bootstrap.py
   - bin/buildout
 script:
