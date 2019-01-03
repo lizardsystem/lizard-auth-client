@@ -3,8 +3,8 @@ language: python
 python:
   - "3.6"
 install:
-  - pip list
-  - python bootstrap.py
+  - pip install zc.buildout
+# - python bootstrap.py
   - bin/buildout
 script:
   - bin/test
