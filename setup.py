@@ -9,7 +9,7 @@ long_description = '\n\n'.join([
 ])
 
 install_requires = [
-    'Django >= 1.4',
+    'Django >= 2.0',
     'django-appconf',
     'django-extensions',
     'itsdangerous',
