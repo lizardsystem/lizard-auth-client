@@ -6,7 +6,7 @@ cache:
   directories:
     - eggs
     - $HOME/.local
-sudo: false
+#sudo: false
 install:
 # - deactivate
 # - pip install --user psycopg2
