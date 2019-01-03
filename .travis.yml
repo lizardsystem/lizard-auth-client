@@ -1,14 +1,16 @@
+dist: xenial
 language: python
 python:
-  - 3.5
+  - "3.6"
 cache:
   directories:
     - eggs
     - $HOME/.local
 sudo: false
 install:
-  - deactivate
-  - pip install --user psycopg2
+# - deactivate
+# - pip install --user psycopg2
+  - pip install psycopg2
   - python bootstrap.py
   - bin/buildout
 script:
