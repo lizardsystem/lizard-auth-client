@@ -10,7 +10,7 @@ sudo: false
 install:
 # - deactivate
 # - pip install --user psycopg2
-  - pip install psycopg2
+  - pip install psycopg2 setuptools==33.1.1
   - python bootstrap.py
   - bin/buildout
 script:
