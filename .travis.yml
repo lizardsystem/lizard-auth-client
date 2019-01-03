@@ -9,7 +9,7 @@ sudo: false
 install:
   - deactivate
   - pip install --user psycopg2
-  - python3 bootstrap.py
+  - python3.6 bootstrap.py
   - bin/buildout
 script:
   - bin/test
