@@ -134,7 +134,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     # Gzip needs to be at the top.
     'django.middleware.gzip.GZipMiddleware',
     # Below is the default list, don't modify it.

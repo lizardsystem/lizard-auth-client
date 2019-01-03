@@ -46,7 +46,7 @@ def attempt_auto_login(view):
 
     @wraps(view, assigned=available_attrs(view))
     def wrapped_view(request, *args, **kwargs):
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             return view(request, *args, **kwargs)
 
         now = datetime.datetime.now()

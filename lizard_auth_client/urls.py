@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
-from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
@@ -132,7 +130,7 @@ if settings.SSO_STANDALONE is True:
     urlpatterns += [
         url(r'^$',           views.TestHomeView.as_view()),
         url(r'^protected/$', views.TestProtectedView.as_view()),
-        url(r'^admin/',      include(admin.site.urls)),
+        url(r'^admin/',      admin.site.urls),
     ]
     if settings.DEBUG:
         urlpatterns += staticfiles_urlpatterns()

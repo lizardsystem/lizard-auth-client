@@ -3,12 +3,12 @@
 from __future__ import unicode_literals
 from django.contrib.auth.models import User
 from django.core.exceptions import ImproperlyConfigured
-from django.core.urlresolvers import reverse
 from django.http import Http404
 from django.test import Client
 from django.test import RequestFactory
 from django.test import TestCase
 from django.test import override_settings
+from django.urls import reverse
 from faker import Faker
 from lizard_auth_client import backends
 from lizard_auth_client import client
@@ -609,7 +609,7 @@ class TestViews(TestCase):
     def test_no_attempt_login_middleware(self):
         """Test that no authentication takes place when
         AttemptAutoLoginMiddleware isn't enabled"""
-        with self.modify_settings(MIDDLEWARE_CLASSES={
+        with self.modify_settings(MIDDLEWARE={
             'remove':
                 'lizard_auth_client.middleware.AttemptAutoLoginMiddleware',
                 }):
@@ -625,7 +625,7 @@ class TestViews(TestCase):
         self.assertEqual(response.status_code, 301)
         self.assertTrue('attempt_login_only' not in response.url)
 
-        with self.modify_settings(MIDDLEWARE_CLASSES={
+        with self.modify_settings(MIDDLEWARE={
             'remove':
                 'lizard_auth_client.middleware.AttemptAutoLoginMiddleware',
                 }):
