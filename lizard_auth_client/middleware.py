@@ -58,7 +58,7 @@ class LoginRequiredMiddleware(MiddlewareMixin):
         If that doesn't work, ensure your TEMPLATE_CONTEXT_PROCESSORS
         setting includes 'django.core.context_processors.auth'."""
 
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             path = request.path_info.strip('/')
             if not string_has_any_prefix(exempt_urls, path):
                 return HttpResponseRedirect(settings.LOGIN_URL)
