@@ -4,7 +4,6 @@ python:
   - "3.6"
 install:
   - pip install zc.buildout
-# - python bootstrap.py
   - buildout
 script:
   - bin/test
