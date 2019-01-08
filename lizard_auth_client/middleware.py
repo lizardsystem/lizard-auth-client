@@ -1,4 +1,5 @@
 from django.http import HttpResponseRedirect
+from django.utils.deprecation import MiddlewareMixin
 from lizard_auth_client.conf import settings
 from lizard_auth_client.decorators import attempt_auto_login
 
@@ -41,7 +42,7 @@ exempt_urls = [exempt_url.strip() for exempt_url in exempt_urls]
 exempt_urls = [exempt_url for exempt_url in exempt_urls if url]
 
 
-class LoginRequiredMiddleware(object):
+class LoginRequiredMiddleware(MiddlewareMixin):
     """
     Middleware that requires a user to be authenticated to view any page other
     than EXEMPT_URLS (which you can copy from your urls.py).
@@ -57,13 +58,13 @@ class LoginRequiredMiddleware(object):
         If that doesn't work, ensure your TEMPLATE_CONTEXT_PROCESSORS
         setting includes 'django.core.context_processors.auth'."""
 
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             path = request.path_info.strip('/')
             if not string_has_any_prefix(exempt_urls, path):
                 return HttpResponseRedirect(settings.LOGIN_URL)
 
 
-class AttemptAutoLoginMiddleware(object):
+class AttemptAutoLoginMiddleware(MiddlewareMixin):
     """Apply the attempt_auto_login decorator on every view function.
 
     Note: this middleware doesn't work together with LoginRequiredMiddleware

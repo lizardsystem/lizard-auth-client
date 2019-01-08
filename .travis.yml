@@ -1,17 +1,10 @@
+dist: bionic
 language: python
 python:
-  - 2.7
-  - 3.6
-cache:
-  directories:
-    - eggs
-    - $HOME/.local
-sudo: false
+  - "3.6"
 install:
-  - deactivate
-  - pip install --user psycopg2
-  - python bootstrap.py
-  - bin/buildout
+  - pip install zc.buildout
+  - buildout
 script:
   - bin/test
 after_success:
