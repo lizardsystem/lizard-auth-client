@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 3.1 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- User management case sensitive email field.
 
 
 3.0 (2019-01-15)
