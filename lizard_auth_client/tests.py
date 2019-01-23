@@ -932,13 +932,6 @@ class TestRoleManagement(TestCase):
         """
         self.user_1 = factories.UserFactory.create(username='user_1')
         self.user_2 = factories.UserFactory.create(username='user_2')
-        self.user_3 = factories.UserFactory.create(username='user_3')
-        self.data_user_4 = {
-            'email': str(self.user_3.email).swapcase(),
-            'username': self.user_3.username,
-            'first_name': self.user_3.first_name,
-            'last_name': self.user_3.last_name,
-        }
         self.organisation_1 = factories.OrganisationFactory.create(
             name='organisation_1')
         self.organisation_2 = factories.OrganisationFactory.create(
@@ -1047,8 +1040,15 @@ class TestRoleManagement(TestCase):
     def test_email_case_insensitive(self):
         """test for an existing user, we try to add to a different
         organization with an email containing capital letters"""
+        user_3 = factories.UserFactory.create(username='user_3')
+        data_user_4 = {
+            'email': str(user_3.email).swapcase(),
+            'username': user_3.username,
+            'first_name': user_3.first_name,
+            'last_name': user_3.last_name,
+        }
         form = forms.ManageUserAddForm(
-            data=self.data_user_4,
+            data=data_user_4,
         )
         self.assertTrue(form.is_valid())
         self.assertEqual(form.validate_unique(), None)
