@@ -1051,7 +1051,6 @@ class TestRoleManagement(TestCase):
             data=self.data_user_4,
         )
         self.assertTrue(form.is_valid())
-        form.save()
         self.assertEqual(form.validate_unique(), None)
         exclude = form._get_validation_unique_exclusions()
         self.assertTrue('username' in exclude)
