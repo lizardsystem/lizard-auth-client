@@ -135,7 +135,7 @@ class ManageUserAddForm(ManageUserBaseForm):
         if 'email' in self.cleaned_data:
             model = get_user_model()
             email = self.cleaned_data['email']
-            if model.objects.filter(email=email).exists():
+            if model.objects.filter(email__iexact=email).exists():
                 exclude.append('username')
         return exclude
 
