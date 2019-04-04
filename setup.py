@@ -26,6 +26,7 @@ tests_require = [
     'factory-boy',
     'fake-factory',
     'mock',
+    'flake8',
 ]
 
 setup(
