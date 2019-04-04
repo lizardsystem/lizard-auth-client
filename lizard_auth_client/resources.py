@@ -4,14 +4,14 @@ from lizard_auth_client import models
 
 class RoleResource(resources.ModelResource):
     class Meta:
-        model = Role
+        model = models.Role
 
 
 class OrganisationResource(resources.ModelResource):
     class Meta:
-        model = Organisation
+        model = models.Organisation
 
 
 class UserOrganisationRoleResource(resources.ModelResource):
     class Meta:
-        model = UserOrganisationRole
+        model = models.UserOrganisationRole
