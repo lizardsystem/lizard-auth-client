@@ -1,5 +1,8 @@
 FROM ubuntu:bionic
 
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
 ENV REFRESHED_AT 2019-01-04
 ARG DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="ops@nelen-schuurmans.nl"
