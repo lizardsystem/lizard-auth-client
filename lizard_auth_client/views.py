@@ -705,7 +705,7 @@ class ManageOrganisationDetail(
             # management page
             return HttpResponseRedirect(reverse(
                 'lizard_auth_client.management_users_index'))
-        except:  # noqa: E722
+        except Exception:
             # catch all other exceptions and respond with a 404
             raise Http404
 

@@ -245,7 +245,7 @@ def sso_authenticate_v2(sso_server_api_start_url, sso_key, sso_secret,
             r.raise_for_status()
         return r.json()['user']
 
-    except:  # noqa: E722
+    except Exception:
         logger.exception(
             "Exception occurred while asking SSO to check credentials")
         raise
