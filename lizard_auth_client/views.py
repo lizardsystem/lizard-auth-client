@@ -172,9 +172,9 @@ class LoginViewV1(View):
         wrapped_response = get_request_token_and_determine_response(
             domain, attempt_login_only)
 
-        if (issubclass(wrapped_response.http_response, HttpResponseRedirect) or
-            issubclass(wrapped_response.http_response,
-                       HttpResponsePermanentRedirect)):
+        if (issubclass(wrapped_response.http_response, HttpResponseRedirect)
+                or issubclass(wrapped_response.http_response,  # noqa: W503
+                              HttpResponsePermanentRedirect)):
             return wrapped_response.http_response(
                 wrapped_response.redirect_url
             )
@@ -203,7 +203,7 @@ class JWTLoginView(View):
             # Our items.
             'login_success_url': abs_reverse(
                 request, 'lizard_auth_client.sso_local_login'),
-            }
+        }
         if request.GET.get('attempt_login_only', 'false').lower() == 'true':
             # We don't force the user to log in. To signal that, we pass our
             # 'the user is not logged in' url, too.
@@ -216,7 +216,7 @@ class JWTLoginView(View):
         query_string = urlencode({
             'message': signed_message,
             'key': settings.SSO_KEY
-            })
+        })
 
         # Build an absolute URL pointing to the SSO server out of it.
         url = sso_server_url('login')
@@ -332,7 +332,7 @@ class JWTLogoutView(View):
         query_string = urlencode({
             'message': signed_message,
             'key': settings.SSO_KEY
-            })
+        })
 
         url = sso_server_url('logout')
         url = '%s?%s' % (url, query_string)
@@ -705,7 +705,7 @@ class ManageOrganisationDetail(
             # management page
             return HttpResponseRedirect(reverse(
                 'lizard_auth_client.management_users_index'))
-        except:
+        except Exception:
             # catch all other exceptions and respond with a 404
             raise Http404
 

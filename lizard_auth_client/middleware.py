@@ -10,6 +10,7 @@ def string_has_any_prefix(prefix_list, some_string):
     """
     return any(some_string.startswith(p) for p in prefix_list)
 
+
 # url prefixes which shouldn't result in a redirect
 exempt_urls = [
     'sso',

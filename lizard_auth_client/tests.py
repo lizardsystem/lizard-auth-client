@@ -609,10 +609,11 @@ class TestViews(TestCase):
     def test_no_attempt_login_middleware(self):
         """Test that no authentication takes place when
         AttemptAutoLoginMiddleware isn't enabled"""
-        with self.modify_settings(MIDDLEWARE={
+        middleware = {
             'remove':
                 'lizard_auth_client.middleware.AttemptAutoLoginMiddleware',
-                }):
+        }
+        with self.modify_settings(MIDDLEWARE=middleware):
             c = Client()
             response = c.get('/')
             self.assertEqual(response.status_code, 200)
@@ -624,11 +625,11 @@ class TestViews(TestCase):
         response = c.get('/protected')
         self.assertEqual(response.status_code, 301)
         self.assertTrue('attempt_login_only' not in response.url)
-
-        with self.modify_settings(MIDDLEWARE={
+        middleware = {
             'remove':
                 'lizard_auth_client.middleware.AttemptAutoLoginMiddleware',
-                }):
+        }
+        with self.modify_settings(MIDDLEWARE=middleware):
             c = Client()
             response = c.get('/protected')
             self.assertEqual(response.status_code, 301)

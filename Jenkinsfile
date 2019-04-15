@@ -7,6 +7,7 @@ node {
    sh "docker-compose run web buildout"
 
    stage "Test"
+   sh "docker-compose run --rm web bin/flake8 lizard_auth_client"
    sh "docker-compose run web bin/test"
    sh "docker-compose down"
    step $class: 'JUnitResultArchiver', testResults: 'nosetests.xml'

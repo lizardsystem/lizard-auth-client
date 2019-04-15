@@ -89,6 +89,6 @@ class SSOBackend(ModelBackend):
         except client.AuthenticationFailed as e:
             logger.info(e)
             return None
-        except:
+        except:  # noqa: E722
             logger.exception('Error while authenticating user "%s".', username)
             return None

@@ -16,6 +16,7 @@ install_requires = [
     'requests',
     'PyJWT',
     'django-crispy-forms',
+    'django-import-export',
 ],
 
 tests_require = [
@@ -25,6 +26,7 @@ tests_require = [
     'factory-boy',
     'fake-factory',
     'mock',
+    'flake8',
 ]
 
 setup(
