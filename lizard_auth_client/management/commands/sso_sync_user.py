@@ -22,12 +22,12 @@ class Command(BaseCommand):
         """
         sso_user = options.get('sso_user')
         if not sso_user:
-            msg = '[E] Please provide the username for the user you are trying'\
-                   ' to sync.'
+            msg = '[E] Please provide the username for the user ' \
+                  'you are trying to sync.'
             raise Exception(msg)
         if V:
-            print("[*] About to SSO-sync data for a User with username " \
-                   "'%s'..." % sso_user)
+            print("[*] About to SSO-sync data for a User "
+                  "with username '%s'..." % sso_user)
         try:
             user_data = sso_get_user_django(sso_user)
             if V:

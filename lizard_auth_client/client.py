@@ -10,9 +10,7 @@ import jwt
 import logging
 import requests
 
-
 logger = logging.getLogger(__name__)
-
 
 try:
     from urlparse import urljoin
@@ -247,7 +245,7 @@ def sso_authenticate_v2(sso_server_api_start_url, sso_key, sso_secret,
             r.raise_for_status()
         return r.json()['user']
 
-    except:
+    except:  # noqa: E722
         logger.exception(
             "Exception occurred while asking SSO to check credentials")
         raise
@@ -394,7 +392,7 @@ def construct_user(data):
     # disabled for now
     # use the Primary Key of the User on the SSO server to
     # generate a new username
-#   local_username = 'sso-user-{}'.format(data['pk'])
+    #   local_username = 'sso-user-{}'.format(data['pk'])
     # /disabled for now
 
     # just copy the username from the sso server for now
@@ -554,7 +552,7 @@ def sso_get_roles(sso_server_private_url, sso_key, sso_secret):
             'api/roles',
             sso_key,
             sso_secret
-            )
+        )
     except Exception as ex:
         logger.exception("Exception occurred in _do_post: {}".format(ex))
         raise CommunicationError(ex)
@@ -633,7 +631,7 @@ def sso_get_user_organisation_roles_django(user):
             settings.SSO_KEY,
             settings.SSO_SECRET,
             username=user.username
-            )
+        )
     except Exception as ex:
         logger.exception("Exception occurred in _do_post: {}".format(ex))
         raise CommunicationError(ex)

@@ -66,7 +66,8 @@ def attempt_auto_login(view):
         login_scheme, login_netloc = urlparse(attempt_only_login_url)[:2]
         current_scheme, current_netloc = urlparse(path)[:2]
 
-        if ((not login_scheme or login_scheme == current_scheme) and
+        if ((not login_scheme  # noqa: W503
+             or login_scheme == current_scheme) and  # noqa: W504, W503
                 (not login_netloc or login_netloc == current_netloc)):
             path = request.get_full_path()
 

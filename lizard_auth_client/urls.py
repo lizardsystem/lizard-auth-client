@@ -34,8 +34,8 @@ def check_settings():
                 'your settings. This URL is used to locate the SSO server.'
             )
     else:
-        if (not settings.SSO_SERVER_PUBLIC_URL or
-                not settings.SSO_SERVER_PRIVATE_URL):
+        if (not settings.SSO_SERVER_PUBLIC_URL
+                or not settings.SSO_SERVER_PRIVATE_URL):  # noqa: W503
             raise ImproperlyConfigured(
                 'Please define values for SSO_SERVER_PUBLIC_URL and '
                 'SSO_SERVER_PRIVATE_URL in your settings. '
@@ -128,9 +128,9 @@ if settings.SSO_STANDALONE is True:
     # when running standalone (for testing purposes), add some extra URLS
     admin.autodiscover()
     urlpatterns += [
-        url(r'^$',           views.TestHomeView.as_view()),
+        url(r'^$', views.TestHomeView.as_view()),
         url(r'^protected/$', views.TestProtectedView.as_view()),
-        url(r'^admin/',      admin.site.urls),
+        url(r'^admin/', admin.site.urls),
     ]
     if settings.DEBUG:
         urlpatterns += staticfiles_urlpatterns()

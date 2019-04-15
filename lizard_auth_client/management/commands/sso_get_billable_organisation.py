@@ -27,6 +27,7 @@ class Command(BaseCommand):
                 user_model = get_user_model()
                 user = user_model.objects.get(username=sso_user)
             except Exception as err:
-                raise CommandError("\n[E] unexpected exception: '%s'" % str(err))
+                raise CommandError(
+                    "\n[E] unexpected exception: '%s'" % str(err))
             billable_org = client.get_billable_organisation(user)
             print(billable_org)
