@@ -248,14 +248,14 @@ def sso_authenticate_v2(sso_server_api_start_url, sso_key, sso_secret,
             r.raise_for_status()
         return r.json()['user']
 
-    except Exception as e:
+    except Exception:
         if r is not None and r.status_code == 403:
-            # A wrong password error shouldn't appear in Sentry,
-            # so log 403 at level INFO.
-            logger.info(e)
-        else:
-            logger.exception(
-                "Exception occurred while asking SSO to check credentials")
+            # Log at INFO so a wrong password doesn't show up in Sentry.
+            logger.info("SSO server returned HTTP_403_FORBIDDEN.")
+            raise AuthenticationFailed
+        logger.exception(
+            "Exception occurred while asking SSO to check credentials"
+        )
         raise
 
 
