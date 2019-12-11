@@ -228,6 +228,7 @@ def sso_authenticate_v2(sso_server_api_start_url, sso_key, sso_secret,
 
     """
     try:
+        r = None
         payload = {
             # Identifier for this site
             'iss': sso_key,
@@ -247,9 +248,14 @@ def sso_authenticate_v2(sso_server_api_start_url, sso_key, sso_secret,
             r.raise_for_status()
         return r.json()['user']
 
-    except:
-        logger.exception(
-            "Exception occurred while asking SSO to check credentials")
+    except Exception as e:
+        if r is not None and r.status_code == 403:
+            # A wrong password error shouldn't appear in Sentry,
+            # so log 403 at level INFO.
+            logger.info(e)
+        else:
+            logger.exception(
+                "Exception occurred while asking SSO to check credentials")
         raise
 
 
