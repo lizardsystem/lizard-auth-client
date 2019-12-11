@@ -20,6 +20,12 @@ Changelog of lizard-auth-client
 - Django >= 2.0.
 
 
+2.19 (2019-12-11)
+-----------------
+
+- Log 403 (wrong password) returned by SSO at level INFO.
+
+
 2.18 (2018-12-05)
 -----------------
 
