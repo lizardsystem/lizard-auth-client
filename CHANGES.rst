@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-2.19 (unreleased)
+2.19 (2019-12-11)
 -----------------
 
 - Log 403 (wrong password) returned by SSO at level INFO.
