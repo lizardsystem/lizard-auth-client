@@ -16,7 +16,6 @@ install_requires = [
     'requests',
     'PyJWT',
     'django-crispy-forms',
-    'django-import-export',
 ],
 
 tests_require = [
