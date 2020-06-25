@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-3.0.3 (unreleased)
+3.0.3 (2020-06-25)
 ------------------
 
 - Removed functionality to export objects in admin panel.
