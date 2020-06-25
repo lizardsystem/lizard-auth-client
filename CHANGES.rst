@@ -5,7 +5,9 @@ Changelog of lizard-auth-client
 3.0.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Removed functionality to export objects in admin panel.
+
+- Fixed search functionality in UserOrganisationRole admin panel.
 
 
 3.0.2 (2020-06-19)
