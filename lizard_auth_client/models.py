@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from lizard_auth_client.conf import settings
+from uuid import UUID
 
 
 class RoleManager(models.Manager):
@@ -81,6 +82,14 @@ class Organisation(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def uuid(self):
+        return UUID(self.unique_id)
+
+    @uuid.setter
+    def uuid(self, value):
+        self.unique_id = UUID(str(value)).hex
 
     def natural_key(self):
         return (self.unique_id, )
