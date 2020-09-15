@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from lizard_auth_client.conf import settings
+from uuid import UUID
 
 
 class RoleManager(models.Manager):
@@ -74,6 +75,8 @@ class Organisation(models.Model):
     # synchronized when someone in an organisation logs in -- we can't
     # guarantee that names will stay unique that way.
     name = models.CharField(max_length=255, null=False, blank=False)
+    # In hindsight, UUIDField might have been a better choice for unique_id.
+    # The uuid property and setter may be used as an alternative.
     unique_id = models.CharField(max_length=32, unique=True)
 
     class Meta:
@@ -81,6 +84,16 @@ class Organisation(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def uuid(self):
+        """An alternative getter for unique_id."""
+        return UUID(self.unique_id)
+
+    @uuid.setter
+    def uuid(self, value):
+        """An alternative setter for unique_id."""
+        self.unique_id = UUID(str(value)).hex
 
     def natural_key(self):
         return (self.unique_id, )
