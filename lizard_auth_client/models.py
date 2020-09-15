@@ -75,6 +75,8 @@ class Organisation(models.Model):
     # synchronized when someone in an organisation logs in -- we can't
     # guarantee that names will stay unique that way.
     name = models.CharField(max_length=255, null=False, blank=False)
+    # In hindsight, UUIDField might have been a better choice for unique_id.
+    # The uuid property and setter may be used as an alternative.
     unique_id = models.CharField(max_length=32, unique=True)
 
     class Meta:
@@ -85,10 +87,12 @@ class Organisation(models.Model):
 
     @property
     def uuid(self):
+        """An alternative getter for unique_id."""
         return UUID(self.unique_id)
 
     @uuid.setter
     def uuid(self, value):
+        """An alternative setter for unique_id."""
         self.unique_id = UUID(str(value)).hex
 
     def natural_key(self):
