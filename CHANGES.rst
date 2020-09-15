@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-3.0.4 (unreleased)
+3.0.4 (2020-09-15)
 ------------------
 
 - Extended the Organisation model with a `uuid` property and setter.
