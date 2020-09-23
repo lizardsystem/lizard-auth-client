@@ -237,14 +237,22 @@ decorator::
 Tests and local development
 ---------------------------
 
-To run the tests, docker is used::
+(Re)create & activate a virtualenv::
 
-    $ docker-compose build
-    $ docker-compose run --rm web buildout
-    $ docker-compose run web bin/test
+    $ rm -rf .venv
+    $ virtualenv .venv --python=python3
+    $ source .venv/bin/activate
+
+Install package and run tests::
+
+    (virtualenv)$ pip install django==2.2
+    (virtualenv)$ pip install -e .[test]
+    (virtualenv)$ python manage.py test
 
 To not conflict with an optional local lizard-auth-server (running on port
-5000, normally), we run on port **5050**.
+5000, normally), we run on port **5050**::
+
+    (virtualenv)$ python manage.py runserver 5050
 
 For a test in your browser, you'll need to also start a local
 lizard-auth-server. Or test against the staging SSO. For the V2 API, you can

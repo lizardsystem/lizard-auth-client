@@ -51,3 +51,7 @@ old
 
 # Local settings
 lizard_auth_client/local*.py
+
+# IDEs
+.idea
+.vscode

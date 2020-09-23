@@ -19,11 +19,9 @@ install_requires = [
 ],
 
 tests_require = [
-    'coverage',
-    'coveralls',
     'django-nose',
-    'factory-boy',
-    'fake-factory',
+    'factory-boy==2.7.0',
+    'fake-factory==0.6.0',
     'mock',
     'flake8',
 ]
