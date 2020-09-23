@@ -22,7 +22,7 @@ tests_require = [
     'pytest',
     'pytest-django',
     'pytest-cov',
-    'factory-boy',
+    'pytest-factoryboy',
     'flake8',
 ]
 
