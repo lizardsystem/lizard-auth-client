@@ -32,6 +32,6 @@ jobs:
         pip install -e .[test] django==${{ matrix.django-version }}
     - name: Test with nose
       run: |
-        python manage.py test
+        pytest --cov lizard_auth_client
     - name: Lint with flake8
       run: if flake8 lizard_auth_client > flake8.txt; then echo 'flake8 is a success'; else cat flake8.txt; false; fi

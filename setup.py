@@ -19,10 +19,11 @@ install_requires = [
 ],
 
 tests_require = [
-    'django-nose',
+    'pytest',
+    'pytest-django',
+    'pytest-cov',
     'factory-boy==2.7.0',
     'fake-factory==0.6.0',
-    'mock',
     'flake8',
 ]
 

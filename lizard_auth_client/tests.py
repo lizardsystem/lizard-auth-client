@@ -28,7 +28,7 @@ import inspect
 import json
 import jwt
 import logging
-import mock
+from unittest import mock
 import pprint
 
 logger = logging.getLogger(__name__)
