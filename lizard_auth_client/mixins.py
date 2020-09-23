@@ -7,7 +7,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import ImproperlyConfigured
 from django.core.exceptions import PermissionDenied
-from django.utils import six
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_text
 from django.utils.functional import cached_property
@@ -118,7 +117,7 @@ class RoleRequiredMixin(AccessMixin):
                 'override {0}.get_role_required().'.format(
                     self.__class__.__name__)
             )
-        if isinstance(self.role_required, six.string_types):
+        if isinstance(self.role_required, str):
             roles = (self.role_required,)
         else:
             roles = self.role_required

@@ -117,7 +117,15 @@ AUTHENTICATION_BACKENDS = (
     'lizard_auth_client.backends.SSOBackend',
 )
 
-TEMPLATE_CONTEXT_PROCESSORS = (
+# Required for django.contrib.admin
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "debug": DEBUG,
+            "context_processors": (
     # default template context processors
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
@@ -127,6 +135,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.static',
     'django.core.context_processors.request',
 )
+        },
+    }
+]
 
 MIDDLEWARE = (
     # Gzip needs to be at the top.
