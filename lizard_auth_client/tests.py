@@ -19,7 +19,6 @@ from lizard_auth_client import models
 from lizard_auth_client import signals
 from lizard_auth_client import urls
 from lizard_auth_client import views  # NOQA
-from lizard_auth_client.client import sso_server_url
 from lizard_auth_client.conf import settings
 from lizard_auth_client.models import get_user_org_role_dict
 from requests.exceptions import HTTPError
@@ -33,6 +32,16 @@ import pprint
 
 logger = logging.getLogger(__name__)
 fake = Faker()
+
+SSO_SERVER_URLS = {
+    'organisations': 'https://some.where/api2/organisations/',
+    'check-credentials': 'https://some.where/api2/check_credentials/',
+    'available-languages': ['en', 'nl'],
+    'new-user': 'https://some.where/api2/new_user/',
+    'logout': 'https://some.where/api2/logout/',
+    'login': 'https://some.where/api2/login/',
+    'find-user': 'https://some.where/api2/find_user/',
+}
 
 
 class TestAuthenticate(TestCase):
@@ -798,15 +807,10 @@ class ClientV2Test(TestCase):
 class V2ViewsTest(TestCase):
 
     def setUp(self):
-        self.server_urls = {
-            'check-credentials': 'https://some.where/api2/check_credentials/',
-            'login': 'https://some.where/api2/login/',
-            'logout': 'https://some.where/api2/logout/'}
-
         def mock_get(url, timeout):
             result = mock.Mock()
             result.status_code = 200
-            result.json.return_value = self.server_urls
+            result.json.return_value = SSO_SERVER_URLS
             return result
 
         with mock.patch('lizard_auth_client.client.requests.get', mock_get):
@@ -1127,7 +1131,14 @@ class TestManagementViews(TestCase):
             unique_id='30', code='manage', name='Manage')
 
         # Init the sso_server_url cache
-        logger.info(sso_server_url('find-user'))
+        def mock_get(url, timeout):
+            result = mock.Mock()
+            result.status_code = 200
+            result.json.return_value = SSO_SERVER_URLS
+            return result
+
+        with mock.patch('lizard_auth_client.client.requests.get', mock_get):
+            views.sso_server_url('find-user', use_cache=False)
 
         self.request_factory = RequestFactory()
 
