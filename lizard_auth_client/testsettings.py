@@ -22,12 +22,6 @@ LOGGING = {
             'formatter': 'simple',
             'level': None
         },
-        'logfile': {
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BUILDOUT_DIR, 'var', 'log', 'django.log'),
-            'formatter': 'verbose',
-            'level': 'WARN'
-        },
         'null': {
             'class': 'logging.NullHandler',
             'level': 'DEBUG'

@@ -30,7 +30,6 @@ import jwt
 import logging
 import mock
 import pprint
-import uuid
 
 logger = logging.getLogger(__name__)
 fake = Faker()
@@ -227,19 +226,6 @@ class TestOrganisation(TestCase):
         # Check that is has been saved and the fields are correct
         self.assertTrue(org.pk)
         self.assertEquals(org.unique_id, "NENS")
-        self.assertEquals(org.name, "Nelen & Schuurmans")
-
-    def test_create_from_uuid(self):
-        uuid = uuid.uuid4()
-        org = models.Organisation.create_from_uuid({
-            'uuid': uuid,
-            'name': "Nelen & Schuurmans"
-        })
-
-        # Check that is has been saved and the fields are correct
-        self.assertTrue(org.pk)
-        self.assertEquals(org.uuid, uuid)
-        self.assertEquals(org.unique_id, uuid.hex)
         self.assertEquals(org.name, "Nelen & Schuurmans")
 
     def test_prepresentation(self):
