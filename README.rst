@@ -1,12 +1,8 @@
 lizard-auth-client
 ==========================================
 
-.. image:: https://travis-ci.org/lizardsystem/lizard-auth-client.svg?branch=reinout-next-nxt-removal
-    :target: https://travis-ci.org/lizardsystem/lizard-auth-client
-
-
-.. image:: https://coveralls.io/repos/lizardsystem/lizard-auth-client/badge.svg?branch=reinout-next-nxt-removal&service=github
-  :target: https://coveralls.io/github/lizardsystem/lizard-auth-client?branch=reinout-next-nxt-removal
+.. image:: https://coveralls.io/repos/lizardsystem/lizard-auth-client/badge.svg?branch=master&service=github
+  :target: https://coveralls.io/github/lizardsystem/lizard-auth-client?branch=master
 
 
 

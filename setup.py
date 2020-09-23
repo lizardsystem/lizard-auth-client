@@ -22,6 +22,8 @@ tests_require = [
     'pytest',
     'pytest-django',
     'pytest-cov',
+    # Py3.5 & factory_boy 3.0.1: pip fails installing with "Generating metadata
+    # for package factory-boy produced metadata for project name unknown"
     'factory-boy==2.*',
     'flake8',
 ]
