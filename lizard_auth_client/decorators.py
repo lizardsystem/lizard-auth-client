@@ -9,9 +9,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from django.contrib.auth.views import redirect_to_login
-from django.utils.decorators import available_attrs
 from django.utils.encoding import force_str
-from django.utils.six.moves.urllib.parse import urlparse
+from urllib.parse import urlparse
 from functools import wraps
 from lizard_auth_client.conf import settings
 
@@ -44,7 +43,7 @@ def attempt_auto_login(view):
     on to the view with the user as currently set in the session.
     """
 
-    @wraps(view, assigned=available_attrs(view))
+    @wraps(view)
     def wrapped_view(request, *args, **kwargs):
         if request.user.is_authenticated:
             return view(request, *args, **kwargs)

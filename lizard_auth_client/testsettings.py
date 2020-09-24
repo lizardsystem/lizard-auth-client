@@ -22,12 +22,6 @@ LOGGING = {
             'formatter': 'simple',
             'level': None
         },
-        'logfile': {
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BUILDOUT_DIR, 'var', 'log', 'django.log'),
-            'formatter': 'verbose',
-            'level': 'WARN'
-        },
         'null': {
             'class': 'logging.NullHandler',
             'level': 'DEBUG'
@@ -48,7 +42,6 @@ LOGGING = {
 }
 
 DEBUG = True
-TEMPLATE_DEBUG = True
 
 ADMINS = (
 )
@@ -123,7 +116,15 @@ AUTHENTICATION_BACKENDS = (
     'lizard_auth_client.backends.SSOBackend',
 )
 
-TEMPLATE_CONTEXT_PROCESSORS = (
+# Required for django.contrib.admin
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "debug": DEBUG,
+            "context_processors": (
     # default template context processors
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
@@ -133,6 +134,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.static',
     'django.core.context_processors.request',
 )
+        },
+    }
+]
 
 MIDDLEWARE = (
     # Gzip needs to be at the top.

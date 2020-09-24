@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 from lizard_auth_client.conf import settings
 from uuid import UUID
 
@@ -11,7 +10,6 @@ class RoleManager(models.Manager):
         return self.get(unique_id=unique_id)
 
 
-@python_2_unicode_compatible
 class Role(models.Model):
     objects = RoleManager()
 
@@ -67,7 +65,6 @@ class OrganisationManager(models.Manager):
         return self.get(unique_id=unique_id)
 
 
-@python_2_unicode_compatible
 class Organisation(models.Model):
     objects = OrganisationManager()
 
@@ -116,7 +113,6 @@ class Organisation(models.Model):
         return org
 
 
-@python_2_unicode_compatible
 class UserOrganisationRole(models.Model):
     """Stores which roles in which organisations a user has."""
     user_model = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')

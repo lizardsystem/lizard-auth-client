@@ -1,12 +1,8 @@
 lizard-auth-client
 ==========================================
 
-.. image:: https://travis-ci.org/lizardsystem/lizard-auth-client.svg?branch=reinout-next-nxt-removal
-    :target: https://travis-ci.org/lizardsystem/lizard-auth-client
-
-
-.. image:: https://coveralls.io/repos/lizardsystem/lizard-auth-client/badge.svg?branch=reinout-next-nxt-removal&service=github
-  :target: https://coveralls.io/github/lizardsystem/lizard-auth-client?branch=reinout-next-nxt-removal
+.. image:: https://coveralls.io/repos/lizardsystem/lizard-auth-client/badge.svg?branch=master&service=github
+  :target: https://coveralls.io/github/lizardsystem/lizard-auth-client?branch=master
 
 
 
@@ -237,14 +233,20 @@ decorator::
 Tests and local development
 ---------------------------
 
-To run the tests, docker is used::
+(Re)create & activate a virtualenv::
 
-    $ docker-compose build
-    $ docker-compose run --rm web buildout
-    $ docker-compose run web bin/test
+    $ python3 -m virtualenv .
+
+Install package and run tests::
+
+    $ bin/pip install django==2.2
+    $ bin/pip install -e .[test]
+    $ bin/pytest
 
 To not conflict with an optional local lizard-auth-server (running on port
-5000, normally), we run on port **5050**.
+5000, normally), we run on port **5050**::
+
+    $ bin/python manage.py runserver 5050
 
 For a test in your browser, you'll need to also start a local
 lizard-auth-server. Or test against the staging SSO. For the V2 API, you can

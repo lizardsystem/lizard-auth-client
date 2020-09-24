@@ -9,7 +9,7 @@ long_description = '\n\n'.join([
 ])
 
 install_requires = [
-    'Django >= 2.0',
+    'Django',
     'django-appconf',
     'django-extensions',
     'itsdangerous',
@@ -19,12 +19,12 @@ install_requires = [
 ],
 
 tests_require = [
-    'coverage',
-    'coveralls',
-    'django-nose',
-    'factory-boy',
-    'fake-factory',
-    'mock',
+    'pytest',
+    'pytest-django',
+    'pytest-cov',
+    # Py3.5 & factory_boy 3.0.1: pip fails installing with "Generating metadata
+    # for package factory-boy produced metadata for project name unknown"
+    'factory-boy==2.*',
     'flake8',
 ]
 

@@ -19,7 +19,6 @@ from lizard_auth_client import models
 from lizard_auth_client import signals
 from lizard_auth_client import urls
 from lizard_auth_client import views  # NOQA
-from lizard_auth_client.client import sso_server_url
 from lizard_auth_client.conf import settings
 from lizard_auth_client.models import get_user_org_role_dict
 from requests.exceptions import HTTPError
@@ -28,12 +27,21 @@ import inspect
 import json
 import jwt
 import logging
-import mock
+from unittest import mock
 import pprint
-import uuid
 
 logger = logging.getLogger(__name__)
 fake = Faker()
+
+SSO_SERVER_URLS = {
+    'organisations': 'https://some.where/api2/organisations/',
+    'check-credentials': 'https://some.where/api2/check_credentials/',
+    'available-languages': ['en', 'nl'],
+    'new-user': 'https://some.where/api2/new_user/',
+    'logout': 'https://some.where/api2/logout/',
+    'login': 'https://some.where/api2/login/',
+    'find-user': 'https://some.where/api2/find_user/',
+}
 
 
 class TestAuthenticate(TestCase):
@@ -226,21 +234,8 @@ class TestOrganisation(TestCase):
 
         # Check that is has been saved and the fields are correct
         self.assertTrue(org.pk)
-        self.assertEquals(org.unique_id, "NENS")
-        self.assertEquals(org.name, "Nelen & Schuurmans")
-
-    def test_create_from_uuid(self):
-        uuid = uuid.uuid4()
-        org = models.Organisation.create_from_uuid({
-            'uuid': uuid,
-            'name': "Nelen & Schuurmans"
-        })
-
-        # Check that is has been saved and the fields are correct
-        self.assertTrue(org.pk)
-        self.assertEquals(org.uuid, uuid)
-        self.assertEquals(org.unique_id, uuid.hex)
-        self.assertEquals(org.name, "Nelen & Schuurmans")
+        self.assertEqual(org.unique_id, "NENS")
+        self.assertEqual(org.name, "Nelen & Schuurmans")
 
     def test_prepresentation(self):
         organisation = models.Organisation(name='Reinout')
@@ -262,11 +257,11 @@ class TestRole(TestCase):
 
         # Check that it has been saved and that the fields are correct
         self.assertTrue(role.pk)
-        self.assertEquals(role.unique_id, 'KLANT')
-        self.assertEquals(role.code, 'klant')
-        self.assertEquals(role.name, 'Klant')
-        self.assertEquals(role.external_description, 'Hooggeachte klant')
-        self.assertEquals(role.internal_description, 'Melkkoe')
+        self.assertEqual(role.unique_id, 'KLANT')
+        self.assertEqual(role.code, 'klant')
+        self.assertEqual(role.name, 'Klant')
+        self.assertEqual(role.external_description, 'Hooggeachte klant')
+        self.assertEqual(role.internal_description, 'Melkkoe')
         self.assertFalse(hasattr(role, 'nog_een_veld'))
 
     def test_prepresentation(self):
@@ -457,12 +452,12 @@ class TestGetOrganisationsWithRole(TestCase):
     def test_call_get_organisations_with_role(self):
         orgs = list(models.get_organisations_with_role(self.user, 'billing'))
 
-        self.assertEquals(len(orgs), 1)
-        self.assertEquals(orgs[0].name, 'Nelen & Schuurmans')
+        self.assertEqual(len(orgs), 1)
+        self.assertEqual(orgs[0].name, 'Nelen & Schuurmans')
 
     def test_call_get_organisation_with_role(self):
         org = models.get_organisation_with_role(self.user, 'billing')
-        self.assertEquals(org.name, 'Nelen & Schuurmans')
+        self.assertEqual(org.name, 'Nelen & Schuurmans')
 
 
 @override_settings(SSO_USE_V2_LOGIN=False)
@@ -558,7 +553,7 @@ class TestGetBillableOrganisation(TestCase):
             org = client.get_billable_organisation(self.user)
             self.assertFalse(patched.called)
 
-        self.assertEquals(org.pk, org1.pk)
+        self.assertEqual(org.pk, org1.pk)
 
 
 def mock_get_request_token():
@@ -750,7 +745,7 @@ class ClientV2Test(TestCase):
             return result
 
         with mock.patch('requests.post', mock_post):
-            self.assertEquals(
+            self.assertEqual(
                 {'a': 'dict'},
                 client.sso_authenticate_django_v2('someone', 'pass'))
 
@@ -769,7 +764,8 @@ class ClientV2Test(TestCase):
                 key = 'pietje'
                 message = self.data['message']
                 decoded = jwt.decode(message, 'klaasje',
-                                     issuer=key)
+                                     issuer=key,
+                                     algorithms=[settings.SSO_JWT_ALGORITHM])
                 self.assertEqual('someone', decoded['username'])
 
     def test_search_user(self):
@@ -785,7 +781,7 @@ class ClientV2Test(TestCase):
         with mock.patch('requests.get', mock_get):
             with mock.patch('lizard_auth_client.client.sso_server_url',
                             mock_server_url):
-                self.assertEquals(
+                self.assertEqual(
                     {'a': 'dict'},
                     client.sso_search_user_by_email('some@example.org'))
 
@@ -802,7 +798,7 @@ class ClientV2Test(TestCase):
         with mock.patch('requests.post', mock_post):
             with mock.patch('lizard_auth_client.client.sso_server_url',
                             mock_server_url):
-                self.assertEquals(
+                self.assertEqual(
                     {'a': 'dict'},
                     client.sso_create_user('some', 'name',
                                            'some@example.org',
@@ -812,15 +808,10 @@ class ClientV2Test(TestCase):
 class V2ViewsTest(TestCase):
 
     def setUp(self):
-        self.server_urls = {
-            'check-credentials': 'https://some.where/api2/check_credentials/',
-            'login': 'https://some.where/api2/login/',
-            'logout': 'https://some.where/api2/logout/'}
-
         def mock_get(url, timeout):
             result = mock.Mock()
             result.status_code = 200
-            result.json.return_value = self.server_urls
+            result.json.return_value = SSO_SERVER_URLS
             return result
 
         with mock.patch('lizard_auth_client.client.requests.get', mock_get):
@@ -849,7 +840,8 @@ class V2ViewsTest(TestCase):
         message = argument_string.split('message=')[-1].split('&')[0]
         payload = jwt.decode(message,
                              settings.SSO_SECRET,
-                             issuer=settings.SSO_KEY)
+                             issuer=settings.SSO_KEY,
+                             algorithms=[settings.SSO_JWT_ALGORITHM])
         self.assertIn('login_success_url', payload.keys())
 
     def test_jwt_login_view_attempt_login_only(self):
@@ -863,7 +855,8 @@ class V2ViewsTest(TestCase):
         message = argument_string.split('message=')[-1].split('&')[0]
         payload = jwt.decode(message,
                              settings.SSO_SECRET,
-                             issuer=settings.SSO_KEY)
+                             issuer=settings.SSO_KEY,
+                             algorithms=[settings.SSO_JWT_ALGORITHM])
         self.assertIn('login_success_url', payload.keys())
         self.assertIn('unauthenticated_is_ok_url', payload.keys())
 
@@ -883,7 +876,8 @@ class V2ViewsTest(TestCase):
         message = argument_string.split('message=')[-1].split('&')[0]
         payload = jwt.decode(message,
                              settings.SSO_SECRET,
-                             issuer=settings.SSO_KEY)
+                             issuer=settings.SSO_KEY,
+                             algorithms=[settings.SSO_JWT_ALGORITHM])
         self.assertIn('logout_url', payload.keys())
 
     def test_user_overview_smoke(self):
@@ -1141,7 +1135,14 @@ class TestManagementViews(TestCase):
             unique_id='30', code='manage', name='Manage')
 
         # Init the sso_server_url cache
-        logger.info(sso_server_url('find-user'))
+        def mock_get(url, timeout):
+            result = mock.Mock()
+            result.status_code = 200
+            result.json.return_value = SSO_SERVER_URLS
+            return result
+
+        with mock.patch('lizard_auth_client.client.requests.get', mock_get):
+            views.sso_server_url('find-user', use_cache=False)
 
         self.request_factory = RequestFactory()
 

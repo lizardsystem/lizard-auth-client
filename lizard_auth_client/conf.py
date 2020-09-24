@@ -21,6 +21,7 @@ class SSOAppConf(AppConf):
     CREDENTIAL_CACHE_TIMEOUT_SECONDS = 60
     JWT_EXPIRATION_MINUTES = 5
     JWT_ALGORITHM = 'HS256'
+    SERVER_JWT_ALGORITHMS = ["HS256"]
 
     # Required settings for the v1 API.
     SERVER_PRIVATE_URL = ''

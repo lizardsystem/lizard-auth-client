@@ -18,7 +18,7 @@ from lizard_auth_client.models import UserOrganisationRole
 import factory
 
 
-class UserFactory(factory.DjangoModelFactory):
+class UserFactory(factory.django.DjangoModelFactory):
     first_name = factory.Faker('first_name')
     last_name = factory.Faker('last_name')
     username = factory.LazyAttribute(
@@ -42,7 +42,7 @@ class UserFactory(factory.DjangoModelFactory):
         return user
 
 
-class OrganisationFactory(factory.DjangoModelFactory):
+class OrganisationFactory(factory.django.DjangoModelFactory):
     name = factory.Faker('company')
     unique_id = factory.Faker('md5')
 
@@ -50,7 +50,7 @@ class OrganisationFactory(factory.DjangoModelFactory):
         model = Organisation
 
 
-class RoleFactory(factory.DjangoModelFactory):
+class RoleFactory(factory.django.DjangoModelFactory):
     unique_id = factory.Faker('md5')
     code = factory.Faker('ssn')
     name = factory.Faker('job')
@@ -61,7 +61,7 @@ class RoleFactory(factory.DjangoModelFactory):
         model = Role
 
 
-class UserOrganisationRoleFactory(factory.DjangoModelFactory):
+class UserOrganisationRoleFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     organisation = factory.SubFactory(OrganisationFactory)
     role = factory.SubFactory(RoleFactory)

@@ -238,7 +238,8 @@ class LocalLoginView(View):
         if settings.SSO_USE_V2_LOGIN:
             try:
                 payload = jwt.decode(message, settings.SSO_SECRET,
-                                     audience=settings.SSO_KEY)
+                                     audience=settings.SSO_KEY,
+                                     algorithms=settings.SSO_SERVER_JWT_ALGORITHMS)
             except jwt.exceptions.DecodeError:
                 return HttpResponseBadRequest(
                     "Failed to decode JWT signature.")
