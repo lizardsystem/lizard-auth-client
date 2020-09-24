@@ -235,20 +235,18 @@ Tests and local development
 
 (Re)create & activate a virtualenv::
 
-    $ rm -rf .venv
-    $ virtualenv .venv --python=python3
-    $ source .venv/bin/activate
+    $ python3 -m virtualenv .
 
 Install package and run tests::
 
-    (virtualenv)$ pip install django==2.2
-    (virtualenv)$ pip install -e .[test]
-    (virtualenv)$ python manage.py test
+    $ bin/pip install django==2.2
+    $ bin/pip install -e .[test]
+    $ bin/pytest
 
 To not conflict with an optional local lizard-auth-server (running on port
 5000, normally), we run on port **5050**::
 
-    (virtualenv)$ python manage.py runserver 5050
+    $ bin/python manage.py runserver 5050
 
 For a test in your browser, you'll need to also start a local
 lizard-auth-server. Or test against the staging SSO. For the V2 API, you can
