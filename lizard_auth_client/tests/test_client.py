@@ -764,7 +764,8 @@ class ClientV2Test(TestCase):
                 key = 'pietje'
                 message = self.data['message']
                 decoded = jwt.decode(message, 'klaasje',
-                                     issuer=key, algorithms=["HS256"])
+                                     issuer=key,
+                                     algorithms=[settings.SSO_JWT_ALGORITHM])
                 self.assertEqual('someone', decoded['username'])
 
     def test_search_user(self):
@@ -840,7 +841,7 @@ class V2ViewsTest(TestCase):
         payload = jwt.decode(message,
                              settings.SSO_SECRET,
                              issuer=settings.SSO_KEY,
-                             algorithms=["HS256"])
+                             algorithms=[settings.SSO_JWT_ALGORITHM])
         self.assertIn('login_success_url', payload.keys())
 
     def test_jwt_login_view_attempt_login_only(self):
@@ -855,7 +856,7 @@ class V2ViewsTest(TestCase):
         payload = jwt.decode(message,
                              settings.SSO_SECRET,
                              issuer=settings.SSO_KEY,
-                             algorithms=["HS256"])
+                             algorithms=[settings.SSO_JWT_ALGORITHM])
         self.assertIn('login_success_url', payload.keys())
         self.assertIn('unauthenticated_is_ok_url', payload.keys())
 
@@ -876,7 +877,7 @@ class V2ViewsTest(TestCase):
         payload = jwt.decode(message,
                              settings.SSO_SECRET,
                              issuer=settings.SSO_KEY,
-                             algorithms=settings.SSO_SERVER_JWT_ALGORITHMS)
+                             algorithms=[settings.SSO_JWT_ALGORITHM])
         self.assertIn('logout_url', payload.keys())
 
     def test_user_overview_smoke(self):
