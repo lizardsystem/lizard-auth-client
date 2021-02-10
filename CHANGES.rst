@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 3.0.5 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Use pip, pytest, github actions. Django 1.11.* and 3.* compat. 
 
 
 3.0.4 (2020-09-15)
