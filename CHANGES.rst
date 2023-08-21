@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 3.0.6 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix Django4 deprecation warnings.
 
 
 3.0.5 (2021-02-10)
