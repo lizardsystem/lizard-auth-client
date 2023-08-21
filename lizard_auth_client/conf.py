@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
+
 from __future__ import unicode_literals
 
 from appconf import AppConf
+from django import VERSION
 from django.conf import settings
-from django.utils.translation import ugettext_lazy as _
 
+if VERSION < (2,):
+    # Has been Alias of gettext_lazy since Django 2.0.
+    # Removed in Django40 in favor of gettext_lazy.
+    from django.utils.translation import ugettext_lazy as _
+else:
+    from django.utils.translation import gettext_lazy as _
 
 settings  # NOQA
 
