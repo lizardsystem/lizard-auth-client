@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.conf.urls import re_path
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.core.exceptions import ImproperlyConfigured
@@ -58,63 +58,63 @@ if settings.SSO_ENABLED:
     urlpatterns = [
         # Note: ensure LOGIN_URL isn't defined in the settings
         # URLS the do the SSO redirect for login/logout
-        url(r'^accounts/login/$',
+        re_path(r'^accounts/login/$',
             views.LoginView.as_view(),
             name='lizard_auth_client.sso_login'),
-        url(r'^accounts/logout/$',
+        re_path(r'^accounts/logout/$',
             views.LogoutView.as_view(),
             name='lizard_auth_client.sso_logout'),
 
         # Named aliases of the above URLs, for compatibility with
         # other Django apps
-        url(r'^accounts/login/$',
+        re_path(r'^accounts/login/$',
             views.LoginView.as_view(),
             name='login'),
-        url(r'^accounts/logout/$',
+        re_path(r'^accounts/logout/$',
             views.LogoutView.as_view(),
             name='logout'),
 
         # URLS that perform the local login/logout
         # these are used by the SSO server to redirect the user back again
-        url(r'^sso/local_login/$',
+        re_path(r'^sso/local_login/$',
             views.LocalLoginView.as_view(),
             name='lizard_auth_client.sso_local_login'),
-        url(r'^sso/local_not_logged_in/$',
+        re_path(r'^sso/local_not_logged_in/$',
             views.LocalNotLoggedInView.as_view(),
             name='lizard_auth_client.sso_local_not_logged_in'),
-        url(r'^sso/local_logout/$',
+        re_path(r'^sso/local_logout/$',
             views.LocalLogoutView.as_view(),
             name='lizard_auth_client.sso_local_logout'),
 
         # management URLS
-        url(
+        re_path(
             r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/(?P<user_pk>[0-9]+)/delete/$',  # NOQA
             views.ManageUserDeleteDetail.as_view(),
             name='lizard_auth_client.management_users_delete'),
-        url(r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/(?P<user_pk>[0-9]+)/$',  # NOQA
+        re_path(r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/(?P<user_pk>[0-9]+)/$',  # NOQA
             views.ManageUserOrganisationDetail.as_view(),
             name='lizard_auth_client.management_user_organisation_detail'),
-        url(r'^management/organisations/(?P<pk>[0-9]+)/users/$',
+        re_path(r'^management/organisations/(?P<pk>[0-9]+)/users/$',
             views.ManageOrganisationDetail.as_view(),
             name='lizard_auth_client.management_organisation_detail'),
-        url(r'^management/organisations/$',
+        re_path(r'^management/organisations/$',
             views.ManageOrganisationIndex.as_view(),
             name='lizard_auth_client.management_users_index'),
-        url(r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/add/$',  # NOQA
+        re_path(r'^management/organisations/(?P<organisation_pk>[0-9]+)/users/add/$',  # NOQA
             views.ManageUserAddView.as_view(),
             name='lizard_auth_client.management_users_add'),
 
         # User management views
-        url(r'^sso/user_overview/$',
+        re_path(r'^sso/user_overview/$',
             views.UserOverviewView.as_view(),
             name='lizard_auth_client.user_overview'),
-        url(r'^sso/search_new_user/$',
+        re_path(r'^sso/search_new_user/$',
             views.SearchNewUserView.as_view(),
             name='lizard_auth_client.search_new_user'),
-        url(r'^sso/create_new_user/$',
+        re_path(r'^sso/create_new_user/$',
             views.CreateNewUserView.as_view(),
             name='lizard_auth_client.create_new_user'),
-        url(r'^sso/disallowed_user/$',
+        re_path(r'^sso/disallowed_user/$',
             views.DisallowedUserView.as_view(),
             name='lizard_auth_client.disallowed_user'),
     ]
@@ -126,9 +126,9 @@ if settings.SSO_STANDALONE is True:
     # when running standalone (for testing purposes), add some extra URLS
     admin.autodiscover()
     urlpatterns += [
-        url(r'^$', views.TestHomeView.as_view()),
-        url(r'^protected/$', views.TestProtectedView.as_view()),
-        url(r'^admin/', admin.site.urls),
+        re_path(r'^$', views.TestHomeView.as_view()),
+        re_path(r'^protected/$', views.TestProtectedView.as_view()),
+        re_path(r'^admin/', admin.site.urls),
     ]
     if settings.DEBUG:
         urlpatterns += staticfiles_urlpatterns()
