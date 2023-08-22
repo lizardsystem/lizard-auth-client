@@ -128,7 +128,7 @@ class ManageUserAddForm(ManageUserBaseForm):
         # database, because he has roles in other organsitions. In that
         # case, `validate_unique` should not fire. NB: the SSO server
         # matches on email address, not on username.
-        exclude = self._get_validation_exclusions()
+        exclude = list(self._get_validation_exclusions())
         if 'email' in self.cleaned_data:
             model = get_user_model()
             email = self.cleaned_data['email']
