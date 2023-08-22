@@ -33,7 +33,7 @@ from django.http import HttpResponseForbidden
 from django.http import HttpResponsePermanentRedirect
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic.base import TemplateView
 from django.views.generic.base import View
 from django.views.generic import DetailView
