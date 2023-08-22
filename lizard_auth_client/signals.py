@@ -12,8 +12,7 @@ import django.dispatch
 # This signal is sent whenever a user was synchronized. Receivers
 # get the user object, and a list of (organisation, role)
 # tuples.
-user_synchronized = django.dispatch.Signal(
-    providing_args=('user', 'organisation_roles'))
+user_synchronized = django.dispatch.Signal()
 
 
 def set_superuser_staff_callback(user, organisation_roles, **kwargs):
