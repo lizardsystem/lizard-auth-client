@@ -1,3 +1,4 @@
+from django import VERSION
 from django.contrib.auth import get_user_model
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.decorators import login_required
@@ -5,11 +6,17 @@ from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import ImproperlyConfigured
 from django.core.exceptions import PermissionDenied
 from django.utils.decorators import method_decorator
-from django.utils.encoding import force_text
+
 from django.utils.functional import cached_property
 from lizard_auth_client import constants
 from lizard_auth_client import models
 from lizard_auth_client.conf import settings
+
+
+if VERSION < (4,):
+    from django.utils.encoding import force_text as force_str
+else:
+    from django.utils.encoding import force_str
 
 
 def get_is_connected_role():
@@ -52,7 +59,7 @@ class AccessMixin:
                 'settings.LOGIN_URL, or override {0}.get_login_url().'.format(
                     self.__class__.__name__)
             )
-        return force_text(login_url)
+        return force_str(login_url)
 
     def get_permission_denied_message(self):
         """
