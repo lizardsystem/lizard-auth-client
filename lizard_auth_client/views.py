@@ -264,7 +264,7 @@ class LocalLoginView(View):
         # link the user instance to the default database backend
         # and call django-auth's login function
         user.backend = "{}.{}".format(BACKEND.__module__,
-                                  BACKEND.__class__.__name__)
+                                      BACKEND.__class__.__name__)
         django_login(request, user)
         # redirect the user to the stored "next" url, which is probably a
         # protected page
