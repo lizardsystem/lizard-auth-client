@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 # Yet untested, but we want them reported by coverage.py, so we import them.
-from __future__ import unicode_literals
 from django.contrib.auth.models import User
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404
@@ -407,7 +405,7 @@ class TestGetUserOrgRoleDict(TestCase):
         self.assertTrue(repr(ic))
 
         organisation = models.Organisation.objects.get(
-            unique_id=u"77f5a464c35044c19bc7d4b42d7f58da"
+            unique_id="77f5a464c35044c19bc7d4b42d7f58da"
         )
         models.UserOrganisationRole.objects.create(
             user=self.user, role=role, organisation=organisation)

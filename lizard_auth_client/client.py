@@ -1,4 +1,3 @@
-from __future__ import print_function
 from django.core.cache import cache
 from itsdangerous import URLSafeTimedSerializer
 from lizard_auth_client import models
@@ -66,7 +65,7 @@ def _do_post(sso_server_private_url, sso_server_path, sso_key, sso_secret,
     if r.status_code == requests.codes.ok:
         result = json.loads(r.text)
         if isinstance(result, dict):
-            logger.debug("Data received in _do_post: {}".format(result))
+            logger.debug(f"Data received in _do_post: {result}")
             return result
         logger.exception(
             "Did not recieve a dict / associative array as response.")
@@ -102,7 +101,7 @@ def _do_post_unsigned(
         result = json.loads(r.text)
         if isinstance(result, dict):
             logger.debug(
-                "Data received in _do_post_unsigned: {}".format(result))
+                f"Data received in _do_post_unsigned: {result}")
             return result
         else:
             logger.exception(
@@ -186,7 +185,7 @@ def sso_authenticate(
             password=password
         )
     except Exception as ex:
-        logger.exception("Exception occurred in _do_post: {}".format(ex))
+        logger.exception(f"Exception occurred in _do_post: {ex}")
         raise CommunicationError(ex)
 
     # validate response a bit
@@ -292,7 +291,7 @@ def sso_get_user(sso_server_private_url, sso_key, sso_secret, username):
             username=username
         )
     except Exception as ex:
-        logger.exception("Exception occurred in _do_post: {}".format(ex))
+        logger.exception(f"Exception occurred in _do_post: {ex}")
         raise CommunicationError(ex)
 
     # validate response a bit
@@ -322,7 +321,7 @@ def sso_get_users(sso_server_private_url, sso_key, sso_secret):
             sso_secret
         )
     except Exception as ex:
-        logger.exception("Exception occurred in _do_post: {}".format(ex))
+        logger.exception(f"Exception occurred in _do_post: {ex}")
         raise CommunicationError(ex)
 
     # validate response a bit
@@ -509,7 +508,7 @@ def sso_get_organisations_v1(sso_server_private_url, sso_key, sso_secret):
             sso_secret
         )
     except Exception as ex:
-        logger.exception("Exception occurred in _do_post: {}".format(ex))
+        logger.exception(f"Exception occurred in _do_post: {ex}")
         raise CommunicationError(ex)
 
     # validate response a bit
@@ -560,7 +559,7 @@ def sso_get_roles(sso_server_private_url, sso_key, sso_secret):
             sso_secret
         )
     except Exception as ex:
-        logger.exception("Exception occurred in _do_post: {}".format(ex))
+        logger.exception(f"Exception occurred in _do_post: {ex}")
         raise CommunicationError(ex)
 
     # validate response a bit
@@ -639,7 +638,7 @@ def sso_get_user_organisation_roles_django(user):
             username=user.username
         )
     except Exception as ex:
-        logger.exception("Exception occurred in _do_post: {}".format(ex))
+        logger.exception(f"Exception occurred in _do_post: {ex}")
         raise CommunicationError(ex)
 
     # validate response a bit

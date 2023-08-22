@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import logging
 
 from requests import HTTPError
@@ -43,7 +40,7 @@ class ManageUserBaseForm(forms.ModelForm):
         # pop the user roles from the kwargs
         roles = kwargs.pop('roles', [])
 
-        super(ManageUserBaseForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # create role fields
         self.role_field_names = []
@@ -74,7 +71,7 @@ class ManageUserBaseForm(forms.ModelForm):
             'email': 'sander.smits@nelen-schuurmans.nl'
         }
         """
-        cleaned_data = super(ManageUserBaseForm, self).clean()
+        cleaned_data = super().clean()
         user_role_codes = [
             key[5:] for key in cleaned_data if
             key.startswith('role_') and cleaned_data[key] is True]
@@ -87,7 +84,7 @@ class ManageUserAddForm(ManageUserBaseForm):
     """Form for adding a user with its roles/permissions."""
     def __init__(self, *args, **kwargs):
         """Initialize this form with a crispy forms FormHelper instance."""
-        super(ManageUserAddForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.fields['email'].required = True
         self.fields['email'].help_text = _(
@@ -149,7 +146,7 @@ class ManageUserChangeForm(ManageUserBaseForm):
 
     def __init__(self, *args, **kwargs):
         """Add a crispy forms FormHelper instance."""
-        super(ManageUserChangeForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         for field in self.Meta.fields:
             # A manager is not allowed to change user data like `username`,

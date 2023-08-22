@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals
-
 from appconf import AppConf
 from django import VERSION
 from django.conf import settings

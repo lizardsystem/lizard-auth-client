@@ -1,13 +1,8 @@
 # (c) Nelen & Schuurmans.  GPL licensed, see LICENSE.rst.
-# -*- coding: utf-8 -*-
 
 """View decorators."""
 
 # Python 3 is coming
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 from django.contrib.auth.views import redirect_to_login
 from django.utils.encoding import force_str
 from urllib.parse import urlparse

@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.decorators import login_required
@@ -27,7 +24,7 @@ def get_is_connected_role():
     return is_connected_role
 
 
-class AccessMixin(object):
+class AccessMixin:
     """
     N.B. this mixin is from Django >= 1.9. For now, Django 1.8 still needs
     to be supported since it is an LTS release. Therefore, we copied the
@@ -144,11 +141,11 @@ class RoleRequiredMixin(AccessMixin):
     def dispatch(self, request, *args, **kwargs):
         if not self.has_role():
             return self.handle_no_permission()
-        return super(RoleRequiredMixin, self).dispatch(
+        return super().dispatch(
             request, *args, **kwargs)
 
 
-class ManagedObjectsMixin(object):
+class ManagedObjectsMixin:
     """
     CBV mixin which provides a number of role/permission management-related
     fields:

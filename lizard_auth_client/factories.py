@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans, see LICENSE.rst.
 
 """Convenient model factories to be used in tests.
 
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 from lizard_auth_client.models import Organisation
@@ -22,10 +17,10 @@ class UserFactory(factory.django.DjangoModelFactory):
     first_name = factory.Faker('first_name')
     last_name = factory.Faker('last_name')
     username = factory.LazyAttribute(
-        lambda x: '{}.{}'.format(slugify(x.first_name), slugify(x.last_name)))
+        lambda x: f'{slugify(x.first_name)}.{slugify(x.last_name)}')
     password = factory.Faker('password')
     email = factory.LazyAttribute(
-        lambda x: '{}@gmail.com'.format(x.username))
+        lambda x: f'{x.username}@gmail.com')
     is_superuser = False
     is_staff = False
     is_active = True

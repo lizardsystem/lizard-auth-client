@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from django import VERSION
 
 # Automatically discovered since Django 3.2.

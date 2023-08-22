@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 from django.db import models
 from lizard_auth_client.conf import settings
 from uuid import UUID
@@ -136,7 +134,7 @@ class UserOrganisationRole(models.Model):
         unique_together = ('user', 'organisation', 'role')
 
     def __str__(self):
-        return '%s %s %s' % (
+        return '{} {} {}'.format(
             str(self.user), str(self.organisation), str(self.role))
 
     def natural_key(self):
