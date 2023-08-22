@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from collections import namedtuple
 import datetime
 import json
@@ -36,7 +33,7 @@ from django.http import HttpResponseForbidden
 from django.http import HttpResponsePermanentRedirect
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic.base import TemplateView
 from django.views.generic.base import View
 from django.views.generic import DetailView
@@ -138,7 +135,7 @@ class TestProtectedView(View):
     """
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        return super(TestProtectedView, self).dispatch(
+        return super().dispatch(
             request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
@@ -220,7 +217,7 @@ class JWTLoginView(View):
 
         # Build an absolute URL pointing to the SSO server out of it.
         url = sso_server_url('login')
-        url_with_params = '%s?%s' % (url, query_string)
+        url_with_params = '{}?{}'.format(url, query_string)
         return HttpResponseRedirect(url_with_params)
 
 
@@ -266,8 +263,8 @@ class LocalLoginView(View):
 
         # link the user instance to the default database backend
         # and call django-auth's login function
-        user.backend = "%s.%s" % (BACKEND.__module__,
-                                  BACKEND.__class__.__name__)
+        user.backend = "{}.{}".format(BACKEND.__module__,
+                                      BACKEND.__class__.__name__)
         django_login(request, user)
         # redirect the user to the stored "next" url, which is probably a
         # protected page
@@ -336,7 +333,7 @@ class JWTLogoutView(View):
         })
 
         url = sso_server_url('logout')
-        url = '%s?%s' % (url, query_string)
+        url = '{}?{}'.format(url, query_string)
 
         # send the redirect response
         return HttpResponseRedirect(url)
@@ -486,7 +483,7 @@ def get_request_token_and_determine_response(
                               ('key', settings.SSO_KEY)])
     # Build an absolute URL pointing to the SSO server out of it.
     url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/authorize') + '/'
-    url = '%s?%s' % (url, query_string)
+    url = '{}?{}'.format(url, query_string)
 
     return WrappedResponse(HttpResponseRedirect, 'OK', url)
 
@@ -508,7 +505,7 @@ def build_sso_portal_action_url(action, domain=None):
     query_string = urlencode([('message', message),
                               ('key', settings.SSO_KEY)])
     url = urljoin(settings.SSO_SERVER_PUBLIC_URL, 'sso/portal_action') + '/'
-    url = '%s?%s' % (url, query_string)
+    url = '{}?{}'.format(url, query_string)
     return url
 
 
@@ -522,7 +519,7 @@ class UserOverviewView(TemplateView):
 
     @method_decorator(permission_required('auth.manage_users'))
     def dispatch(self, request, *args, **kwargs):
-        return super(UserOverviewView, self).dispatch(
+        return super().dispatch(
             request, *args, **kwargs)
 
     @property
@@ -565,7 +562,7 @@ class SearchNewUserView(FormView):
 
     @method_decorator(permission_required('auth.manage_users'))
     def dispatch(self, request, *args, **kwargs):
-        return super(SearchNewUserView, self).dispatch(
+        return super().dispatch(
             request, *args, **kwargs)
 
 
@@ -577,7 +574,7 @@ class CreateNewUserView(FormView):
 
     @method_decorator(permission_required('auth.manage_users'))
     def dispatch(self, request, *args, **kwargs):
-        return super(CreateNewUserView, self).dispatch(
+        return super().dispatch(
             request, *args, **kwargs)
 
 
@@ -606,7 +603,7 @@ class ManageOrganisationIndex(
 
     def get_context_data(self, **kwargs):
         """Add managed organisations and users to the context."""
-        context = super(ManageOrganisationIndex, self).get_context_data(
+        context = super().get_context_data(
             **kwargs)
         # put the managed organisations in the context
         context['organisations'] = self.managed_organisations
@@ -627,7 +624,7 @@ class ManageOrganisationIndex(
                 kwargs={'pk': organisation.pk})
             return HttpResponseRedirect(redirect_to=redirect_to)
         else:
-            return super(ManageOrganisationIndex, self).dispatch(
+            return super().dispatch(
                 request, *args, **kwargs)
 
 
@@ -665,7 +662,7 @@ class ManageOrganisationDetail(
 
     def get_context_data(self, **kwargs):
         """Store organisation in the context."""
-        context = super(ManageOrganisationDetail, self).get_context_data(
+        context = super().get_context_data(
             **kwargs)
 
         # add organisation to context
@@ -698,7 +695,7 @@ class ManageOrganisationDetail(
         he should be redirected to the main management page.
         """
         try:
-            return super(ManageOrganisationDetail, self).dispatch(
+            return super().dispatch(
                 request, *args, **kwargs)
         except Http404:
             # user has probably taken the management permission for this
@@ -721,7 +718,7 @@ class ManageUserOrganisationDetail(
 
     def get_context_data(self, **kwargs):
         """Add organisation and user to the context."""
-        context = super(ManageUserOrganisationDetail, self).get_context_data(
+        context = super().get_context_data(
             **kwargs)
         context['organisation'] = self.organisation
         context['roles'] = self.available_roles
@@ -755,12 +752,11 @@ class ManageUserOrganisationDetail(
             self.user = managed_users.get(pk=user_pk)
         except ObjectDoesNotExist:
             return HttpResponseForbidden()
-        return super(ManageUserOrganisationDetail, self).dispatch(
+        return super().dispatch(
             request, organisation_pk, user_pk, *args, **kwargs)
 
     def get_form_kwargs(self):
-        form_kwargs = super(
-            ManageUserOrganisationDetail, self).get_form_kwargs()
+        form_kwargs = super().get_form_kwargs()
         form_kwargs['instance'] = self.user
         role_matrix = get_user_role_matrix_for_organisation(
             self.user, self.organisation, self.available_roles)
@@ -769,7 +765,7 @@ class ManageUserOrganisationDetail(
 
     def get_initial(self):
         # add organisation to the initial dict
-        initial = super(ManageUserOrganisationDetail, self).get_initial()
+        initial = super().get_initial()
         initial['organisation'] = self.organisation.name
         return initial
 
@@ -778,7 +774,7 @@ class ManageUserOrganisationDetail(
         """Save the user organisation roles."""
         roles = form.cleaned_data['roles']
         save_roles(self.user, self.organisation, roles)
-        return super(ManageUserOrganisationDetail, self).form_valid(form)
+        return super().form_valid(form)
 
     def post(self, request, organisation_pk=None, user_pk=None, *args,
              **kwargs):
@@ -789,7 +785,7 @@ class ManageUserOrganisationDetail(
                 'username': self.user.username},
             fail_silently=True
         )
-        return super(ManageUserOrganisationDetail, self).post(
+        return super().post(
             request, *args, **kwargs)
 
     def get_success_url(self):
@@ -829,7 +825,7 @@ class ManageUserAddView(
     role_required = settings.SSO_MANAGER_ROLE_CODES
 
     def get_context_data(self, **kwargs):
-        context = super(ManageUserAddView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['organisation'] = self.organisation
         return context
 
@@ -839,14 +835,14 @@ class ManageUserAddView(
             kwargs={'pk': self.organisation.id})
 
     def get_form_kwargs(self):
-        form_kwargs = super(ManageUserAddView, self).get_form_kwargs()
+        form_kwargs = super().get_form_kwargs()
         role_matrix = [False] * len(self.available_roles)
         form_kwargs['roles'] = zip(self.available_roles, role_matrix)
         return form_kwargs
 
     def get_initial(self):
         # add organisation to the initial dict
-        initial = super(ManageUserAddView, self).get_initial()
+        initial = super().get_initial()
         initial['organisation'] = self.organisation.name
         return initial
 
@@ -936,7 +932,7 @@ class ManageUserAddView(
             fail_silently=True
         )
 
-        return super(ManageUserAddView, self).form_valid(form)
+        return super().form_valid(form)
 
     @method_decorator(login_required)
     def dispatch(self, request, organisation_pk=None, *args, **kwargs):
@@ -945,7 +941,7 @@ class ManageUserAddView(
                 pk=organisation_pk)
         except ObjectDoesNotExist:
             return HttpResponseForbidden()
-        return super(ManageUserAddView, self).dispatch(
+        return super().dispatch(
             request, *args, **kwargs)
 
 
@@ -996,5 +992,5 @@ class ManageUserDeleteDetail(
         )
 
         # now redirect via the super.get()
-        return super(ManageUserDeleteDetail, self).get(
+        return super().get(
             request, *args, **kwargs)

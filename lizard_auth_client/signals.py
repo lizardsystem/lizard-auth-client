@@ -1,14 +1,9 @@
 # (c) Nelen & Schuurmans.  GPL licensed, see LICENSE.rst.
-# -*- coding: utf-8 -*-
 
 """Signal that gets sent when a user is synchronized, and one
 function making use of it."""
 
 # Python 3 is coming
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 from lizard_auth_client.conf import settings
 
 import django.dispatch
@@ -17,8 +12,7 @@ import django.dispatch
 # This signal is sent whenever a user was synchronized. Receivers
 # get the user object, and a list of (organisation, role)
 # tuples.
-user_synchronized = django.dispatch.Signal(
-    providing_args=('user', 'organisation_roles'))
+user_synchronized = django.dispatch.Signal()
 
 
 def set_superuser_staff_callback(user, organisation_roles, **kwargs):

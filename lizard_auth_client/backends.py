@@ -1,5 +1,4 @@
 # (c) Nelen & Schuurmans.  MIT licensed, see LICENSE.rst.
-from __future__ import unicode_literals
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.hashers import is_password_usable
@@ -30,7 +29,7 @@ class SSOBackend(ModelBackend):
         try:
             if username and password:
                 user_data = None
-                cache_key = 'SSOBackend.authenticate.{0}'.format(username)
+                cache_key = f'SSOBackend.authenticate.{username}'
                 # Try getting the user_data from cache first.
                 cached_credentials = cache.get(cache_key)
                 if cached_credentials is not None:

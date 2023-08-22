@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
+from django import VERSION
 from django.contrib.auth import get_user_model
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.decorators import login_required
@@ -8,11 +6,17 @@ from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import ImproperlyConfigured
 from django.core.exceptions import PermissionDenied
 from django.utils.decorators import method_decorator
-from django.utils.encoding import force_text
+
 from django.utils.functional import cached_property
 from lizard_auth_client import constants
 from lizard_auth_client import models
 from lizard_auth_client.conf import settings
+
+
+if VERSION < (4,):
+    from django.utils.encoding import force_text as force_str
+else:
+    from django.utils.encoding import force_str
 
 
 def get_is_connected_role():
@@ -27,7 +31,7 @@ def get_is_connected_role():
     return is_connected_role
 
 
-class AccessMixin(object):
+class AccessMixin:
     """
     N.B. this mixin is from Django >= 1.9. For now, Django 1.8 still needs
     to be supported since it is an LTS release. Therefore, we copied the
@@ -55,7 +59,7 @@ class AccessMixin(object):
                 'settings.LOGIN_URL, or override {0}.get_login_url().'.format(
                     self.__class__.__name__)
             )
-        return force_text(login_url)
+        return force_str(login_url)
 
     def get_permission_denied_message(self):
         """
@@ -144,11 +148,11 @@ class RoleRequiredMixin(AccessMixin):
     def dispatch(self, request, *args, **kwargs):
         if not self.has_role():
             return self.handle_no_permission()
-        return super(RoleRequiredMixin, self).dispatch(
+        return super().dispatch(
             request, *args, **kwargs)
 
 
-class ManagedObjectsMixin(object):
+class ManagedObjectsMixin:
     """
     CBV mixin which provides a number of role/permission management-related
     fields:

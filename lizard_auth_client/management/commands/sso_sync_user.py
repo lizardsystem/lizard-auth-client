@@ -1,4 +1,3 @@
-from __future__ import print_function
 from django.core.management.base import BaseCommand
 from lizard_auth_client.client import construct_user
 from lizard_auth_client.client import sso_get_user_django

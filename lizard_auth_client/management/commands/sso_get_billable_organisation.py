@@ -1,5 +1,4 @@
 # import sys
-from __future__ import print_function
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.core.management.base import CommandError

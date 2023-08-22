@@ -2,16 +2,26 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-3.0.6 (unreleased)
+3.1.1 (unreleased)
 ------------------
 
 - Nothing changed yet.
 
 
+3.1.0 (2023-08-22)
+------------------
+
+- Fixed Django 4+ deprecation warnings.
+
+- Dropped support for Python < 3.8.
+
+- Dropped support for Django < 3.2.
+
+
 3.0.5 (2021-02-10)
 ------------------
 
-- Use pip, pytest, github actions. Django 1.11.* and 3.* compat. 
+- Use pip, pytest, github actions. Django 1.11.* and 3.* compat.
 
 
 3.0.4 (2020-09-15)
