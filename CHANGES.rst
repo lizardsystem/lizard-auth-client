@@ -2,7 +2,7 @@ Changelog of lizard-auth-client
 ===================================================
 
 
-3.1.1 (unreleased)
+4.0.0 (2024-02-12)
 ------------------
 
 - Fixed Django 4+ compatibility.
