@@ -73,6 +73,7 @@ class Organisation(models.Model):
     # In hindsight, UUIDField might have been a better choice for unique_id.
     # The uuid property and setter may be used as an alternative.
     unique_id = models.CharField(max_length=32, unique=True)
+    description = models.TextField(null=False, blank=True, default="")
 
     class Meta:
         ordering = ['name']

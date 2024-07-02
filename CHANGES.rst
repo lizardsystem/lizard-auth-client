@@ -5,7 +5,7 @@ Changelog of lizard-auth-client
 4.0.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added description field to Organisation model.
 
 
 4.0.0 (2024-02-12)

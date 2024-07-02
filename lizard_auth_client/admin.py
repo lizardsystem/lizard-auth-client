@@ -10,7 +10,7 @@ class RoleAdmin(admin.ModelAdmin):
 
 @admin.register(models.Organisation)
 class OrganisationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'unique_id')
+    list_display = ('name', 'description', 'unique_id')
     search_fields = ('name', 'unique_id')
 
 
